@@ -30,6 +30,7 @@ export default function ShoppingListView() {
     wishlist = [],
     addWishlistItem,
     deleteWishlistItem,
+    updateWishlistItem,
     members = [],
     wishlistCategories = [],
     addWishlistCategory,
@@ -51,7 +52,8 @@ export default function ShoppingListView() {
   const [editedSize, setEditedSize] = useState('');
   const [editedNeeds, setEditedNeeds] = useState('');
 
-  // Wishlist Form
+  // Wishlist Form y Edición
+  const [editingWishItem, setEditingWishItem] = useState(null);
   const [wishTitle, setWishTitle] = useState('');
   const [wishUrl, setWishUrl] = useState('');
   const [wishPrice, setWishPrice] = useState('');
@@ -128,20 +130,22 @@ export default function ShoppingListView() {
     }
   };
 
-  const handleAddWishItem = (e) => {
-    e.preventDefault();
-    if (!wishTitle.trim()) return;
+  const handleStartEditWishItem = (item) => {
+    setEditingWishItem(item);
+    setWishTitle(item.title);
+    setWishUrl(item.url || '');
+    setWishPrice(item.price > 0 ? String(item.price) : '');
+    setWishPhoto(item.photoUrl || '');
+    setWishPhotoFileName(item.photoUrl ? 'Imagen cargada' : '');
+    setWishMemberIds(item.memberIds || (item.memberId ? [item.memberId] : []));
+    setWishCategory(item.category || '');
+    setShowNewCategoryInput(false);
+    setNewWishCategory('');
+    setShowAddWishItemMobile(true);
+  };
 
-    addWishlistItem({
-      title: wishTitle.trim(),
-      url: wishUrl.trim(),
-      price: wishPrice ? Number(wishPrice) : 0,
-      photoUrl: wishPhoto,
-      memberIds: wishMemberIds.length > 0 ? wishMemberIds : null,
-      memberId: wishMemberIds.length === 1 ? wishMemberIds[0] : (wishMemberIds.length === 0 ? null : null),
-      category: wishCategory.trim() || null
-    });
-
+  const handleCancelEditWishItem = () => {
+    setEditingWishItem(null);
     setWishTitle('');
     setWishUrl('');
     setWishPrice('');
@@ -152,6 +156,29 @@ export default function ShoppingListView() {
     setNewWishCategory('');
     setShowNewCategoryInput(false);
     setShowAddWishItemMobile(false);
+  };
+
+  const handleAddWishItem = (e) => {
+    e.preventDefault();
+    if (!wishTitle.trim()) return;
+
+    const itemData = {
+      title: wishTitle.trim(),
+      url: wishUrl.trim(),
+      price: wishPrice ? Number(wishPrice) : 0,
+      photoUrl: wishPhoto,
+      memberIds: wishMemberIds.length > 0 ? wishMemberIds : null,
+      memberId: wishMemberIds.length === 1 ? wishMemberIds[0] : null,
+      category: wishCategory.trim() || null
+    };
+
+    if (editingWishItem) {
+      updateWishlistItem(editingWishItem.id, itemData);
+    } else {
+      addWishlistItem(itemData);
+    }
+
+    handleCancelEditWishItem();
   };
 
   const handleCreateCategory = () => {
@@ -475,7 +502,7 @@ export default function ShoppingListView() {
           {/* PANEL CREAR IDEA */}
           <div className={`flat-card p-5 border border-slate-200/60 bg-white h-fit shadow-sm ${showAddWishItemMobile ? 'block animate-fadeIn' : 'hidden lg:block'}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-              <Gift size={15} className="text-blue-500" /> Añadir Deseo / Regalo
+              <Gift size={15} className="text-blue-500" /> {editingWishItem ? 'Editar Deseo / Regalo' : 'Añadir Deseo / Regalo'}
             </h3>
             
             <form onSubmit={handleAddWishItem} className="flex flex-col gap-4">
@@ -658,12 +685,23 @@ export default function ShoppingListView() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full mt-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10"
-              >
-                Añadir a la Wishlist
-              </button>
+              <div className="flex gap-2">
+                {editingWishItem && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditWishItem}
+                    className="flex-1 mt-2 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 font-bold text-xs shadow-sm transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="flex-1 mt-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10 cursor-pointer border-0"
+                >
+                  {editingWishItem ? 'Guardar Cambios' : 'Añadir a la Wishlist'}
+                </button>
+              </div>
             </form>
 
             {/* GESTOR DE CATEGORÍAS */}
@@ -767,12 +805,24 @@ export default function ShoppingListView() {
                             </span>
                           )}
                         </div>
-                        <button
-                          onClick={() => deleteWishlistItem(item.id)}
-                          className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditWishItem(item)}
+                            className="text-slate-400 hover:text-blue-500 p-0.5 bg-transparent border-0 cursor-pointer"
+                            title="Editar Deseo"
+                          >
+                            <Edit size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteWishlistItem(item.id)}
+                            className="text-slate-400 hover:text-red-500 p-0.5 bg-transparent border-0 cursor-pointer"
+                            title="Eliminar Deseo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex gap-3 mt-3">

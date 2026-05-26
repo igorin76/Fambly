@@ -745,6 +745,27 @@ export const useStore = create(
         }
       },
 
+      updateWishlistItem: async (id, updatedFields) => {
+        set((state) => ({
+          wishlist: state.wishlist.map((item) => (item.id === id ? { ...item, ...updatedFields } : item))
+        }));
+
+        if (isSupabaseConfigured()) {
+          const updatePayload = {};
+          if (updatedFields.title !== undefined) updatePayload.title = updatedFields.title;
+          if (updatedFields.url !== undefined) updatePayload.url = updatedFields.url;
+          if (updatedFields.price !== undefined) updatePayload.price = Number(updatedFields.price || 0);
+          if (updatedFields.photoUrl !== undefined) updatePayload.photo_url = updatedFields.photoUrl;
+          if (updatedFields.category !== undefined) updatePayload.category = updatedFields.category || null;
+          if (updatedFields.memberIds !== undefined) updatePayload.member_ids = updatedFields.memberIds;
+
+          const { error } = await supabase.from('wishlist').update(updatePayload).eq('id', id);
+          if (error) {
+            console.error("Error updating wishlist item in Supabase:", error);
+          }
+        }
+      },
+
       addWishlistCategory: async (name) => {
         const newCat = {
           id: `cat-${Date.now()}`,
