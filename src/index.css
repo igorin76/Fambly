@@ -4,31 +4,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ─── */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --nav-height: 72px;
+  --transition-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @layer base {
   body {
-    @apply font-sans bg-slate-50 text-slate-800 antialiased overflow-x-hidden transition-colors duration-300;
+    @apply font-sans bg-slate-50 text-slate-800 antialiased overflow-x-hidden;
     min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  @media (max-width: 767px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="date"],
+    input[type="tel"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
   }
 }
 
-/* Fichas y Contenedores Planos */
+/* ─── Cards & Containers ─── */
 .flat-card {
-  @apply bg-white border border-slate-100 rounded-2xl shadow-sm transition-all duration-300;
+  @apply bg-white border border-slate-100 rounded-2xl shadow-sm transition-all duration-200;
 }
 
 .flat-card:hover {
   @apply border-slate-200 shadow-md;
 }
 
+@media (max-width: 767px) {
+  .flat-card {
+    @apply rounded-xl;
+  }
+}
+
+/* ─── Inputs ─── */
 .flat-input {
-  @apply bg-white border border-slate-200 text-slate-800 rounded-xl px-3.5 py-2 text-sm outline-none transition-all;
+  @apply bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-sm outline-none transition-all;
+  min-height: 48px;
 }
 
 .flat-input:focus {
   @apply border-blue-500 ring-4 ring-blue-500/10;
 }
 
-/* Custom Scrollbar */
+/* ─── Custom Scrollbar ─── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -39,21 +76,30 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+  @apply bg-slate-200 rounded-full hover:bg-slate-300;
 }
 
-/* Checkbox Personalizado Plano */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ─── Checkbox ─── */
 .custom-checkbox {
   @apply rounded-md border-slate-300 bg-white text-blue-500 focus:ring-blue-500 focus:ring-offset-white transition-all cursor-pointer w-5 h-5;
 }
 
-/* Badges Planos de Miembros */
+/* ─── Member Badges ─── */
 .badge-igor { @apply bg-blue-50 text-blue-600 border border-blue-100; }
 .badge-diana { @apply bg-purple-50 text-purple-600 border border-purple-100; }
 .badge-comun { @apply bg-emerald-50 text-emerald-600 border border-emerald-100; }
 .badge-ninos { @apply bg-orange-50 text-orange-600 border border-orange-100; }
 
-/* Segmented Control Selector */
+/* ─── Segmented Control ─── */
 .segmented-container {
   @apply flex bg-slate-100 rounded-xl p-1 border border-slate-200/50;
 }
@@ -66,7 +112,23 @@
   @apply text-slate-500 hover:text-slate-800;
 }
 
-/* Animaciones para Bottom Sheets y Modales */
+/* ─── Touch Feedback ─── */
+.touch-btn {
+  @apply transition-all duration-150 select-none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-btn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Action buttons always visible on mobile, hover-reveal on desktop */
+.action-btn-mobile {
+  @apply opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-150;
+}
+
+/* ─── Animations ─── */
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -77,60 +139,90 @@
 }
 
 .animate-slideUp {
-  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideUp 0.3s var(--transition-spring) forwards;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.18s ease-out forwards;
+  animation: fadeIn 0.2s var(--transition-smooth) forwards;
 }
 
-/* Legibilidad de fuentes aumentada para dispositivos móviles */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s var(--transition-spring) forwards;
+}
+
+/* ─── Mobile Typography Scale ─── */
 @media (max-width: 767px) {
+  .text-\[7px\],
   .text-\[8px\] {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
+    line-height: 1.3;
   }
   .text-\[9px\] {
-    font-size: 11.5px !important;
+    font-size: 12px !important;
+    line-height: 1.3;
   }
   .text-\[10px\] {
-    font-size: 12.5px !important;
+    font-size: 13px !important;
+    line-height: 1.3;
+  }
+  .text-\[11px\] {
+    font-size: 14px !important;
+    line-height: 1.4;
   }
   .text-xs {
-    font-size: 13.5px !important;
+    font-size: 14px !important;
+    line-height: 1.4;
   }
   .text-sm {
     font-size: 15.5px !important;
+    line-height: 1.5;
   }
   .text-base {
-    font-size: 17.5px !important;
+    font-size: 17px !important;
+    line-height: 1.5;
   }
   .text-lg {
-    font-size: 19.5px !important;
+    font-size: 19px !important;
+    line-height: 1.4;
   }
   .text-xl {
-    font-size: 22px !important;
+    font-size: 21px !important;
+    line-height: 1.3;
   }
-  
-  /* Ajuste específico para mantener la altura y armonía de la barra de navegación inferior móvil con textos grandes */
-  .fixed.bottom-0.left-0.right-0 {
-    padding-top: 6px !important;
-    padding-bottom: 20px !important;
-  }
-  
-  /* Aumentar padding sutil en inputs y botones para dar aire con tipografía más grande */
-  .flat-input, select, textarea {
-    font-size: 14.5px !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
+  .text-2xl {
+    font-size: 24px !important;
+    line-height: 1.2;
   }
 }
 
+/* ─── Mobile Safe Areas ─── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: calc(var(--safe-bottom) + 8px);
+  }
+  .mb-safe {
+    margin-bottom: var(--safe-bottom);
+  }
+}

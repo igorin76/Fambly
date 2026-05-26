@@ -530,14 +530,14 @@ export default function AnnouncementBoard() {
     <div className="flex flex-col gap-6">
       
       {/* CABECERA */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-800">Tablón de Anuncios</h2>
           <p className="text-sm text-slate-500">Documentación de uso recurrente: notas de voz, documentos de interés, imágenes y notas de texto.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02]"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02] touch-btn shrink-0 self-start sm:self-center"
         >
           <Plus size={15} />
           Añadir Anuncio
@@ -593,20 +593,20 @@ export default function AnnouncementBoard() {
                           e.stopPropagation();
                           handleOpenEdit(ann);
                         }}
-                        className="text-slate-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        className="text-slate-500 hover:text-blue-600 action-btn-mobile transition-all p-2 rounded-lg touch-btn"
                         title="Editar"
                       >
-                        <Edit2 size={13} />
+                        <Edit2 size={15} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (confirm('¿Eliminar este anuncio?')) deleteAnnouncement(ann.id);
                         }}
-                        className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        className="text-slate-555 hover:text-red-600 action-btn-mobile transition-all p-2 rounded-lg touch-btn"
                         title="Eliminar"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
@@ -783,10 +783,13 @@ export default function AnnouncementBoard() {
       {/* MODAL CREAR ANUNCIO / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh] animate-slideUp sm:animate-fadeIn">
+          <div 
+            className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh] animate-slideUp sm:animate-fadeIn"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{editingAnnouncement ? 'Editar Anuncio' : 'Nuevo Anuncio'}</h3>
-              <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-700">
+              <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
                 <X size={18} />
               </button>
             </div>

@@ -44,15 +44,15 @@ export default function Layout({ children, activeTab, setActiveTab }) {
   const mobileSecondaryNavItems = navItems.slice(4); // Finanzas, Tablón, Miembros
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 transition-colors duration-300">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-slate-50 text-slate-800">
       
       {/* HEADER DE APLICACIÓN */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 bg-white/95 backdrop-blur-md shadow-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           
           {/* LOGO */}
           <div className="flex items-center gap-2">
-            <FamblyLogo className="h-8" />
+            <FamblyLogo className="h-7 md:h-8" />
           </div>
 
           {/* SELECTOR DE USUARIO ACTIVO DINÁMICO */}
@@ -77,7 +77,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                   <button
                     key={m.id}
                     onClick={() => handleUserChange(m.firstName)}
-                    className={`relative z-10 flex h-8 px-3.5 items-center gap-1.5 rounded-lg text-xs font-bold tracking-wide transition-all shrink-0 ${
+                    className={`relative z-10 flex h-8 px-3.5 items-center gap-1.5 rounded-lg text-xs font-bold tracking-wide transition-all shrink-0 touch-btn ${
                       isActive 
                         ? `bg-white ${textColor} shadow-sm border border-slate-200/30` 
                         : 'text-slate-500 hover:text-slate-800'
@@ -95,22 +95,22 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             {/* Avatar compacto en móviles (pantallas < sm) */}
             <button
               onClick={() => setShowProfileSheet(true)}
-              className="flex sm:hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/60 hover:bg-slate-100 transition-colors shadow-sm select-none"
+              className="flex sm:hidden items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/60 hover:bg-slate-100 transition-colors shadow-sm select-none touch-btn"
             >
-              <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black text-white ${
+              <span className={`h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-black text-white ${
                 activeMember.role === 'Padre' ? 'bg-blue-600' :
                 activeMember.role === 'Madre' ? 'bg-purple-600' : 'bg-orange-500'
               }`}>
                 {activeMember.firstName[0]}
               </span>
-              <span className="text-xs font-bold text-slate-700">{activeMember.firstName}</span>
+              <span className="text-sm font-bold text-slate-700">{activeMember.firstName}</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8 pb-28 md:pb-6">
         
         {/* SIDEBAR ESCRITORIO (md+) */}
         <aside className="hidden md:flex w-64 flex-col gap-2 pr-6">
@@ -139,7 +139,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold tracking-wide transition-all border ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold tracking-wide transition-all border touch-btn ${
                     isActive 
                       ? activeStyles 
                       : 'text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800'
@@ -161,54 +161,78 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         </main>
       </div>
 
-      {/* BOTTOM NAV PARA MÓVIL (md-) */}
-      <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden border border-slate-200/60 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg">
-        <div className="flex justify-around items-center max-w-lg mx-auto gap-2">
-          {mobilePrimaryNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+      {/* ═══════════════════════════════════════════════════
+          BOTTOM NAV PARA MÓVIL — Diseño Premium Floating
+          ═══════════════════════════════════════════════════ */}
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}
+      >
+        <div className="mx-3 mb-2 bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/8 px-2 py-1.5">
+          <div className="flex justify-around items-center max-w-lg mx-auto">
+            {mobilePrimaryNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
 
-            const activeColor = activeMember.role === 'Padre' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-purple-600 bg-purple-50';
+              const activeColor = activeMember.role === 'Padre' 
+                ? 'text-blue-600' 
+                : 'text-purple-600';
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className="flex-1 flex flex-col items-center justify-center py-1 rounded-xl transition-all"
-              >
-                <div className={`p-2 rounded-xl transition-all ${
-                  isActive ? activeColor : 'text-slate-400'
-                }`}>
-                  <Icon size={18} className={isActive ? 'scale-110' : 'opacity-75'} />
-                </div>
-                <span className="text-[9px] font-bold mt-1 tracking-wider uppercase">{item.label}</span>
-              </button>
-            );
-          })}
-          
-          {/* Botón MÁS para móvil */}
-          {(() => {
-            const isSecondaryActive = mobileSecondaryNavItems.some(item => activeTab === item.id);
-            const activeColor = activeMember.role === 'Padre' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-purple-600 bg-purple-50';
+              const activeBg = activeMember.role === 'Padre' 
+                ? 'bg-blue-50' 
+                : 'bg-purple-50';
 
-            return (
-              <button
-                onClick={() => setShowMoreMenu(true)}
-                className="flex-1 flex flex-col items-center justify-center py-1 rounded-xl transition-all"
-              >
-                <div className={`p-2 rounded-xl transition-all ${
-                  isSecondaryActive ? activeColor : 'text-slate-400'
-                }`}>
-                  <MoreHorizontal size={18} />
-                </div>
-                <span className="text-[9px] font-bold mt-1 tracking-wider uppercase">Más</span>
-              </button>
-            );
-          })()}
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className="flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all touch-btn"
+                >
+                  <div className={`p-2 rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? `${activeBg} ${activeColor}` 
+                      : 'text-slate-400'
+                  }`}>
+                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={`transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                  </div>
+                  <span className={`text-[10px] font-bold mt-0.5 tracking-wide uppercase transition-colors ${
+                    isActive ? activeColor : 'text-slate-400'
+                  }`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+            
+            {/* Botón MÁS para móvil */}
+            {(() => {
+              const isSecondaryActive = mobileSecondaryNavItems.some(item => activeTab === item.id);
+              const activeColor = activeMember.role === 'Padre' 
+                ? 'text-blue-600' 
+                : 'text-purple-600';
+              const activeBg = activeMember.role === 'Padre' 
+                ? 'bg-blue-50' 
+                : 'bg-purple-50';
+
+              return (
+                <button
+                  onClick={() => setShowMoreMenu(true)}
+                  className="flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all touch-btn"
+                >
+                  <div className={`p-2 rounded-xl transition-all duration-200 ${
+                    isSecondaryActive ? `${activeBg} ${activeColor}` : 'text-slate-400'
+                  }`}>
+                    <MoreHorizontal size={20} strokeWidth={isSecondaryActive ? 2.5 : 2} className={`transition-transform duration-200 ${isSecondaryActive ? 'scale-110' : ''}`} />
+                  </div>
+                  <span className={`text-[10px] font-bold mt-0.5 tracking-wide uppercase transition-colors ${
+                    isSecondaryActive ? activeColor : 'text-slate-400'
+                  }`}>
+                    Más
+                  </span>
+                </button>
+              );
+            })()}
+          </div>
         </div>
       </nav>
 
@@ -219,14 +243,15 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           onClick={() => setShowProfileSheet(false)}
         >
           <div 
-            className="w-full bg-white rounded-t-3xl p-6 shadow-2xl animate-slideUp max-h-[80vh] overflow-y-auto border-t border-slate-200/50 pb-8"
+            className="w-full bg-white rounded-t-3xl p-6 shadow-2xl animate-slideUp max-h-[80vh] overflow-y-auto border-t border-slate-200/50"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4" />
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5" />
             <div className="flex justify-between items-center mb-5 border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Cambiar Perfil Familiar</h3>
-              <button onClick={() => setShowProfileSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer">
-                <X size={18} />
+              <button onClick={() => setShowProfileSheet(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer touch-btn">
+                <X size={20} />
               </button>
             </div>
             <div className="flex flex-col gap-3">
@@ -250,22 +275,22 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                       handleUserChange(m.firstName);
                       setShowProfileSheet(false);
                     }}
-                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left font-bold transition-all ${bgClass} cursor-pointer`}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl border text-left font-bold transition-all ${bgClass} cursor-pointer touch-btn`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${
+                      <span className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${
                         m.role === 'Padre' ? 'bg-blue-600' :
                         m.role === 'Madre' ? 'bg-purple-600' : 'bg-orange-500'
                       }`}>
                         {m.firstName[0]}
                       </span>
                       <div>
-                        <p className="text-xs font-black text-slate-800 leading-tight">{m.firstName}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{m.role}</p>
+                        <p className="text-sm font-black text-slate-800 leading-tight">{m.firstName}</p>
+                        <p className="text-xs text-slate-400 font-semibold mt-0.5">{m.role}</p>
                       </div>
                     </div>
                     {isSelected && (
-                      <span className={`h-2 w-2 rounded-full ${
+                      <span className={`h-2.5 w-2.5 rounded-full ${
                         isKid ? 'bg-orange-500' : m.firstName === 'Diana' ? 'bg-purple-500' : 'bg-blue-600'
                       }`} />
                     )}
@@ -284,17 +309,18 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           onClick={() => setShowMoreMenu(false)}
         >
           <div 
-            className="w-full bg-white rounded-t-3xl p-6 shadow-2xl animate-slideUp max-h-[80vh] overflow-y-auto border-t border-slate-200/50 pb-8"
+            className="w-full bg-white rounded-t-3xl p-6 shadow-2xl animate-slideUp max-h-[80vh] overflow-y-auto border-t border-slate-200/50"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4" />
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5" />
             <div className="flex justify-between items-center mb-5 border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 font-black">Más Secciones</h3>
-              <button onClick={() => setShowMoreMenu(false)} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer">
-                <X size={18} />
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Más Secciones</h3>
+              <button onClick={() => setShowMoreMenu(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer touch-btn">
+                <X size={20} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-3 gap-4">
               {mobileSecondaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -309,16 +335,16 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                       setActiveTab(item.id);
                       setShowMoreMenu(false);
                     }}
-                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                    className={`flex flex-col items-center justify-center p-5 rounded-2xl border text-center transition-all cursor-pointer touch-btn ${
                       isActive 
                         ? activeColor 
                         : 'bg-slate-50 border-slate-100 hover:border-slate-200 text-slate-650'
                     }`}
                   >
-                    <div className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-200/40 mb-2">
-                      <Icon size={20} className={isActive ? 'scale-110' : 'opacity-80'} />
+                    <div className="p-3 rounded-xl bg-white shadow-sm border border-slate-200/40 mb-2.5">
+                      <Icon size={22} className={isActive ? 'scale-110' : 'opacity-80'} />
                     </div>
-                    <span className="text-[9px] font-black tracking-wider uppercase leading-none">{item.label}</span>
+                    <span className="text-[10px] font-black tracking-wider uppercase leading-none">{item.label}</span>
                   </button>
                 );
               })}

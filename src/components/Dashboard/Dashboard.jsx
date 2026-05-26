@@ -181,9 +181,9 @@ export default function Dashboard({ setActiveTab }) {
         </div>
         <button
           onClick={handleExportData}
-          className="flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 px-3.5 py-2 rounded-xl transition-all self-start md:self-auto"
+          className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition-all self-start md:self-auto touch-btn"
         >
-          <Download size={14} />
+          <Download size={16} />
           Exportar Informe
         </button>
       </div>
@@ -194,7 +194,7 @@ export default function Dashboard({ setActiveTab }) {
         {/* KPI: TAREAS CADUCADAS */}
         <button 
           onClick={() => setActiveTab('tasks')}
-          className={`flat-card p-4 flex items-center justify-between transition-all group ${
+          className={`flat-card p-5 flex items-center justify-between transition-all group touch-btn ${
             expiredTasksCount > 0 
               ? 'border-red-100 bg-red-50/50' 
               : 'hover:bg-slate-50/40'
@@ -202,30 +202,30 @@ export default function Dashboard({ setActiveTab }) {
         >
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-xl ${expiredTasksCount > 0 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
-              <AlertCircle size={20} />
+              <AlertCircle size={22} />
             </div>
             <div className="text-left">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tareas Caducadas</p>
               <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{expiredTasksCount}</h3>
             </div>
           </div>
-          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
+          <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
         </button>
 
         {/* KPI: CUMPLEAÑOS INFANTIL */}
         <button 
           onClick={() => setActiveTab('calendar')}
-          className="flat-card p-4 flex items-center justify-between hover:bg-slate-50/40 transition-all group"
+          className="flat-card p-5 flex items-center justify-between hover:bg-slate-50/40 transition-all group touch-btn"
         >
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
-              <Cake size={20} />
+              <Cake size={22} />
             </div>
             <div className="text-left">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Próximo Cumpleaños</p>
               {nextBirthday ? (
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-800 truncate max-w-[130px]">
+                  <h3 className="text-sm font-extrabold text-slate-800 truncate max-w-[160px]">
                     {nextBirthday.target}
                   </h3>
                   <p className="text-[10px] text-orange-600 font-bold">Faltan {nextBirthday.daysLeft} días</p>
@@ -235,24 +235,24 @@ export default function Dashboard({ setActiveTab }) {
               )}
             </div>
           </div>
-          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
+          <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
         </button>
 
         {/* KPI: LISTA DE LA COMPRA */}
         <button 
           onClick={() => setActiveTab('shopping')}
-          className="flat-card p-4 flex items-center justify-between hover:bg-slate-50/40 transition-all group"
+          className="flat-card p-5 flex items-center justify-between hover:bg-slate-50/40 transition-all group touch-btn"
         >
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600">
-              <ShoppingCart size={20} />
+              <ShoppingCart size={22} />
             </div>
             <div className="text-left">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lista de la Compra</p>
               <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{pendingShoppingCount} pendientes</h3>
             </div>
           </div>
-          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
+          <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
         </button>
 
       </div>
@@ -366,13 +366,13 @@ export default function Dashboard({ setActiveTab }) {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none w-full">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none w-full">
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Filtrar:</span>
           {membersList.map((member) => (
             <button
               key={member.name}
               onClick={() => setSelectedMember(member.name)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shrink-0 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shrink-0 touch-btn ${
                 selectedMember === member.name
                   ? 'bg-blue-600 border-blue-600 text-white shadow-sm scale-105'
                   : 'bg-white border-slate-200/60 text-slate-500 hover:border-slate-300 hover:text-slate-800'
@@ -409,7 +409,7 @@ export default function Dashboard({ setActiveTab }) {
                     </div>
                     <button 
                       onClick={() => setActiveTab('tasks')}
-                      className="text-xs text-blue-600 font-bold"
+                      className="text-xs text-blue-600 font-bold px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-100 touch-btn"
                     >
                       Ver
                     </button>
@@ -435,7 +435,7 @@ export default function Dashboard({ setActiveTab }) {
               </h3>
               <button 
                 onClick={() => setActiveTab('tasks')}
-                className="text-xs font-bold text-blue-600"
+                className="text-xs font-bold text-blue-600 touch-btn px-2 py-1"
               >
                 Ver todas
               </button>
@@ -489,7 +489,7 @@ export default function Dashboard({ setActiveTab }) {
               </h3>
               <button 
                 onClick={() => setActiveTab('calendar')}
-                className="text-xs font-bold text-blue-600"
+                className="text-xs font-bold text-blue-600 touch-btn px-2 py-1"
               >
                 Calendario
               </button>

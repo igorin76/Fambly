@@ -111,7 +111,7 @@ export default function FinancePanel() {
       </div>
 
       {/* SELECTOR SEGMENTADO */}
-      <div className="segmented-container max-w-xl">
+      <div className="segmented-container max-w-xl overflow-x-auto scrollbar-none">
         {[
           { id: 'presupuestos', label: 'Presupuestos', icon: TrendingUp },
           { id: 'recibos', label: 'Recibos recurrentes', icon: CreditCard },
@@ -122,13 +122,13 @@ export default function FinancePanel() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              className={`touch-btn flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === tab.id
                   ? 'segmented-btn-active'
                   : 'segmented-btn-inactive'
               }`}
             >
-              <Icon size={14} />
+              <Icon size={15} />
               {tab.label}
             </button>
           );
@@ -143,9 +143,9 @@ export default function FinancePanel() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Presupuestos Familiares</h3>
             <button
               onClick={() => setIsBudgetModalOpen(true)}
-              className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+              className="touch-btn flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
             >
-              <Plus size={14} /> Nuevo Presupuesto
+              <Plus size={16} /> Nuevo Presupuesto
             </button>
           </div>
 
@@ -157,16 +157,16 @@ export default function FinancePanel() {
               const barColor = isOver ? 'bg-red-500' : (percentage >= 85 ? 'bg-amber-500' : 'bg-emerald-500');
               
               return (
-                <div key={b.id} className="flat-card p-5 border border-slate-200/60 bg-white flex flex-col justify-between shadow-sm">
+                <div key={b.id} className="flat-card p-5 sm:p-5 border border-slate-200/60 bg-white flex flex-col justify-between shadow-sm">
                   <div>
                     <div className="flex items-center justify-between mb-3.5">
                       <span className="font-extrabold text-slate-700 text-sm">{b.category}</span>
                       <button 
                         onClick={() => deleteBudgetItem(b.id)}
-                        className="text-slate-400 hover:text-rose-500 transition-colors p-0.5"
+                        className="touch-btn action-btn-mobile text-slate-400 hover:text-rose-500 transition-colors p-1.5"
                         title="Eliminar"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
 
@@ -196,13 +196,13 @@ export default function FinancePanel() {
                         />
                         <button
                           onClick={() => handleSaveSpent(b.id)}
-                          className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                          className="touch-btn px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
                         >
                           Ok
                         </button>
                         <button
                           onClick={() => setEditingBudgetId(null)}
-                          className="px-2 py-1 text-slate-400"
+                          className="touch-btn px-2 py-1 text-slate-400"
                         >
                           X
                         </button>
@@ -215,7 +215,7 @@ export default function FinancePanel() {
                             setEditingBudgetId(b.id);
                             setEditingSpentVal(b.spent.toString());
                           }}
-                          className="text-blue-600 hover:text-blue-700 font-bold"
+                          className="touch-btn text-blue-600 hover:text-blue-700 font-bold"
                         >
                           Modificar Gasto
                         </button>
@@ -235,14 +235,14 @@ export default function FinancePanel() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Recibos Mensuales</h3>
             <button
               onClick={() => setIsReceiptModalOpen(true)}
-              className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+              className="touch-btn flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
             >
-              <Plus size={14} /> Nuevo Recibo
+              <Plus size={16} /> Nuevo Recibo
             </button>
           </div>
 
           <div className="flat-card border border-slate-200/60 bg-white overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200/60 text-slate-500 font-bold uppercase tracking-wider">
@@ -269,13 +269,13 @@ export default function FinancePanel() {
                         <div className="flex justify-center">
                           <button
                             onClick={() => toggleReceiptPaid(r.id)}
-                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider transition-all ${
+                            className={`touch-btn flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider transition-all ${
                               r.paid
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
                                 : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-800'
                             }`}
                           >
-                            <Check size={12} />
+                            <Check size={14} />
                             {r.paid ? 'Pagado' : 'Pendiente'}
                           </button>
                         </div>
@@ -283,9 +283,9 @@ export default function FinancePanel() {
                       <td className="p-4 text-right">
                         <button
                           onClick={() => deleteReceipt(r.id)}
-                          className="text-slate-400 hover:text-red-500 p-1"
+                          className="touch-btn action-btn-mobile text-slate-400 hover:text-red-500 p-1.5"
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={15} />
                         </button>
                       </td>
                     </tr>
@@ -303,9 +303,9 @@ export default function FinancePanel() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Trámites y Certificados FNMT/DNI</h3>
             <button
               onClick={() => setIsProcedureModalOpen(true)}
-              className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+              className="touch-btn flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
             >
-              <Plus size={14} /> Nuevo Trámite
+              <Plus size={16} /> Nuevo Trámite
             </button>
           </div>
 
@@ -322,7 +322,7 @@ export default function FinancePanel() {
                     : 'border-slate-200/60';
 
               return (
-                <div key={p.id} className={`flat-card p-5 border flex flex-col justify-between bg-white shadow-sm ${cardStyles}`}>
+                <div key={p.id} className={`flat-card p-5 sm:p-5 border flex flex-col justify-between bg-white shadow-sm ${cardStyles}`}>
                   <div>
                     <div className="flex items-start justify-between gap-2">
                       <span className={`text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
@@ -364,22 +364,22 @@ export default function FinancePanel() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => toggleProcedureCompleted(p.id)}
-                        className={`h-7 w-7 flex items-center justify-center rounded-lg border transition-all ${
+                        className={`touch-btn h-8 w-8 sm:h-7 sm:w-7 flex items-center justify-center rounded-lg border transition-all ${
                           p.completed
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                             : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-700'
                         }`}
                       >
-                        <Check size={13} />
+                        <Check size={15} />
                       </button>
 
                       <button
                         onClick={() => {
                           if (confirm('¿Eliminar este trámite?')) deleteProcedure(p.id);
                         }}
-                        className="h-7 w-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-red-500"
+                        className="touch-btn action-btn-mobile h-8 w-8 sm:h-7 sm:w-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-red-500"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -393,12 +393,15 @@ export default function FinancePanel() {
 
       {/* MODAL NUEVO PRESUPUESTO */}
       {isBudgetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div
+            className="w-full max-w-sm bg-white border border-slate-200 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 sm:pb-6 shadow-xl relative animate-slideUp sm:animate-fadeIn max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Presupuesto</h3>
-              <button onClick={() => setIsBudgetModalOpen(false)} className="text-slate-400 hover:text-slate-700">
-                <X size={18} />
+              <button onClick={() => setIsBudgetModalOpen(false)} className="touch-btn text-slate-400 hover:text-slate-700 p-2.5">
+                <X size={20} />
               </button>
             </div>
             <form onSubmit={handleAddBudget} className="flex flex-col gap-4">
@@ -425,8 +428,8 @@ export default function FinancePanel() {
                 />
               </div>
               <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
+                <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="touch-btn text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
+                <button type="submit" className="touch-btn px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
               </div>
             </form>
           </div>
@@ -435,12 +438,15 @@ export default function FinancePanel() {
 
       {/* MODAL NUEVO RECIBO */}
       {isReceiptModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div
+            className="w-full max-w-sm bg-white border border-slate-200 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 sm:pb-6 shadow-xl relative animate-slideUp sm:animate-fadeIn max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Recibo</h3>
-              <button onClick={() => setIsReceiptModalOpen(false)} className="text-slate-400 hover:text-slate-700">
-                <X size={18} />
+              <button onClick={() => setIsReceiptModalOpen(false)} className="touch-btn text-slate-400 hover:text-slate-700 p-2.5">
+                <X size={20} />
               </button>
             </div>
             <form onSubmit={handleAddReceipt} className="flex flex-col gap-4">
@@ -491,8 +497,8 @@ export default function FinancePanel() {
                 />
               </div>
               <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsReceiptModalOpen(false)} className="text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
+                <button type="button" onClick={() => setIsReceiptModalOpen(false)} className="touch-btn text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
+                <button type="submit" className="touch-btn px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
               </div>
             </form>
           </div>
@@ -501,12 +507,15 @@ export default function FinancePanel() {
 
       {/* MODAL NUEVO TRÁMITE */}
       {isProcedureModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div
+            className="w-full max-w-md bg-white border border-slate-200 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 sm:pb-6 shadow-xl relative animate-slideUp sm:animate-fadeIn max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Trámite</h3>
-              <button onClick={() => setIsProcedureModalOpen(false)} className="text-slate-400 hover:text-slate-700">
-                <X size={18} />
+              <button onClick={() => setIsProcedureModalOpen(false)} className="touch-btn text-slate-400 hover:text-slate-700 p-2.5">
+                <X size={20} />
               </button>
             </div>
             <form onSubmit={handleAddProcedure} className="flex flex-col gap-4">
@@ -556,8 +565,8 @@ export default function FinancePanel() {
                 />
               </div>
               <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsProcedureModalOpen(false)} className="text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
+                <button type="button" onClick={() => setIsProcedureModalOpen(false)} className="touch-btn text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
+                <button type="submit" className="touch-btn px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
               </div>
             </form>
           </div>

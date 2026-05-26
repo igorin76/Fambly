@@ -911,7 +911,7 @@ export default function CalendarView({ setActiveTab }) {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02] shrink-0 self-start sm:self-center"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02] shrink-0 self-start sm:self-center touch-btn"
         >
           <Plus size={15} />
           Nuevo Evento
@@ -933,7 +933,7 @@ export default function CalendarView({ setActiveTab }) {
             <button
               key={filt.id}
               onClick={() => setCategoryFilter(filt.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap touch-btn ${
                 isActive 
                   ? 'bg-slate-800 border-slate-800 text-white shadow shadow-slate-800/10 scale-105' 
                   : `${filt.colorClass} hover:scale-[1.02]`
@@ -964,13 +964,13 @@ export default function CalendarView({ setActiveTab }) {
             <div className="flex items-center gap-1">
               <button 
                 onClick={handlePrevMonth}
-                className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors"
+                className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors touch-btn"
               >
                 <ChevronLeft size={16} />
               </button>
               <button 
                 onClick={handleNextMonth}
-                className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors"
+                className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors touch-btn"
               >
                 <ChevronRight size={16} />
               </button>
@@ -993,7 +993,7 @@ export default function CalendarView({ setActiveTab }) {
                 <div
                   key={index}
                   onClick={() => cell.dateString && setSelectedDate(cell.dateString)}
-                  className={`min-h-[50px] sm:min-h-[60px] p-1.5 rounded-xl border flex flex-col justify-between transition-all cursor-pointer ${
+                  className={`min-h-[50px] sm:min-h-[60px] p-1.5 rounded-xl border flex flex-col justify-between transition-all cursor-pointer touch-btn ${
                     !cell.day 
                       ? 'bg-transparent border-transparent cursor-default' 
                       : isSelected
@@ -1110,17 +1110,17 @@ export default function CalendarView({ setActiveTab }) {
                           <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => handleOpenEdit(evt)}
-                              className="text-slate-400 hover:text-blue-500 p-1 bg-transparent border-0 cursor-pointer transition-colors"
+                              className="text-slate-500 hover:text-blue-600 p-2 bg-transparent border-0 cursor-pointer transition-colors touch-btn"
                               title="Editar Evento"
                             >
-                              <Edit2 size={13} />
+                              <Edit2 size={16} />
                             </button>
                             <button
                               onClick={() => handleDeleteEventClick(evt)}
-                              className="text-slate-400 hover:text-red-500 p-1 bg-transparent border-0 cursor-pointer transition-colors"
+                              className="text-slate-500 hover:text-red-600 p-2 bg-transparent border-0 cursor-pointer transition-colors touch-btn"
                               title="Eliminar Evento"
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         )}
@@ -1154,7 +1154,7 @@ export default function CalendarView({ setActiveTab }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setMobileAgendaTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer touch-btn ${
                     isActive 
                       ? `${tab.colorActive} shadow scale-[1.02]` 
                       : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
@@ -1364,7 +1364,10 @@ export default function CalendarView({ setActiveTab }) {
       {/* MODAL NUEVO EVENTO / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-slideUp sm:animate-fadeIn">
+          <div 
+            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-slideUp sm:animate-fadeIn"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">

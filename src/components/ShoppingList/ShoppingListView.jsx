@@ -211,7 +211,7 @@ export default function ShoppingListView() {
       <div className="segmented-container max-w-xl">
         <button
           onClick={() => setActiveTab('supermercado')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 touch-btn ${
             activeTab === 'supermercado'
               ? 'segmented-btn-active'
               : 'segmented-btn-inactive'
@@ -222,7 +222,7 @@ export default function ShoppingListView() {
         </button>
         <button
           onClick={() => setActiveTab('ropa')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 touch-btn ${
             activeTab === 'ropa'
               ? 'segmented-btn-active'
               : 'segmented-btn-inactive'
@@ -233,7 +233,7 @@ export default function ShoppingListView() {
         </button>
         <button
           onClick={() => setActiveTab('wishlist')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 touch-btn ${
             activeTab === 'wishlist'
               ? 'segmented-btn-active'
               : 'segmented-btn-inactive'
@@ -253,7 +253,7 @@ export default function ShoppingListView() {
           <button
             type="button"
             onClick={() => setShowAddShopItemMobile(!showAddShopItemMobile)}
-            className="lg:hidden flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all mb-1 shadow-sm"
+            className="lg:hidden flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all mb-1 shadow-sm touch-btn"
           >
             <Plus size={14} className={showAddShopItemMobile ? 'rotate-45 transition-transform' : 'transition-transform'} />
             {showAddShopItemMobile ? 'Cerrar Formulario' : 'Añadir Artículo Nuevo'}
@@ -357,13 +357,12 @@ export default function ShoppingListView() {
                                 {item.name}
                               </span>
                             </label>
-                            
-                            <button
+                                                        <button
                               onClick={() => deleteShoppingItem(item.id)}
-                              className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 p-0.5 transition-opacity shrink-0 ml-1"
+                              className="action-btn-mobile text-slate-450 hover:text-red-600 p-2 transition-all shrink-0 ml-1 touch-btn"
                               title="Eliminar"
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={15} />
                             </button>
                           </div>
                         ))}
@@ -496,7 +495,7 @@ export default function ShoppingListView() {
           <button
             type="button"
             onClick={() => setShowAddWishItemMobile(!showAddWishItemMobile)}
-            className="lg:hidden flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all mb-1 shadow-sm"
+            className="lg:hidden flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all mb-1 shadow-sm touch-btn"
           >
             <Plus size={14} className={showAddWishItemMobile ? 'rotate-45 transition-transform' : 'transition-transform'} />
             {showAddWishItemMobile ? 'Cerrar Formulario' : 'Añadir Nuevo Deseo / Regalo'}
@@ -822,22 +821,22 @@ export default function ShoppingListView() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 action-btn-mobile transition-all">
                           <button
                             type="button"
                             onClick={() => handleStartEditWishItem(item)}
-                            className="text-slate-400 hover:text-blue-500 p-0.5 bg-transparent border-0 cursor-pointer"
+                            className="text-slate-500 hover:text-blue-600 p-1.5 bg-transparent border-0 cursor-pointer touch-btn"
                             title="Editar Deseo"
                           >
-                            <Edit size={13} />
+                            <Edit size={15} />
                           </button>
                           <button
                             type="button"
                             onClick={() => deleteWishlistItem(item.id)}
-                            className="text-slate-400 hover:text-red-500 p-0.5 bg-transparent border-0 cursor-pointer"
+                            className="text-slate-550 hover:text-red-600 p-1.5 bg-transparent border-0 cursor-pointer touch-btn"
                             title="Eliminar Deseo"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </div>

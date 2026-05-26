@@ -158,7 +158,7 @@ export default function MemberManager() {
       <div className="segmented-container max-w-md">
         <button
           onClick={() => setActiveSubTab('perfiles')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 touch-btn ${
             activeSubTab === 'perfiles'
               ? 'segmented-btn-active'
               : 'segmented-btn-inactive'
@@ -169,7 +169,7 @@ export default function MemberManager() {
         </button>
         <button
           onClick={() => setActiveSubTab('premios')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 touch-btn ${
             activeSubTab === 'premios'
               ? 'segmented-btn-active'
               : 'segmented-btn-inactive'
@@ -187,7 +187,7 @@ export default function MemberManager() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Miembros Registrados ({members.length})</h3>
             <button
               onClick={handleOpenCreateMember}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 text-xs font-bold transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 text-xs font-bold transition-all touch-btn"
             >
               <Plus size={14} /> Añadir Miembro
             </button>
@@ -218,10 +218,10 @@ export default function MemberManager() {
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => handleOpenEditMember(m)}
-                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all touch-btn"
                         title="Editar Perfil"
                       >
-                        <Edit2 size={13} />
+                        <Edit2 size={15} />
                       </button>
                       <button
                         onClick={() => {
@@ -229,10 +229,10 @@ export default function MemberManager() {
                             deleteMember(m.id);
                           }
                         }}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-2 text-slate-550 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all touch-btn"
                         title="Eliminar"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export default function MemberManager() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Premios para el Modo Gamificado</h3>
             <button
               onClick={() => setIsRewardModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 text-xs font-bold transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 text-xs font-bold transition-all touch-btn"
             >
               <Plus size={14} /> Crear Premio
             </button>
@@ -348,9 +348,9 @@ export default function MemberManager() {
                   </div>
                   <button
                     onClick={() => deleteReward(rew.id)}
-                    className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 shrink-0"
+                    className="text-slate-500 hover:text-red-650 action-btn-mobile transition-all p-1.5 shrink-0 touch-btn"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
@@ -370,12 +370,15 @@ export default function MemberManager() {
       {/* MODAL MIEMBRO (Crear/Editar) / BOTTOM SHEET EN MÓVIL */}
       {isMemberModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh]">
+          <div 
+            className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh]"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
                 {editingMember ? 'Editar Miembro' : 'Añadir Miembro'}
               </h3>
-              <button onClick={() => setIsMemberModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <button onClick={() => setIsMemberModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
                 <X size={18} />
               </button>
             </div>
@@ -555,10 +558,13 @@ export default function MemberManager() {
       {/* MODAL NUEVO PREMIO / BOTTOM SHEET EN MÓVIL */}
       {isRewardModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+          <div 
+            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Premio</h3>
-              <button onClick={() => setIsRewardModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <button onClick={() => setIsRewardModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
                 <X size={18} />
               </button>
             </div>

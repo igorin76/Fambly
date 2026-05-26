@@ -682,7 +682,7 @@ export default function TaskManager() {
         </div>
         <button
           onClick={handleOpenCreate}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02]"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02] touch-btn"
         >
           <Plus size={15} />
           Nueva Tarea
@@ -701,7 +701,7 @@ export default function TaskManager() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 ${
+            className={`flex-1 py-2.5 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn ${
               activeTab === tab.id
                 ? 'segmented-btn-active'
                 : 'segmented-btn-inactive'
@@ -746,7 +746,7 @@ export default function TaskManager() {
                   <button
                     disabled={needsAcceptance} // No se puede completar si no se ha aceptado
                     onClick={(e) => { e.stopPropagation(); toggleTaskCompleted(task.id); }}
-                    className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all mt-0.5 ${
+                    className={`h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all mt-0.5 touch-btn ${
                       task.completed 
                         ? 'bg-blue-600 border-blue-600 text-white' 
                         : needsAcceptance 
@@ -754,7 +754,7 @@ export default function TaskManager() {
                           : 'border-slate-300 hover:border-blue-500'
                     }`}
                   >
-                    {task.completed && <Check size={14} className="stroke-[3]" />}
+                    {task.completed && <Check size={15} className="stroke-[3]" />}
                   </button>
 
                   <div className="min-w-0 flex-1">
@@ -797,7 +797,7 @@ export default function TaskManager() {
                         </span>
                         <button
                           onClick={(e) => { e.stopPropagation(); acceptTask(task.id); }}
-                          className="flex items-center gap-1 px-3 py-1 rounded bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm transition-all"
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm transition-all touch-btn"
                         >
                           <ThumbsUp size={11} />
                           Aceptar Tarea
@@ -821,25 +821,25 @@ export default function TaskManager() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); handleOpenEdit(task); }}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
+                      className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all touch-btn"
                       title="Editar"
                     >
-                      <Edit2 size={13} />
+                      <Edit2 size={15} />
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm('¿Eliminar esta tarea?')) deleteTask(task.id);
                       }}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-btn"
                       title="Eliminar"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={15} />
                     </button>
                     
                     {/* Indicador Chevron de Expansión */}
-                    <span className="p-1 text-slate-400 hover:text-slate-600 transition-colors ml-1">
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    <span className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors ml-1 touch-btn">
+                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </span>
                   </div>
 
@@ -859,7 +859,10 @@ export default function TaskManager() {
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh] animate-slideUp sm:animate-fadeIn">
+          <div 
+            className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh] animate-slideUp sm:animate-fadeIn" 
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
