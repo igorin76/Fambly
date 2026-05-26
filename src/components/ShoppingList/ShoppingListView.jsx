@@ -67,6 +67,9 @@ export default function ShoppingListView() {
   // Estado de filtrado por categorías
   const [selectedFilterCategories, setSelectedFilterCategories] = useState([]);
 
+  // Visor Lightbox para imágenes de la wishlist
+  const [activeImagePreview, setActiveImagePreview] = useState(null);
+
   // Categorías de wishlist guardadas en base de datos
   const existingWishCategories = wishlistCategories.map(c => c.name);
 
@@ -800,7 +803,21 @@ export default function ShoppingListView() {
                             {assignedNames ? `Para: ${assignedNames}` : 'Familiar'}
                           </span>
                           {item.category && (
-                            <span className="text-[8px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded">
+                            <span 
+                              onClick={() => {
+                                if (selectedFilterCategories.includes(item.category)) {
+                                  setSelectedFilterCategories(selectedFilterCategories.filter(c => c !== item.category));
+                                } else {
+                                  setSelectedFilterCategories([...selectedFilterCategories, item.category]);
+                                }
+                              }}
+                              className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded cursor-pointer transition-all hover:scale-105 ${
+                                selectedFilterCategories.includes(item.category)
+                                  ? 'bg-blue-600 text-white border border-blue-600 shadow-sm font-black'
+                                  : 'bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100'
+                              }`}
+                              title={`Filtrar por ${item.category}`}
+                            >
                               {item.category}
                             </span>
                           )}
@@ -827,7 +844,12 @@ export default function ShoppingListView() {
 
                       <div className="flex gap-3 mt-3">
                         {item.photoUrl ? (
-                          <img src={item.photoUrl} alt={item.title} className="h-16 w-16 object-cover rounded-xl border border-slate-100 shrink-0" />
+                          <img 
+                            src={item.photoUrl} 
+                            alt={item.title} 
+                            onClick={() => setActiveImagePreview({ title: item.title, photoUrl: item.photoUrl })}
+                            className="h-16 w-16 object-cover rounded-xl border border-slate-100 shrink-0 cursor-zoom-in hover:scale-105 transition-transform" 
+                          />
                         ) : (
                           <div className="h-16 w-16 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0 text-slate-300">
                             <Gift size={20} />
@@ -872,6 +894,50 @@ export default function ShoppingListView() {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* VISOR LIGHTBOX IMÁGENES (PANTALLA COMPLETA) */}
+      {activeImagePreview && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fadeIn cursor-zoom-out"
+          onClick={() => setActiveImagePreview(null)}
+        >
+          <div className="relative max-w-4xl max-h-[85vh] flex flex-col items-center gap-4" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => setActiveImagePreview(null)}
+              className="absolute -top-10 right-0 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border-0 cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+            
+            <img 
+              src={activeImagePreview.photoUrl} 
+              alt={activeImagePreview.title} 
+              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
+            />
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  try {
+                    const link = document.createElement('a');
+                    link.href = activeImagePreview.photoUrl;
+                    link.download = `${activeImagePreview.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  } catch (e) {
+                    alert("Error al descargar la imagen.");
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow border-0 cursor-pointer"
+              >
+                <Save size={12} />
+                Descargar Imagen
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
