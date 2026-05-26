@@ -1361,6 +1361,21 @@ export default function CalendarView({ setActiveTab }) {
                 />
               </div>
 
+              {type !== 'cumpleanos' && (
+                <div className="flex flex-col gap-1 animate-fadeIn">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Descripción / Notas
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Detalles o notas adicionales..."
+                    value={eventDescription}
+                    onChange={(e) => setEventDescription(e.target.value)}
+                    className="w-full px-3.5 py-2.5 flat-input text-xs"
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fecha de Inicio *</label>
                 <input
@@ -1554,21 +1569,6 @@ export default function CalendarView({ setActiveTab }) {
                   ))}
                 </div>
               </div>
-
-              {type !== 'cumpleanos' && (
-                <div className="flex flex-col gap-1 animate-fadeIn">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    Descripción / Notas
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Detalles o notas adicionales..."
-                    value={eventDescription}
-                    onChange={(e) => setEventDescription(e.target.value)}
-                    className="w-full px-3.5 py-2.5 flat-input text-xs"
-                  />
-                </div>
-              )}
 
               {type === 'cumpleanos' && (
                 <div className="flex flex-col gap-3.5 animate-fadeIn">
