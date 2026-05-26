@@ -574,7 +574,7 @@ export default function ShoppingListView() {
                         onClick={() => handleWishMemberToggle(m.id)}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shrink-0 ${pillBg}`}
                       >
-                        {m.firstName} ({m.role})
+                        {m.firstName}
                       </button>
                     );
                   })}
