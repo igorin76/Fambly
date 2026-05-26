@@ -137,6 +137,16 @@ export default function CalendarView({ setActiveTab }) {
   const [activeImagePreview, setActiveImagePreview] = useState(null);
   const [activeDocumentPreview, setActiveDocumentPreview] = useState(null);
 
+  // Control de adjuntos expandidos por evento en el listado diario
+  const [expandedEventIds, setExpandedEventIds] = useState([]);
+  const toggleEventAttachments = (evtId) => {
+    if (expandedEventIds.includes(evtId)) {
+      setExpandedEventIds(expandedEventIds.filter(id => id !== evtId));
+    } else {
+      setExpandedEventIds([...expandedEventIds, evtId]);
+    }
+  };
+
   // Limpieza de intervalos al desmontar
   useEffect(() => {
     return () => {
@@ -1071,7 +1081,29 @@ export default function CalendarView({ setActiveTab }) {
                             <p className="text-[10px] text-slate-400 font-normal mt-0.5 truncate">
                               Afecta: {evt.target === 'Comun' || evt.target === 'TODOS' ? 'TODOS' : evt.target}
                             </p>
-                            {renderAttachmentsList(evt.attachments, evt.title)}
+                            {evt.attachments && evt.attachments.length > 0 && (
+                              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleEventAttachments(evt.id)}
+                                  className="flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50/60 hover:bg-blue-100/80 px-2 py-1 rounded-lg border border-blue-100/60 transition-all cursor-pointer shadow-sm"
+                                >
+                                  <Paperclip size={10} className="shrink-0" />
+                                  <span>
+                                    {expandedEventIds.includes(evt.id)
+                                      ? 'Ocultar adjuntos'
+                                      : `Ver adjuntos (${evt.attachments.length})`}
+                                  </span>
+                                  <ChevronDown
+                                    size={10}
+                                    className={`transition-transform duration-200 shrink-0 ${
+                                      expandedEventIds.includes(evt.id) ? 'rotate-180' : ''
+                                    }`}
+                                  />
+                                </button>
+                                {expandedEventIds.includes(evt.id) && renderAttachmentsList(evt.attachments, evt.title)}
+                              </div>
+                            )}
                           </div>
                         </div>
                         {!evt.isVirtual && (
