@@ -69,6 +69,7 @@ export default function CalendarView({ setActiveTab }) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [type, setType] = useState('escolar'); // 'escolar', 'cumpleanos', 'hito', 'extraescolar'
+  const [eventDescription, setEventDescription] = useState('');
   const [selectedMembers, setSelectedMembers] = useState([]); // Array de nombres
   const [birthYear, setBirthYear] = useState(''); // Opcional para calcular la edad en cumpleaños
   const [birthdayLabel, setBirthdayLabel] = useState(''); // Etiqueta personalizada para mostrar en el combo
@@ -330,7 +331,7 @@ export default function CalendarView({ setActiveTab }) {
     if (!title.trim() || !date) return;
 
     const targetString = selectedMembers.length > 0 ? selectedMembers.join(', ') : 'TODOS';
-    const finalDescription = type === 'cumpleanos' ? `${birthYear}|${birthdayLabel}` : '';
+    const finalDescription = type === 'cumpleanos' ? `${birthYear}|${birthdayLabel}` : eventDescription.trim();
 
     if (isRecurrent) {
       if (!endDate) {
@@ -395,6 +396,7 @@ export default function CalendarView({ setActiveTab }) {
     setRecurrenceError('');
     setBirthYear('');
     setBirthdayLabel('');
+    setEventDescription('');
   };
 
   // Controlador al hacer clic en el botón de borrar
@@ -614,6 +616,11 @@ export default function CalendarView({ setActiveTab }) {
                             <p className="text-[10px] text-slate-400 font-normal mt-0.5 truncate">
                               Afecta: {evt.target === 'Comun' || evt.target === 'TODOS' ? 'TODOS' : evt.target}
                             </p>
+                            {evt.type !== 'cumpleanos' && evt.description && (
+                              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-normal break-words italic">
+                                {evt.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                         {!evt.isVirtual && (
@@ -778,6 +785,11 @@ export default function CalendarView({ setActiveTab }) {
                   <p className="text-[10px] text-slate-400 font-semibold mt-1">
                     Fecha: {formatDateSpanish(evt.date)} • Afecta: {evt.target === 'Comun' || evt.target === 'TODOS' ? 'TODOS' : evt.target}
                   </p>
+                  {evt.description && (
+                    <p className="text-[10px] text-slate-500 font-normal mt-1.5 leading-normal italic bg-white/50 p-1.5 rounded border border-slate-100/50 break-words">
+                      {evt.description}
+                    </p>
+                  )}
                 </div>
               ))}
               {hitosEventsCurrentMonth.length === 0 && (
@@ -806,6 +818,11 @@ export default function CalendarView({ setActiveTab }) {
                   <p className="text-[10px] text-slate-400 font-semibold mt-1">
                     Fecha: {formatDateSpanish(evt.date)} • Afecta: {evt.target === 'Comun' || evt.target === 'TODOS' ? 'TODOS' : evt.target}
                   </p>
+                  {evt.description && (
+                    <p className="text-[10px] text-slate-500 font-normal mt-1.5 leading-normal italic bg-white/50 p-1.5 rounded border border-slate-100/50 break-words">
+                      {evt.description}
+                    </p>
+                  )}
                 </div>
               ))}
               {schoolEventsCurrentMonth.length === 0 && (
@@ -834,6 +851,11 @@ export default function CalendarView({ setActiveTab }) {
                   <p className="text-[10px] text-slate-400 font-semibold mt-1">
                     Fecha: {formatDateSpanish(evt.date)} • Afecta: {evt.target === 'Comun' || evt.target === 'TODOS' ? 'TODOS' : evt.target}
                   </p>
+                  {evt.description && (
+                    <p className="text-[10px] text-slate-500 font-normal mt-1.5 leading-normal italic bg-white/50 p-1.5 rounded border border-slate-100/50 break-words">
+                      {evt.description}
+                    </p>
+                  )}
                 </div>
               ))}
               {extraEventsCurrentMonth.length === 0 && (
@@ -1063,6 +1085,21 @@ export default function CalendarView({ setActiveTab }) {
                   ))}
                 </div>
               </div>
+
+              {type !== 'cumpleanos' && (
+                <div className="flex flex-col gap-1 animate-fadeIn">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Descripción / Notas
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Detalles o notas adicionales..."
+                    value={eventDescription}
+                    onChange={(e) => setEventDescription(e.target.value)}
+                    className="w-full px-3.5 py-2.5 flat-input text-xs"
+                  />
+                </div>
+              )}
 
               {type === 'cumpleanos' && (
                 <div className="flex flex-col gap-3.5 animate-fadeIn">
