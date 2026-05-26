@@ -1,0 +1,41 @@
+import pg from 'pg';
+const connectionString = "postgresql://postgres.mwzxggqwzmuzzoqsxufo:HomeHubPassword2026!@aws-1-eu-central-1.pooler.supabase.com:6543/postgres";
+
+async function run() {
+  const client = new pg.Client({
+    connectionString: connectionString,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  try {
+    await client.connect();
+    
+    // Add missing columns to announcements
+    console.log("Altering announcements...");
+    await client.query("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS description TEXT;");
+    await client.query("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb;");
+    
+    console.log("Altering wishlist...");
+    await client.query("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS category TEXT;");
+    await client.query("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS member_ids JSONB;");
+
+    // Create wishlist_categories table
+    console.log("Creating wishlist_categories...");
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wishlist_categories (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT,
+        name TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    console.log("Done.");
+  } catch (err) {
+    console.error("Error:", err);
+  } finally {
+    await client.end();
+  }
+}
+
+run();

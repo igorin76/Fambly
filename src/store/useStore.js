@@ -1,0 +1,941 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { supabase } from '../utils/supabaseClient';
+
+// Arrays de datos semilla vacíos
+const initialTasks = [];
+const initialEvents = [];
+const initialShoppingItems = [];
+const initialClothingLogistics = [];
+const initialBudgets = [];
+const initialReceipts = [];
+const initialProcedures = [];
+const initialMembers = [];
+const initialWishlist = [];
+const initialAnnouncements = [];
+const initialRewards = [];
+const initialWishlistCategories = [];
+
+const isSupabaseConfigured = () => {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  return url && url !== 'https://placeholder-project.supabase.co' && !url.includes('placeholder');
+};
+
+export const useStore = create(
+  persist(
+    (set, get) => ({
+      currentUser: 'Igor',
+      setCurrentUser: (user) => set({ currentUser: user }),
+      focusedTaskId: null,
+      setFocusedTaskId: (id) => set({ focusedTaskId: id }),
+
+      tasks: initialTasks,
+      events: initialEvents,
+      shoppingItems: initialShoppingItems,
+      clothingLogistics: initialClothingLogistics,
+      budgets: initialBudgets,
+      receipts: initialReceipts,
+      procedures: initialProcedures,
+      members: initialMembers,
+      wishlist: initialWishlist,
+      announcements: initialAnnouncements,
+      rewards: initialRewards,
+      wishlistCategories: initialWishlistCategories,
+
+      fetchInitialData: async () => {
+        if (!isSupabaseConfigured()) return;
+        try {
+          const [
+            { data: dbTasks, error: errTasks },
+            { data: dbEvents, error: errEvents },
+            { data: dbShopping, error: errShopping },
+            { data: dbMembers, error: errMembers },
+            { data: dbBudgets, error: errBudgets },
+            { data: dbReceipts, error: errReceipts },
+            { data: dbProcedures, error: errProcedures },
+            { data: dbWishlist, error: errWishlist },
+            { data: dbAnnouncements, error: errAnnouncements },
+            { data: dbRewards, error: errRewards },
+            { data: dbWishlistCategories, error: errWishlistCategories }
+          ] = await Promise.all([
+            supabase.from('tasks').select('*'),
+            supabase.from('events').select('*'),
+            supabase.from('shopping_items').select('*'),
+            supabase.from('members').select('*'),
+            supabase.from('budgets').select('*'),
+            supabase.from('receipts').select('*'),
+            supabase.from('procedures').select('*'),
+            supabase.from('wishlist').select('*'),
+            supabase.from('announcements').select('*'),
+            supabase.from('rewards').select('*'),
+            supabase.from('wishlist_categories').select('*')
+          ]);
+
+          if (errTasks) console.error("Error fetching tasks:", errTasks);
+          if (errEvents) console.error("Error fetching events:", errEvents);
+          if (errShopping) console.error("Error fetching shopping items:", errShopping);
+          if (errMembers) console.error("Error fetching members:", errMembers);
+          if (errBudgets) console.error("Error fetching budgets:", errBudgets);
+          if (errReceipts) console.error("Error fetching receipts:", errReceipts);
+          if (errProcedures) console.error("Error fetching procedures:", errProcedures);
+          if (errWishlist) console.error("Error fetching wishlist:", errWishlist);
+          if (errAnnouncements) console.error("Error fetching announcements:", errAnnouncements);
+          if (errRewards) console.error("Error fetching rewards:", errRewards);
+          if (errWishlistCategories) console.error("Error fetching wishlist categories:", errWishlistCategories);
+
+          set({
+            tasks: dbTasks ? dbTasks.map(t => ({
+              id: t.id,
+              title: t.title,
+              description: t.description,
+              scope: t.scope,
+              assignee: t.assignee || 'Todos',
+              children: t.children || [],
+              dueDate: t.due_date,
+              completed: t.completed,
+              createdAt: t.created_at ? t.created_at.split('T')[0] : null,
+              workspaceId: t.workspace_id || 'ws-default-1',
+              category: t.category || 'GENERAL',
+              priority: t.priority || 'MEDIA',
+              assignedMemberIds: t.assigned_member_ids || [],
+              isAccepted: t.is_accepted !== false,
+              attachments: t.attachments || []
+            })) : get().tasks,
+
+            events: dbEvents ? dbEvents.map(e => ({
+              id: e.id,
+              title: e.title,
+              date: e.date,
+              type: e.type,
+              target: e.target,
+              description: e.description
+            })) : get().events,
+
+            shoppingItems: dbShopping ? dbShopping.map(i => ({
+              id: i.id,
+              name: i.name,
+              category: i.category,
+              completed: i.completed
+            })) : get().shoppingItems,
+
+            members: dbMembers ? dbMembers.map(m => ({
+              id: m.id,
+              workspaceId: m.workspace_id,
+              firstName: m.first_name,
+              lastName: m.last_name || '',
+              gender: m.gender || 'M',
+              birthDate: m.birth_date,
+              role: m.role,
+              confidentialInfo: m.confidential_info || '',
+              shoeSize: m.shoe_size || '',
+              shirtSize: m.shirt_size || '',
+              pantsSize: m.pants_size || '',
+              allergies: m.allergies || [],
+              bloodType: m.blood_type || '',
+              dietaryRestrictions: m.dietary_restrictions || [],
+              points: m.points || 0,
+              neededItems: m.needed_items || ''
+            })) : get().members,
+
+            clothingLogistics: dbMembers ? dbMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
+              id: m.id,
+              childName: m.first_name,
+              currentSize: `Zapato: ${m.shoe_size || '-'} / Camisa: ${m.shirt_size || '-'} / Pantalón: ${m.pants_size || '-'}`,
+              neededItems: m.needed_items || ''
+            })) : get().clothingLogistics,
+
+            budgets: dbBudgets ? dbBudgets.map(b => ({
+              id: b.id,
+              category: b.category,
+              limit: Number(b.limit_amount),
+              spent: Number(b.spent)
+            })) : get().budgets,
+
+            receipts: dbReceipts ? dbReceipts.map(r => ({
+              id: r.id,
+              name: r.name,
+              amount: Number(r.amount),
+              period: r.period,
+              nextDueDate: r.next_due_date,
+              paid: r.paid
+            })) : get().receipts,
+
+            procedures: dbProcedures ? dbProcedures.map(p => ({
+              id: p.id,
+              name: p.name,
+              owner: p.owner,
+              expiryDate: p.expiry_date,
+              completed: p.completed,
+              notes: p.notes
+            })) : get().procedures,
+
+            wishlist: dbWishlist ? dbWishlist.map(w => ({
+              id: w.id,
+              workspaceId: w.workspace_id,
+              memberId: w.member_id,
+              memberIds: w.member_ids || (w.member_id ? [w.member_id] : []),
+              title: w.title,
+              url: w.url,
+              price: Number(w.price || 0),
+              photoUrl: w.photo_url,
+              category: w.category || ''
+            })) : get().wishlist,
+
+            wishlistCategories: dbWishlistCategories ? dbWishlistCategories.map(c => ({
+              id: c.id,
+              workspaceId: c.workspace_id,
+              name: c.name
+            })) : get().wishlistCategories,
+
+            announcements: dbAnnouncements ? dbAnnouncements.map(a => ({
+              id: a.id,
+              workspaceId: a.workspace_id,
+              title: a.title,
+              description: a.description || '',
+              contentType: a.content_type,
+              fileUrl: a.file_url,
+              textContent: a.text_content,
+              isEmergency: a.is_emergency,
+              attachments: a.attachments || []
+            })) : get().announcements,
+
+            rewards: dbRewards ? dbRewards.map(rew => ({
+              id: rew.id,
+              workspaceId: rew.workspace_id,
+              title: rew.title,
+              pointsRequired: rew.points_required
+            })) : get().rewards
+          });
+        } catch (e) {
+          console.error("Error al sincronizar con Supabase al iniciar. Usando datos locales.", e);
+        }
+      },
+
+      // --- MUTACIONES DE MIEMBROS ---
+      addMember: async (member) => {
+        const newMember = {
+          ...member,
+          id: `mem-${Date.now()}`,
+          workspaceId: 'ws-default-1',
+          points: member.role === 'Hijo' || member.role === 'Hija' ? 0 : 0,
+          neededItems: '',
+          shoeSize: member.shoeSize || '',
+          shirtSize: member.shirtSize || '',
+          pantsSize: member.pantsSize || '',
+          allergies: member.allergies || [],
+          bloodType: member.bloodType || '',
+          dietaryRestrictions: member.dietaryRestrictions || []
+        };
+        set((state) => {
+          const updatedMembers = [...state.members, newMember];
+          const updatedLogistics = updatedMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
+            id: m.id,
+            childName: m.firstName,
+            currentSize: `Zapato: ${m.shoeSize || '-'} / Camisa: ${m.shirtSize || '-'} / Pantalón: ${m.pantsSize || '-'}`,
+            neededItems: m.neededItems || ''
+          }));
+          return { members: updatedMembers, clothingLogistics: updatedLogistics };
+        });
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('members').insert({
+            id: newMember.id,
+            workspace_id: newMember.workspaceId,
+            first_name: newMember.firstName,
+            last_name: newMember.lastName || '',
+            gender: newMember.gender || 'M',
+            birth_date: newMember.birthDate || null,
+            role: newMember.role,
+            confidential_info: newMember.confidentialInfo || '',
+            shoe_size: newMember.shoeSize || '',
+            shirt_size: newMember.shirtSize || '',
+            pants_size: newMember.pantsSize || '',
+            allergies: newMember.allergies || [],
+            blood_type: newMember.bloodType || '',
+            dietary_restrictions: newMember.dietaryRestrictions || [],
+            points: newMember.points || 0,
+            needed_items: ''
+          });
+        }
+      },
+
+      updateMember: async (id, updatedFields) => {
+        set((state) => {
+          const updatedMembers = state.members.map((m) => (m.id === id ? { ...m, ...updatedFields } : m));
+          const updatedLogistics = updatedMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
+            id: m.id,
+            childName: m.firstName,
+            currentSize: `Zapato: ${m.shoeSize || '-'} / Camisa: ${m.shirtSize || '-'} / Pantalón: ${m.pantsSize || '-'}`,
+            neededItems: m.neededItems || ''
+          }));
+          return { members: updatedMembers, clothingLogistics: updatedLogistics };
+        });
+
+        if (isSupabaseConfigured()) {
+          const updatePayload = {};
+          if (updatedFields.firstName !== undefined) updatePayload.first_name = updatedFields.firstName;
+          if (updatedFields.lastName !== undefined) updatePayload.last_name = updatedFields.lastName;
+          if (updatedFields.gender !== undefined) updatePayload.gender = updatedFields.gender;
+          if (updatedFields.birthDate !== undefined) updatePayload.birth_date = updatedFields.birthDate;
+          if (updatedFields.role !== undefined) updatePayload.role = updatedFields.role;
+          if (updatedFields.confidentialInfo !== undefined) updatePayload.confidential_info = updatedFields.confidentialInfo;
+          if (updatedFields.shoeSize !== undefined) updatePayload.shoe_size = updatedFields.shoeSize;
+          if (updatedFields.shirtSize !== undefined) updatePayload.shirt_size = updatedFields.shirtSize;
+          if (updatedFields.pantsSize !== undefined) updatePayload.pants_size = updatedFields.pantsSize;
+          if (updatedFields.allergies !== undefined) updatePayload.allergies = updatedFields.allergies;
+          if (updatedFields.bloodType !== undefined) updatePayload.blood_type = updatedFields.bloodType;
+          if (updatedFields.dietaryRestrictions !== undefined) updatePayload.dietary_restrictions = updatedFields.dietaryRestrictions;
+          if (updatedFields.points !== undefined) updatePayload.points = updatedFields.points;
+          if (updatedFields.neededItems !== undefined) updatePayload.needed_items = updatedFields.neededItems;
+
+          await supabase.from('members').update(updatePayload).eq('id', id);
+        }
+      },
+
+      deleteMember: async (id) => {
+        set((state) => {
+          const updatedMembers = state.members.filter((m) => m.id !== id);
+          const updatedLogistics = updatedMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
+            id: m.id,
+            childName: m.firstName,
+            currentSize: `Zapato: ${m.shoeSize || '-'} / Camisa: ${m.shirtSize || '-'} / Pantalón: ${m.pantsSize || '-'}`,
+            neededItems: m.neededItems || ''
+          }));
+          return { members: updatedMembers, clothingLogistics: updatedLogistics };
+        });
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('members').delete().eq('id', id);
+        }
+      },
+
+      // --- MUTACIONES DE TAREAS ---
+      addTask: async (task) => {
+        const activeUser = get().currentUser;
+        const membersList = get().members;
+        const activeMember = membersList.find(m => m.firstName === activeUser);
+        const isAdult = activeMember ? (activeMember.role === 'Padre' || activeMember.role === 'Madre') : true;
+        
+        let defaultAccepted = true;
+        if (isAdult && task.assignedMemberIds && task.assignedMemberIds.length === 1 && !task.assignedMemberIds.includes(activeMember?.id)) {
+          defaultAccepted = false;
+        }
+
+        const newTask = {
+          ...task,
+          id: `task-${Date.now()}`,
+          completed: false,
+          createdAt: new Date().toISOString().split('T')[0],
+          workspaceId: 'ws-default-1',
+          category: task.category || 'GENERAL',
+          priority: task.priority || 'MEDIA',
+          assignedMemberIds: task.assignedMemberIds || [],
+          isAccepted: defaultAccepted,
+          attachments: task.attachments || [],
+          assignee: task.assignee || 'Todos',
+          children: task.children || []
+        };
+        
+        set((state) => ({ tasks: [...state.tasks, newTask] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('tasks').insert({
+            id: newTask.id,
+            title: newTask.title,
+            description: newTask.description,
+            scope: newTask.scope,
+            assignee: newTask.assignee,
+            children: newTask.children,
+            due_date: newTask.dueDate || null,
+            completed: newTask.completed,
+            workspace_id: newTask.workspaceId,
+            category: newTask.category,
+            priority: newTask.priority,
+            assigned_member_ids: newTask.assignedMemberIds,
+            is_accepted: newTask.isAccepted,
+            attachments: newTask.attachments
+          });
+        }
+      },
+
+      updateTask: async (taskId, updatedTask) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, ...updatedTask } : task))
+        }));
+
+        if (isSupabaseConfigured()) {
+          const updatePayload = {
+            title: updatedTask.title,
+            description: updatedTask.description,
+            scope: updatedTask.scope,
+            assignee: updatedTask.assignee || 'Todos',
+            children: updatedTask.children || [],
+            due_date: updatedTask.dueDate || null,
+            completed: updatedTask.completed
+          };
+
+          if (updatedTask.category !== undefined) updatePayload.category = updatedTask.category;
+          if (updatedTask.priority !== undefined) updatePayload.priority = updatedTask.priority;
+          if (updatedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = updatedTask.assignedMemberIds;
+          if (updatedTask.isAccepted !== undefined) updatePayload.is_accepted = updatedTask.isAccepted;
+          if (updatedTask.attachments !== undefined) updatePayload.attachments = updatedTask.attachments;
+
+          await supabase.from('tasks').update(updatePayload).eq('id', taskId);
+        }
+      },
+
+      deleteTask: async (taskId) => {
+        set((state) => ({
+          tasks: state.tasks.filter((task) => task.id !== taskId)
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('tasks').delete().eq('id', taskId);
+        }
+      },
+
+      toggleTaskCompleted: async (taskId) => {
+        let isCompleted = false;
+        let taskRef = null;
+        
+        set((state) => {
+          const updated = state.tasks.map((task) => {
+            if (task.id === taskId) {
+              isCompleted = !task.completed;
+              taskRef = { ...task, completed: isCompleted };
+              return taskRef;
+            }
+            return task;
+          });
+          return { tasks: updated };
+        });
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('tasks').update({ completed: isCompleted }).eq('id', taskId);
+          
+          // GAMIFICACIÓN: Si la tarea se completó y está asignada a niños, sumarle puntos al niño! (10 puntos por misión)
+          if (isCompleted && taskRef && taskRef.scope === 'ninos' && taskRef.assignedMemberIds) {
+            for (const childId of taskRef.assignedMemberIds) {
+              await get().awardPoints(childId, 10);
+            }
+          }
+        }
+      },
+
+      acceptTask: async (taskId) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === taskId ? { ...task, isAccepted: true } : task
+          )
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('tasks').update({ is_accepted: true }).eq('id', taskId);
+        }
+      },
+
+      // --- MUTACIONES DE EVENTOS ---
+      addEvent: async (eventOrEvents) => {
+        const eventsArray = Array.isArray(eventOrEvents) ? eventOrEvents : [eventOrEvents];
+        const newEvents = eventsArray.map((evt, idx) => ({
+          ...evt,
+          id: evt.id || `evt-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+          title: evt.title,
+          date: evt.date,
+          type: evt.type,
+          target: evt.target,
+          description: evt.description || ''
+        }));
+
+        set((state) => ({ events: [...state.events, ...newEvents] }));
+
+        if (isSupabaseConfigured()) {
+          const payload = newEvents.map(e => ({
+            id: e.id,
+            title: e.title,
+            date: e.date,
+            type: e.type,
+            target: e.target,
+            description: e.description || ''
+          }));
+          await supabase.from('events').insert(payload);
+        }
+      },
+
+      deleteEvent: async (eventId, deleteAllRecurrences = false) => {
+        const isRecurrent = typeof eventId === 'string' && eventId.startsWith('evt-rec-');
+        
+        if (isRecurrent && deleteAllRecurrences) {
+          const parts = eventId.split('-');
+          const groupPrefix = parts.slice(0, 3).join('-'); // 'evt-rec-timestamp'
+          
+          set((state) => ({
+            events: state.events.filter((evt) => !evt.id.startsWith(groupPrefix))
+          }));
+
+          if (isSupabaseConfigured()) {
+            await supabase.from('events').delete().like('id', `${groupPrefix}%`);
+          }
+        } else {
+          set((state) => ({
+            events: state.events.filter((evt) => evt.id !== eventId)
+          }));
+
+          if (isSupabaseConfigured()) {
+            await supabase.from('events').delete().eq('id', eventId);
+          }
+        }
+      },
+
+      // --- MUTACIONES DE COMPRA ---
+      addShoppingItem: async (name, category) => {
+        const newItem = { id: `shop-${Date.now()}`, name, category, completed: false };
+        set((state) => ({ shoppingItems: [...state.shoppingItems, newItem] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('shopping_items').insert({
+            id: newItem.id,
+            name: newItem.name,
+            category: newItem.category,
+            completed: newItem.completed
+          });
+        }
+      },
+
+      toggleShoppingItem: async (itemId) => {
+        let isCompleted = false;
+        set((state) => {
+          const updated = state.shoppingItems.map((item) => {
+            if (item.id === itemId) {
+              isCompleted = !item.completed;
+              return { ...item, completed: isCompleted };
+            }
+            return item;
+          });
+          return { shoppingItems: updated };
+        });
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('shopping_items').update({ completed: isCompleted }).eq('id', itemId);
+        }
+      },
+
+      deleteShoppingItem: async (itemId) => {
+        set((state) => ({
+          shoppingItems: state.shoppingItems.filter((item) => item.id !== itemId)
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('shopping_items').delete().eq('id', itemId);
+        }
+      },
+
+      clearCompletedShoppingItems: async () => {
+        const completedIds = get().shoppingItems.filter(item => item.completed).map(item => item.id);
+        set((state) => ({
+          shoppingItems: state.shoppingItems.filter((item) => !item.completed)
+        }));
+
+        if (isSupabaseConfigured() && completedIds.length > 0) {
+          await supabase.from('shopping_items').delete().in('id', completedIds);
+        }
+      },
+
+      // --- LOGÍSTICA ROPA ---
+      updateClothingLogistics: async (id, currentSize, neededItems) => {
+        set((state) => ({
+          clothingLogistics: state.clothingLogistics.map((cloth) =>
+            cloth.id === id ? { ...cloth, currentSize, neededItems } : cloth
+          ),
+          members: state.members.map((m) =>
+            m.id === id ? { ...m, neededItems } : m
+          )
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('members').update({
+            needed_items: neededItems
+          }).eq('id', id);
+        }
+      },
+
+      // --- PRESUPUESTOS ---
+      updateBudgetSpent: async (budgetId, amount) => {
+        set((state) => ({
+          budgets: state.budgets.map((b) => (b.id === budgetId ? { ...b, spent: amount } : b))
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('budgets').update({ spent: amount }).eq('id', budgetId);
+        }
+      },
+
+      addBudgetItem: async (category, limit) => {
+        const newBudget = { id: `bud-${Date.now()}`, category, limit, spent: 0 };
+        set((state) => ({ budgets: [...state.budgets, newBudget] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('budgets').insert({
+            id: newBudget.id,
+            category: newBudget.category,
+            limit_amount: newBudget.limit,
+            spent: newBudget.spent
+          });
+        }
+      },
+
+      deleteBudgetItem: async (budgetId) => {
+        set((state) => ({
+          budgets: state.budgets.filter((b) => b.id !== budgetId)
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('budgets').delete().eq('id', budgetId);
+        }
+      },
+
+      // --- RECIBOS ---
+      toggleReceiptPaid: async (receiptId) => {
+        let isPaid = false;
+        set((state) => {
+          const updated = state.receipts.map((r) => {
+            if (r.id === receiptId) {
+              isPaid = !r.paid;
+              return { ...r, paid: isPaid };
+            }
+            return r;
+          });
+          return { receipts: updated };
+        });
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('receipts').update({ paid: isPaid }).eq('id', receiptId);
+        }
+      },
+
+      addReceipt: async (receipt) => {
+        const newReceipt = { ...receipt, id: `rec-${Date.now()}`, paid: false };
+        set((state) => ({ receipts: [...state.receipts, newReceipt] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('receipts').insert({
+            id: newReceipt.id,
+            name: newReceipt.name,
+            amount: newReceipt.amount,
+            period: newReceipt.period,
+            next_due_date: newReceipt.nextDueDate,
+            paid: newReceipt.paid
+          });
+        }
+      },
+
+      deleteReceipt: async (receiptId) => {
+        set((state) => ({
+          receipts: state.receipts.filter((r) => r.id !== receiptId)
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('receipts').delete().eq('id', receiptId);
+        }
+      },
+
+      // --- TRÁMITES ---
+      toggleProcedureCompleted: async (procId) => {
+        let isCompleted = false;
+        set((state) => {
+          const updated = state.procedures.map((p) => {
+            if (p.id === procId) {
+              isCompleted = !p.completed;
+              return { ...p, completed: isCompleted };
+            }
+            return p;
+          });
+          return { procedures: updated };
+        });
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('procedures').update({ completed: isCompleted }).eq('id', procId);
+        }
+      },
+
+      addProcedure: async (procedure) => {
+        const newProc = { ...procedure, id: `proc-${Date.now()}`, completed: false };
+        set((state) => ({ procedures: [...state.procedures, newProc] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('procedures').insert({
+            id: newProc.id,
+            name: newProc.name,
+            owner: newProc.owner,
+            expiry_date: newProc.expiryDate,
+            completed: newProc.completed,
+            notes: newProc.notes
+          });
+        }
+      },
+
+      deleteProcedure: async (procId) => {
+        set((state) => ({
+          procedures: state.procedures.filter((p) => p.id !== procId)
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('procedures').delete().eq('id', procId);
+        }
+      },
+
+      // --- WISHLIST ---
+      addWishlistItem: async (item) => {
+        const newItem = {
+          ...item,
+          id: `wish-${Date.now()}`,
+          workspaceId: 'ws-default-1'
+        };
+        set((state) => ({ wishlist: [...state.wishlist, newItem] }));
+
+        if (isSupabaseConfigured()) {
+          const { error } = await supabase.from('wishlist').insert({
+            id: newItem.id,
+            workspace_id: newItem.workspaceId,
+            member_id: newItem.memberId || null,
+            member_ids: newItem.memberIds || [],
+            title: newItem.title,
+            url: newItem.url || '',
+            price: Number(newItem.price || 0),
+            photo_url: newItem.photoUrl || '',
+            category: newItem.category || null
+          });
+          if (error) {
+            console.error("Error inserting wishlist item into Supabase:", error);
+          }
+        }
+      },
+
+      deleteWishlistItem: async (id) => {
+        set((state) => ({
+          wishlist: state.wishlist.filter((item) => item.id !== id)
+        }));
+
+        if (isSupabaseConfigured()) {
+          const { error } = await supabase.from('wishlist').delete().eq('id', id);
+          if (error) {
+            console.error("Error deleting wishlist item from Supabase:", error);
+          }
+        }
+      },
+
+      addWishlistCategory: async (name) => {
+        const newCat = {
+          id: `cat-${Date.now()}`,
+          workspaceId: 'ws-default-1',
+          name: name.trim()
+        };
+        set((state) => ({ wishlistCategories: [...(state.wishlistCategories || []), newCat] }));
+
+        if (isSupabaseConfigured()) {
+          const { error } = await supabase.from('wishlist_categories').insert({
+            id: newCat.id,
+            workspace_id: newCat.workspaceId,
+            name: newCat.name
+          });
+          if (error) {
+            console.error("Error adding wishlist category to Supabase:", error);
+          }
+        }
+      },
+
+      deleteWishlistCategory: async (id) => {
+        let categoryName = '';
+        set((state) => {
+          const cat = state.wishlistCategories.find(c => c.id === id);
+          if (cat) categoryName = cat.name;
+          
+          const updatedCategories = (state.wishlistCategories || []).filter(c => c.id !== id);
+          const updatedWishlist = state.wishlist.map(item => 
+            item.category === categoryName ? { ...item, category: '' } : item
+          );
+          
+          return {
+            wishlistCategories: updatedCategories,
+            wishlist: updatedWishlist
+          };
+        });
+
+        if (isSupabaseConfigured()) {
+          const { error: errorCat } = await supabase.from('wishlist_categories').delete().eq('id', id);
+          if (errorCat) {
+            console.error("Error deleting wishlist category from Supabase:", errorCat);
+          }
+          
+          if (categoryName) {
+            const { error: errorWish } = await supabase.from('wishlist').update({ category: null }).eq('category', categoryName);
+            if (errorWish) {
+              console.error("Error clearing category from wishlist items in Supabase:", errorWish);
+            }
+          }
+        }
+      },
+
+      // --- ANNOUNCEMENTS (TABLÓN) ---
+      addAnnouncement: async (ann) => {
+        const newAnn = {
+          ...ann,
+          id: `ann-${Date.now()}`,
+          workspaceId: 'ws-default-1',
+          attachments: ann.attachments || []
+        };
+        set((state) => ({ announcements: [...state.announcements, newAnn] }));
+
+        if (isSupabaseConfigured()) {
+          const firstAtt = newAnn.attachments && newAnn.attachments[0];
+          const legacyType = firstAtt ? firstAtt.type : 'text';
+          const legacyFileUrl = firstAtt ? (firstAtt.fileUrl || '') : '';
+          const legacyTextContent = firstAtt ? (firstAtt.textContent || '') : '';
+
+          const { error } = await supabase.from('announcements').insert({
+            id: newAnn.id,
+            workspace_id: newAnn.workspaceId,
+            title: newAnn.title,
+            description: newAnn.description || '',
+            content_type: legacyType,
+            file_url: legacyFileUrl,
+            text_content: legacyTextContent,
+            is_emergency: newAnn.isEmergency || false,
+            attachments: newAnn.attachments || []
+          });
+          if (error) {
+            console.error("Error inserting announcement into Supabase:", error);
+          }
+        }
+      },
+
+      deleteAnnouncement: async (id) => {
+        set((state) => ({
+          announcements: state.announcements.filter((a) => a.id !== id)
+        }));
+
+        if (isSupabaseConfigured()) {
+          const { error } = await supabase.from('announcements').delete().eq('id', id);
+          if (error) {
+            console.error("Error deleting announcement from Supabase:", error);
+          }
+        }
+      },
+
+      updateAnnouncement: async (id, data) => {
+        set((state) => ({
+          announcements: state.announcements.map((a) =>
+            a.id === id ? { ...a, ...data } : a
+          )
+        }));
+
+        if (isSupabaseConfigured()) {
+          const firstAtt = data.attachments && data.attachments[0];
+          const legacyType = firstAtt ? firstAtt.type : 'text';
+          const legacyFileUrl = firstAtt ? (firstAtt.fileUrl || '') : '';
+          const legacyTextContent = firstAtt ? (firstAtt.textContent || '') : '';
+
+          const { error } = await supabase.from('announcements').update({
+            title: data.title,
+            description: data.description || '',
+            content_type: legacyType,
+            file_url: legacyFileUrl,
+            text_content: legacyTextContent,
+            is_emergency: data.isEmergency || false,
+            attachments: data.attachments || []
+          }).eq('id', id);
+          if (error) {
+            console.error("Error updating announcement in Supabase:", error);
+          }
+        }
+      },
+
+      // --- REWARDS (GAMIFICACIÓN) ---
+      addReward: async (rew) => {
+        const newRew = {
+          ...rew,
+          id: `rew-${Date.now()}`,
+          workspaceId: 'ws-default-1'
+        };
+        set((state) => ({ rewards: [...state.rewards, newRew] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('rewards').insert({
+            id: newRew.id,
+            workspace_id: newRew.workspaceId,
+            title: newRew.title,
+            points_required: newRew.pointsRequired
+          });
+        }
+      },
+
+      deleteReward: async (id) => {
+        set((state) => ({
+          rewards: state.rewards.filter((r) => r.id !== id)
+        }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('rewards').delete().eq('id', id);
+        }
+      },
+
+      redeemReward: async (memberId, rewardId, pointsRequired) => {
+        set((state) => {
+          const updatedMembers = state.members.map((m) => {
+            if (m.id === memberId) {
+              return { ...m, points: Math.max(0, m.points - pointsRequired) };
+            }
+            return m;
+          });
+          return { members: updatedMembers };
+        });
+
+        if (isSupabaseConfigured()) {
+          const { data } = await supabase.from('members').select('points').eq('id', memberId).single();
+          if (data) {
+            const newPoints = Math.max(0, (data.points || 0) - pointsRequired);
+            await supabase.from('members').update({ points: newPoints }).eq('id', memberId);
+          }
+        }
+      },
+
+      awardPoints: async (memberId, amount) => {
+        set((state) => {
+          const updatedMembers = state.members.map((m) => {
+            if (m.id === memberId) {
+              return { ...m, points: (m.points || 0) + amount };
+            }
+            return m;
+          });
+          return { members: updatedMembers };
+        });
+
+        if (isSupabaseConfigured()) {
+          const { data } = await supabase.from('members').select('points').eq('id', memberId).single();
+          if (data) {
+            const newPoints = (data.points || 0) + amount;
+            await supabase.from('members').update({ points: newPoints }).eq('id', memberId);
+          }
+        }
+      },
+
+      resetToDefaultData: () => set({
+        tasks: initialTasks,
+        events: initialEvents,
+        shoppingItems: initialShoppingItems,
+        clothingLogistics: initialClothingLogistics,
+        budgets: initialBudgets,
+        receipts: initialReceipts,
+        procedures: initialProcedures,
+        members: initialMembers,
+        wishlist: initialWishlist,
+        announcements: initialAnnouncements,
+        rewards: initialRewards,
+        wishlistCategories: initialWishlistCategories
+      })
+    }),
+    {
+      name: 'homehub-storage-v2',
+    }
+  )
+);
