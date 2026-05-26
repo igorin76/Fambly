@@ -462,6 +462,23 @@ export const useStore = create(
         }
       },
 
+      updateEvent: async (eventId, updatedEvent) => {
+        set((state) => ({
+          events: state.events.map((evt) => (evt.id === eventId ? { ...evt, ...updatedEvent } : evt))
+        }));
+
+        if (isSupabaseConfigured()) {
+          const updatePayload = {};
+          if (updatedEvent.title !== undefined) updatePayload.title = updatedEvent.title;
+          if (updatedEvent.date !== undefined) updatePayload.date = updatedEvent.date;
+          if (updatedEvent.type !== undefined) updatePayload.type = updatedEvent.type;
+          if (updatedEvent.target !== undefined) updatePayload.target = updatedEvent.target;
+          if (updatedEvent.description !== undefined) updatePayload.description = updatedEvent.description;
+
+          await supabase.from('events').update(updatePayload).eq('id', eventId);
+        }
+      },
+
       deleteEvent: async (eventId, deleteAllRecurrences = false) => {
         const isRecurrent = typeof eventId === 'string' && eventId.startsWith('evt-rec-');
         

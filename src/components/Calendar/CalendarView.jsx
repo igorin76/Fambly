@@ -14,11 +14,12 @@ import {
   CheckSquare,
   Sparkles,
   Trophy,
-  ChevronDown
+  ChevronDown,
+  Edit2
 } from 'lucide-react';
 
 export default function CalendarView({ setActiveTab }) {
-  const { events, addEvent, deleteEvent, tasks = [], members = [], setFocusedTaskId } = useStore();
+  const { events, addEvent, updateEvent, deleteEvent, tasks = [], members = [], setFocusedTaskId } = useStore();
   
   const handleEventClick = (evt) => {
     if (evt.type === 'tarea') {
@@ -64,6 +65,9 @@ export default function CalendarView({ setActiveTab }) {
   
   // Pestaña de agenda activa en móviles
   const [mobileAgendaTab, setMobileAgendaTab] = useState('cumpleanos');
+
+  // Estado del evento en edición
+  const [editingEvent, setEditingEvent] = useState(null);
 
   // Estados Formulario Evento
   const [title, setTitle] = useState('');
@@ -326,6 +330,42 @@ export default function CalendarView({ setActiveTab }) {
     return name || bday.target || 'Cumpleaños';
   };
 
+  const handleOpenEdit = (evt) => {
+    setEditingEvent(evt);
+    setTitle(evt.title);
+    setDate(evt.date);
+    setType(evt.type);
+    
+    if (evt.type === 'cumpleanos') {
+      setEventDescription('');
+      if (evt.description && evt.description.includes('|')) {
+        const [by, bl] = evt.description.split('|');
+        setBirthYear(by || '');
+        setBirthdayLabel(bl || '');
+      } else if (evt.description && !isNaN(parseInt(evt.description))) {
+        setBirthYear(evt.description);
+        setBirthdayLabel('');
+      } else {
+        setBirthYear('');
+        setBirthdayLabel(evt.description || '');
+      }
+    } else {
+      setEventDescription(evt.description || '');
+      setBirthYear('');
+      setBirthdayLabel('');
+    }
+
+    if (evt.target === 'TODOS' || evt.target === 'Comun') {
+      setSelectedMembers([]);
+    } else {
+      setSelectedMembers(evt.target.split(', ').filter(Boolean));
+    }
+
+    setIsRecurrent(false);
+    setEndDate('');
+    setIsModalOpen(true);
+  };
+
   const handleSaveEvent = (e) => {
     e.preventDefault();
     if (!title.trim() || !date) return;
@@ -333,7 +373,15 @@ export default function CalendarView({ setActiveTab }) {
     const targetString = selectedMembers.length > 0 ? selectedMembers.join(', ') : 'TODOS';
     const finalDescription = type === 'cumpleanos' ? `${birthYear}|${birthdayLabel}` : eventDescription.trim();
 
-    if (isRecurrent) {
+    if (editingEvent) {
+      updateEvent(editingEvent.id, {
+        title,
+        date,
+        type,
+        target: targetString,
+        description: finalDescription
+      });
+    } else if (isRecurrent) {
       if (!endDate) {
         setRecurrenceError("Por favor, selecciona una fecha límite.");
         return;
@@ -397,6 +445,7 @@ export default function CalendarView({ setActiveTab }) {
     setBirthYear('');
     setBirthdayLabel('');
     setEventDescription('');
+    setEditingEvent(null);
   };
 
   // Controlador al hacer clic en el botón de borrar
@@ -624,12 +673,22 @@ export default function CalendarView({ setActiveTab }) {
                           </div>
                         </div>
                         {!evt.isVirtual && (
-                          <button
-                            onClick={() => handleDeleteEventClick(evt)}
-                            className="text-slate-400 hover:text-red-500 p-1 shrink-0 bg-transparent border-0 cursor-pointer transition-colors"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleOpenEdit(evt)}
+                              className="text-slate-400 hover:text-blue-500 p-1 bg-transparent border-0 cursor-pointer transition-colors"
+                              title="Editar Evento"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEventClick(evt)}
+                              className="text-slate-400 hover:text-red-500 p-1 bg-transparent border-0 cursor-pointer transition-colors"
+                              title="Eliminar Evento"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         )}
                       </div>
                     );
@@ -874,8 +933,16 @@ export default function CalendarView({ setActiveTab }) {
           <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Nuevo Evento</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
+                {editingEvent ? 'Editar Evento' : 'Nuevo Evento'}
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingEvent(null);
+                }} 
+                className="text-slate-400 hover:text-slate-700"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -948,26 +1015,28 @@ export default function CalendarView({ setActiveTab }) {
                 </div>
               </div>
 
-              {/* CHECKBOX PERIODICIDAD */}
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="checkbox"
-                  id="recurrent-check"
-                  checked={isRecurrent}
-                  onChange={(e) => {
-                    setIsRecurrent(e.target.checked);
-                    setRecurrenceError('');
-                    if (e.target.checked && date) {
-                      const dateObj = new Date(date);
-                      setSelectedDays([dateObj.getDay()]);
-                    }
-                  }}
-                  className="rounded text-blue-600 focus:ring-blue-500 border-slate-300 h-4 w-4 cursor-pointer"
-                />
-                <label htmlFor="recurrent-check" className="text-xs font-bold text-slate-700 cursor-pointer">
-                  ¿Hacer este evento periódico/recurrente?
-                </label>
-              </div>
+              {/* CHECKBOX PERIODICIDAD - Oculto en Edición */}
+              {!editingEvent && (
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="checkbox"
+                    id="recurrent-check"
+                    checked={isRecurrent}
+                    onChange={(e) => {
+                      setIsRecurrent(e.target.checked);
+                      setRecurrenceError('');
+                      if (e.target.checked && date) {
+                        const dateObj = new Date(date);
+                        setSelectedDays([dateObj.getDay()]);
+                      }
+                    }}
+                    className="rounded text-blue-600 focus:ring-blue-500 border-slate-300 h-4 w-4 cursor-pointer"
+                  />
+                  <label htmlFor="recurrent-check" className="text-xs font-bold text-slate-700 cursor-pointer">
+                    ¿Hacer este evento periódico/recurrente?
+                  </label>
+                </div>
+              )}
 
               {isRecurrent && (
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col gap-3.5 animate-fadeIn">
@@ -1136,7 +1205,10 @@ export default function CalendarView({ setActiveTab }) {
               <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingEvent(null);
+                  }}
                   className="text-xs font-bold text-slate-400 px-3 py-2"
                 >
                   Cancelar
@@ -1145,7 +1217,7 @@ export default function CalendarView({ setActiveTab }) {
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10"
                 >
-                  Añadir Evento
+                  {editingEvent ? 'Guardar Cambios' : 'Añadir Evento'}
                 </button>
               </div>
 
