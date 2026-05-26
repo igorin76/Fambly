@@ -108,7 +108,8 @@ export const useStore = create(
               date: e.date,
               type: e.type,
               target: e.target,
-              description: e.description
+              description: e.description,
+              attachments: e.attachments || []
             })) : get().events,
 
             shoppingItems: dbShopping ? dbShopping.map(i => ({
@@ -444,7 +445,8 @@ export const useStore = create(
           date: evt.date,
           type: evt.type,
           target: evt.target,
-          description: evt.description || ''
+          description: evt.description || '',
+          attachments: evt.attachments || []
         }));
 
         set((state) => ({ events: [...state.events, ...newEvents] }));
@@ -456,7 +458,8 @@ export const useStore = create(
             date: e.date,
             type: e.type,
             target: e.target,
-            description: e.description || ''
+            description: e.description || '',
+            attachments: e.attachments
           }));
           await supabase.from('events').insert(payload);
         }
@@ -474,6 +477,7 @@ export const useStore = create(
           if (updatedEvent.type !== undefined) updatePayload.type = updatedEvent.type;
           if (updatedEvent.target !== undefined) updatePayload.target = updatedEvent.target;
           if (updatedEvent.description !== undefined) updatePayload.description = updatedEvent.description;
+          if (updatedEvent.attachments !== undefined) updatePayload.attachments = updatedEvent.attachments;
 
           await supabase.from('events').update(updatePayload).eq('id', eventId);
         }
