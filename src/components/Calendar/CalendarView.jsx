@@ -61,6 +61,9 @@ export default function CalendarView({ setActiveTab }) {
   const [currentMonth, setCurrentMonth] = useState(baseDate.getMonth()); 
   const [selectedDate, setSelectedDate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Pestaña de agenda activa en móviles
+  const [mobileAgendaTab, setMobileAgendaTab] = useState('cumpleanos');
 
   // Estados Formulario Evento
   const [title, setTitle] = useState('');
@@ -636,8 +639,41 @@ export default function CalendarView({ setActiveTab }) {
         {/* COLUMNA DERECHA (AGENDAS DEL MES EN CURSO) */}
         <div className="flex flex-col gap-6">
           
+          {/* SELECTOR DE PESTAÑAS PARA MÓVIL */}
+          <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 mb-2 border-b border-slate-100">
+            {[
+              { id: 'cumpleanos', label: 'Cumples', count: birthdaysCurrentMonth.length, icon: Cake, colorActive: 'bg-orange-500 border-orange-500 text-white shadow-orange-500/10' },
+              { id: 'hito', label: 'Hitos', count: hitosEventsCurrentMonth.length, icon: Trophy, colorActive: 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10' },
+              { id: 'escolar', label: 'Colegio', count: schoolEventsCurrentMonth.length, icon: GraduationCap, colorActive: 'bg-blue-500 border-blue-500 text-white shadow-blue-500/10' },
+              { id: 'extraescolar', label: 'Extra', count: extraEventsCurrentMonth.length, icon: Sparkles, colorActive: 'bg-purple-500 border-purple-500 text-white shadow-purple-500/10' }
+            ].map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = mobileAgendaTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setMobileAgendaTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                    isActive 
+                      ? `${tab.colorActive} shadow scale-[1.02]` 
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <TabIcon size={12} />
+                  <span>{tab.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* CUMPLEANOS (SELECCIÓN POR COMBO) */}
-          <div className="flat-card p-5 flex flex-col gap-4 border border-slate-200/60 bg-white shadow-sm">
+          <div className={`flat-card p-5 flex flex-col gap-4 border border-slate-200/60 bg-white shadow-sm ${mobileAgendaTab === 'cumpleanos' ? 'block animate-fadeIn' : 'hidden lg:flex'}`}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                 <Cake className="text-orange-500 h-4.5 w-4.5 shrink-0" />
@@ -650,10 +686,10 @@ export default function CalendarView({ setActiveTab }) {
 
             <div className="flex flex-col gap-3">
               <select
-                value={selectedBirthdayId}
-                onChange={(e) => setSelectedBirthdayId(e.target.value)}
-                disabled={birthdaysCurrentMonth.length === 0}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-700 bg-white focus:outline-none focus:border-orange-300 disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer transition-colors"
+                 value={selectedBirthdayId}
+                 onChange={(e) => setSelectedBirthdayId(e.target.value)}
+                 disabled={birthdaysCurrentMonth.length === 0}
+                 className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-700 bg-white focus:outline-none focus:border-orange-300 disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer transition-colors"
               >
                 {birthdaysCurrentMonth.length === 0 ? (
                   <option value="">No hay cumpleaños este mes</option>
@@ -723,7 +759,7 @@ export default function CalendarView({ setActiveTab }) {
           </div>
 
           {/* HITOS DEL HOGAR DEL MES */}
-          <div className="flat-card p-5 flex flex-col gap-3 border border-slate-200/60 bg-white">
+          <div className={`flat-card p-5 flex flex-col gap-3 border border-slate-200/60 bg-white ${mobileAgendaTab === 'hito' ? 'block animate-fadeIn' : 'hidden lg:flex'}`}>
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
               <Trophy size={14} className="text-emerald-500" /> Hitos de {monthNames[currentMonth]}
             </h3>
@@ -751,7 +787,7 @@ export default function CalendarView({ setActiveTab }) {
           </div>
 
           {/* HITOS COLEGIO DEL MES */}
-          <div className="flat-card p-5 flex flex-col gap-3 border border-slate-200/60 bg-white">
+          <div className={`flat-card p-5 flex flex-col gap-3 border border-slate-200/60 bg-white ${mobileAgendaTab === 'escolar' ? 'block animate-fadeIn' : 'hidden lg:flex'}`}>
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <GraduationCap size={14} className="text-blue-500" /> Colegio en {monthNames[currentMonth]}
             </h3>
@@ -779,7 +815,7 @@ export default function CalendarView({ setActiveTab }) {
           </div>
 
           {/* ACTIVIDADES EXTRAESCOLARES DEL MES */}
-          <div className="flat-card p-5 flex flex-col gap-3 border border-slate-200/60 bg-white">
+          <div className={`flat-card p-5 flex flex-col gap-3 border border-slate-200/60 bg-white ${mobileAgendaTab === 'extraescolar' ? 'block animate-fadeIn' : 'hidden lg:flex'}`}>
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Sparkles size={14} className="text-purple-500" /> Extraescolares en {monthNames[currentMonth]}
             </h3>

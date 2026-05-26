@@ -38,6 +38,10 @@ export default function ShoppingListView() {
 
   const [activeTab, setActiveTab] = useState('supermercado'); 
   
+  // Mobile Collapsible Forms States
+  const [showAddShopItemMobile, setShowAddShopItemMobile] = useState(false);
+  const [showAddWishItemMobile, setShowAddWishItemMobile] = useState(false);
+  
   // Supermercado Form
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('Frescos');
@@ -80,6 +84,7 @@ export default function ShoppingListView() {
     if (!newItemName.trim()) return;
     addShoppingItem(newItemName.trim(), newItemCategory);
     setNewItemName('');
+    setShowAddShopItemMobile(false);
   };
 
   const handleStartEditChild = (child) => {
@@ -146,6 +151,7 @@ export default function ShoppingListView() {
     setWishCategory('');
     setNewWishCategory('');
     setShowNewCategoryInput(false);
+    setShowAddWishItemMobile(false);
   };
 
   const handleCreateCategory = () => {
@@ -211,10 +217,20 @@ export default function ShoppingListView() {
       {activeTab === 'supermercado' && (
         
         /* SUPERMERCADO MÓDULO */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
           
+          {/* Botón para expandir formulario de añadir artículo en móvil */}
+          <button
+            type="button"
+            onClick={() => setShowAddShopItemMobile(!showAddShopItemMobile)}
+            className="lg:hidden flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all mb-1 shadow-sm"
+          >
+            <Plus size={14} className={showAddShopItemMobile ? 'rotate-45 transition-transform' : 'transition-transform'} />
+            {showAddShopItemMobile ? 'Cerrar Formulario' : 'Añadir Artículo Nuevo'}
+          </button>
+
           {/* PANEL AÑADIR */}
-          <div className="flat-card p-5 border border-slate-200/60 bg-white h-fit">
+          <div className={`flat-card p-5 border border-slate-200/60 bg-white h-fit ${showAddShopItemMobile ? 'block animate-fadeIn' : 'hidden lg:block'}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
               <Plus size={15} className="text-blue-500" /> Añadir Artículo
             </h3>
@@ -444,10 +460,20 @@ export default function ShoppingListView() {
       {activeTab === 'wishlist' && (
         
         /* MÓDULO WISHLIST (Ideas de regalos) */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
           
+          {/* Botón para expandir formulario de añadir deseo en móvil */}
+          <button
+            type="button"
+            onClick={() => setShowAddWishItemMobile(!showAddWishItemMobile)}
+            className="lg:hidden flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all mb-1 shadow-sm"
+          >
+            <Plus size={14} className={showAddWishItemMobile ? 'rotate-45 transition-transform' : 'transition-transform'} />
+            {showAddWishItemMobile ? 'Cerrar Formulario' : 'Añadir Nuevo Deseo / Regalo'}
+          </button>
+
           {/* PANEL CREAR IDEA */}
-          <div className="flat-card p-5 border border-slate-200/60 bg-white h-fit shadow-sm">
+          <div className={`flat-card p-5 border border-slate-200/60 bg-white h-fit shadow-sm ${showAddWishItemMobile ? 'block animate-fadeIn' : 'hidden lg:block'}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
               <Gift size={15} className="text-blue-500" /> Añadir Deseo / Regalo
             </h3>
