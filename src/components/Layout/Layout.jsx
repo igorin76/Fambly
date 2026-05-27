@@ -44,7 +44,9 @@ export default function Layout({ children, activeTab, setActiveTab }) {
   const mobileSecondaryNavItems = navItems.slice(4); // Finanzas, Tablón, Miembros
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-slate-50 text-slate-800">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-slate-50 text-slate-800 relative selection:bg-blue-100 selection:text-blue-900">
+      {/* Patrón de fondo opcional sutil */}
+      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50/40 via-slate-50/20 to-slate-100/50 pointer-events-none" />
       
       {/* HEADER DE APLICACIÓN */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 bg-white/95 backdrop-blur-md shadow-sm">
@@ -110,7 +112,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       </header>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8 pb-28 md:pb-6">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 md:pb-6">
         
         {/* SIDEBAR ESCRITORIO (md+) */}
         <aside className="hidden md:flex w-64 flex-col gap-2 pr-6">
@@ -165,11 +167,11 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           BOTTOM NAV PARA MÓVIL — Diseño Premium Floating
           ═══════════════════════════════════════════════════ */}
       <nav 
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none flex justify-center pb-safe"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}
       >
-        <div className="mx-3 mb-2 bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/8 px-2 py-1.5">
-          <div className="flex justify-around items-center max-w-lg mx-auto">
+        <div className="mx-3 w-full max-w-sm bg-white/95 backdrop-blur-md border border-slate-200/60 rounded-[24px] shadow-premium pointer-events-auto px-1.5 py-1">
+          <div className="flex justify-around items-center">
             {mobilePrimaryNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -179,23 +181,23 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 : 'text-purple-600';
 
               const activeBg = activeMember.role === 'Padre' 
-                ? 'bg-blue-50' 
-                : 'bg-purple-50';
+                ? 'bg-blue-50/80' 
+                : 'bg-purple-50/80';
 
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className="flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all touch-btn"
+                  className="flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl transition-all touch-btn min-h-[44px]"
                 >
-                  <div className={`p-2 rounded-xl transition-all duration-200 ${
+                  <div className={`p-1.5 rounded-[12px] transition-all duration-350 ${
                     isActive 
-                      ? `${activeBg} ${activeColor}` 
-                      : 'text-slate-400'
+                      ? `${activeBg} ${activeColor} shadow-sm border border-slate-100` 
+                      : 'text-slate-400 hover:text-slate-650'
                   }`}>
-                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={`transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={`transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
                   </div>
-                  <span className={`text-[10px] font-bold mt-0.5 tracking-wide uppercase transition-colors ${
+                  <span className={`text-[9px] font-bold mt-0.5 tracking-wide transition-colors hidden min-[360px]:block ${
                     isActive ? activeColor : 'text-slate-400'
                   }`}>
                     {item.label}
@@ -211,20 +213,20 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 ? 'text-blue-600' 
                 : 'text-purple-600';
               const activeBg = activeMember.role === 'Padre' 
-                ? 'bg-blue-50' 
-                : 'bg-purple-50';
+                ? 'bg-blue-50/80' 
+                : 'bg-purple-50/80';
 
               return (
                 <button
                   onClick={() => setShowMoreMenu(true)}
-                  className="flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all touch-btn"
+                  className="flex-1 flex flex-col items-center justify-center py-1.5 rounded-xl transition-all touch-btn min-h-[44px]"
                 >
-                  <div className={`p-2 rounded-xl transition-all duration-200 ${
-                    isSecondaryActive ? `${activeBg} ${activeColor}` : 'text-slate-400'
+                  <div className={`p-1.5 rounded-[12px] transition-all duration-350 ${
+                    isSecondaryActive ? `${activeBg} ${activeColor} shadow-sm border border-slate-100` : 'text-slate-400 hover:text-slate-650'
                   }`}>
-                    <MoreHorizontal size={20} strokeWidth={isSecondaryActive ? 2.5 : 2} className={`transition-transform duration-200 ${isSecondaryActive ? 'scale-110' : ''}`} />
+                    <MoreHorizontal size={20} strokeWidth={isSecondaryActive ? 2.5 : 2} className={`transition-transform duration-300 ${isSecondaryActive ? 'scale-110' : ''}`} />
                   </div>
-                  <span className={`text-[10px] font-bold mt-0.5 tracking-wide uppercase transition-colors ${
+                  <span className={`text-[9px] font-bold mt-0.5 tracking-wide transition-colors hidden min-[360px]:block ${
                     isSecondaryActive ? activeColor : 'text-slate-400'
                   }`}>
                     Más

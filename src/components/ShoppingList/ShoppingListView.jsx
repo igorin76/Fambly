@@ -218,7 +218,8 @@ export default function ShoppingListView() {
           }`}
         >
           <ShoppingCart size={14} />
-          Supermercado
+          <span className="hidden min-[360px]:inline">Supermercado</span>
+          <span className="inline min-[360px]:hidden">Súper</span>
         </button>
         <button
           onClick={() => setActiveTab('ropa')}
@@ -229,7 +230,8 @@ export default function ShoppingListView() {
           }`}
         >
           <Shirt size={14} />
-          Ropa y Tallas
+          <span className="hidden min-[360px]:inline">Ropa y Tallas</span>
+          <span className="inline min-[360px]:hidden">Ropa</span>
         </button>
         <button
           onClick={() => setActiveTab('wishlist')}
@@ -240,7 +242,8 @@ export default function ShoppingListView() {
           }`}
         >
           <Gift size={14} />
-          Lista de Deseos
+          <span className="hidden min-[360px]:inline">Lista de Deseos</span>
+          <span className="inline min-[360px]:hidden">Deseos</span>
         </button>
       </div>
 
@@ -259,11 +262,34 @@ export default function ShoppingListView() {
             {showAddShopItemMobile ? 'Cerrar Formulario' : 'Añadir Artículo Nuevo'}
           </button>
 
+          {/* Backdrop para mobile bottom sheet */}
+          {showAddShopItemMobile && (
+            <div 
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-45 lg:hidden animate-fadeIn"
+              onClick={() => setShowAddShopItemMobile(false)}
+            />
+          )}
+
           {/* PANEL AÑADIR */}
-          <div className={`flat-card p-5 border border-slate-200/60 bg-white h-fit ${showAddShopItemMobile ? 'block animate-fadeIn' : 'hidden lg:block'}`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-              <Plus size={15} className="text-blue-500" /> Añadir Artículo
-            </h3>
+          <div 
+            className={`flat-card p-5 border border-slate-200/60 bg-white h-fit 
+              fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-slate-200 p-6 pb-10 max-h-[85vh] overflow-y-auto animate-slideUp
+              lg:relative lg:inset-auto lg:z-0 lg:rounded-2xl lg:p-5 lg:pb-5 lg:max-h-none lg:overflow-visible lg:animate-fadeIn lg:shadow-sm
+              ${showAddShopItemMobile ? 'block' : 'hidden lg:block'}`}
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3 lg:border-none lg:pb-0 lg:mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Plus size={15} className="text-blue-500" /> Añadir Artículo
+              </h3>
+              <button 
+                type="button"
+                onClick={() => setShowAddShopItemMobile(false)}
+                className="lg:hidden text-slate-400 hover:text-slate-700 bg-transparent border-0 cursor-pointer p-1 touch-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
             
             <form onSubmit={handleAddItem} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
@@ -300,7 +326,7 @@ export default function ShoppingListView() {
 
               <button
                 type="submit"
-                className="w-full mt-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10"
+                className="w-full mt-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10 cursor-pointer border-0"
               >
                 Añadir Artículo
               </button>
@@ -501,11 +527,34 @@ export default function ShoppingListView() {
             {showAddWishItemMobile ? 'Cerrar Formulario' : 'Añadir Nuevo Deseo / Regalo'}
           </button>
 
+          {/* Backdrop para mobile bottom sheet */}
+          {showAddWishItemMobile && (
+            <div 
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-45 lg:hidden animate-fadeIn"
+              onClick={handleCancelEditWishItem}
+            />
+          )}
+
           {/* PANEL CREAR IDEA */}
-          <div className={`flat-card p-5 border border-slate-200/60 bg-white h-fit shadow-sm ${showAddWishItemMobile ? 'block animate-fadeIn' : 'hidden lg:block'}`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-              <Gift size={15} className="text-blue-500" /> {editingWishItem ? 'Editar Deseo / Regalo' : 'Añadir Deseo / Regalo'}
-            </h3>
+          <div 
+            className={`flat-card p-5 border border-slate-200/60 bg-white h-fit shadow-sm
+              fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-slate-200 p-6 pb-10 max-h-[85vh] overflow-y-auto animate-slideUp
+              lg:relative lg:inset-auto lg:z-0 lg:rounded-2xl lg:p-5 lg:pb-5 lg:max-h-none lg:overflow-visible lg:animate-fadeIn
+              ${showAddWishItemMobile ? 'block' : 'hidden lg:block'}`}
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3 lg:border-none lg:pb-0 lg:mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Gift size={15} className="text-blue-500" /> {editingWishItem ? 'Editar Deseo / Regalo' : 'Añadir Deseo / Regalo'}
+              </h3>
+              <button 
+                type="button"
+                onClick={handleCancelEditWishItem}
+                className="lg:hidden text-slate-400 hover:text-slate-700 bg-transparent border-0 cursor-pointer p-1 touch-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
             
             <form onSubmit={handleAddWishItem} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
@@ -745,10 +794,10 @@ export default function ShoppingListView() {
 
             {/* PÍLDORAS DE FILTRADO POR CATEGORÍA */}
             {existingWishCategories.length > 0 && (
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none flex-wrap">
+              <div className="flex gap-1.5 overflow-x-auto pb-2 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full lg:flex-wrap lg:overflow-x-visible lg:pb-0">
                 <button
                   onClick={() => setSelectedFilterCategories([])}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all whitespace-nowrap snap-start ${
                     selectedFilterCategories.length === 0
                       ? 'bg-slate-800 border-slate-800 text-white shadow shadow-slate-800/10 scale-105'
                       : 'bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:scale-[1.01]'
@@ -768,7 +817,7 @@ export default function ShoppingListView() {
                           setSelectedFilterCategories([...selectedFilterCategories, cat]);
                         }
                       }}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${
+                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all whitespace-nowrap snap-start ${
                         isActive
                           ? 'bg-blue-600 border-blue-600 text-white shadow shadow-blue-500/10 scale-105'
                           : 'bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:scale-[1.01]'

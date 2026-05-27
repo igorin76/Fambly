@@ -111,25 +111,26 @@ export default function FinancePanel() {
       </div>
 
       {/* SELECTOR SEGMENTADO */}
-      <div className="segmented-container max-w-xl overflow-x-auto scrollbar-none">
+      <div className="segmented-container max-w-xl overflow-x-auto pb-1.5 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full lg:pb-0">
         {[
-          { id: 'presupuestos', label: 'Presupuestos', icon: TrendingUp },
-          { id: 'recibos', label: 'Recibos recurrentes', icon: CreditCard },
-          { id: 'tramites', label: 'Certificados y Trámites', icon: FileText }
+          { id: 'presupuestos', label: 'Presupuestos', mobileLabel: 'Presupuestos', icon: TrendingUp },
+          { id: 'recibos', label: 'Recibos recurrentes', mobileLabel: 'Recibos', icon: CreditCard },
+          { id: 'tramites', label: 'Certificados y Trámites', mobileLabel: 'Trámites', icon: FileText }
         ].map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`touch-btn flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              className={`touch-btn flex-1 py-2 px-3 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 shrink-0 snap-start ${
                 activeTab === tab.id
                   ? 'segmented-btn-active'
                   : 'segmented-btn-inactive'
               }`}
             >
               <Icon size={15} />
-              {tab.label}
+              <span className="hidden min-[360px]:inline">{tab.label}</span>
+              <span className="inline min-[360px]:hidden">{tab.mobileLabel}</span>
             </button>
           );
         })}

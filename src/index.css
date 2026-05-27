@@ -42,16 +42,16 @@
 
 /* ─── Cards & Containers ─── */
 .flat-card {
-  @apply bg-white border border-slate-100 rounded-2xl shadow-sm transition-all duration-200;
+  @apply bg-white/95 backdrop-blur-md border border-white/60 shadow-premium rounded-3xl transition-all duration-300;
 }
 
 .flat-card:hover {
-  @apply border-slate-200 shadow-md;
+  @apply shadow-premium-hover border-white/80 bg-white;
 }
 
 @media (max-width: 767px) {
   .flat-card {
-    @apply rounded-xl;
+    @apply rounded-2xl shadow-sm backdrop-blur-none bg-white;
   }
 }
 
@@ -172,50 +172,28 @@
   animation: scaleIn 0.2s var(--transition-spring) forwards;
 }
 
-/* ─── Mobile Typography Scale ─── */
-@media (max-width: 767px) {
-  .text-\[7px\],
-  .text-\[8px\] {
-    font-size: 11px !important;
-    line-height: 1.3;
-  }
-  .text-\[9px\] {
-    font-size: 12px !important;
-    line-height: 1.3;
-  }
-  .text-\[10px\] {
-    font-size: 13px !important;
-    line-height: 1.3;
-  }
-  .text-\[11px\] {
-    font-size: 14px !important;
-    line-height: 1.4;
-  }
-  .text-xs {
-    font-size: 14px !important;
-    line-height: 1.4;
-  }
-  .text-sm {
-    font-size: 15.5px !important;
-    line-height: 1.5;
-  }
-  .text-base {
-    font-size: 17px !important;
-    line-height: 1.5;
-  }
-  .text-lg {
-    font-size: 19px !important;
-    line-height: 1.4;
-  }
-  .text-xl {
-    font-size: 21px !important;
-    line-height: 1.3;
-  }
-  .text-2xl {
-    font-size: 24px !important;
-    line-height: 1.2;
-  }
+
+/* ─── Mobile Utilities & Helper Classes ─── */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom Sheet Container */
+.bottom-sheet {
+  @apply fixed inset-x-0 bottom-0 bg-white rounded-t-[24px] shadow-premium z-50 transition-transform duration-300 ease-out;
+  padding-bottom: calc(var(--safe-bottom) + 16px);
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+}
+
+.bottom-sheet-backdrop {
+  @apply fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity duration-300;
+}
+
 
 /* ─── Mobile Safe Areas ─── */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

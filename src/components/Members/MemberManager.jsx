@@ -165,7 +165,8 @@ export default function MemberManager() {
           }`}
         >
           <Users size={14} />
-          Perfiles Familiares
+          <span className="hidden min-[360px]:inline">Perfiles Familiares</span>
+          <span className="inline min-[360px]:hidden">Perfiles</span>
         </button>
         <button
           onClick={() => setActiveSubTab('premios')}
@@ -176,7 +177,8 @@ export default function MemberManager() {
           }`}
         >
           <Gift size={14} />
-          Premios Niños
+          <span className="hidden min-[360px]:inline">Premios Niños</span>
+          <span className="inline min-[360px]:hidden">Premios</span>
         </button>
       </div>
 

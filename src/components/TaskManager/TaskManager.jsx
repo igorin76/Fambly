@@ -690,18 +690,18 @@ export default function TaskManager() {
       </div>
 
       {/* TABS DE ÁMBITO (Segmented Control) */}
-      <div className="segmented-container max-w-2xl overflow-x-auto scrollbar-none flex-wrap gap-1">
+      <div className="segmented-container max-w-2xl overflow-x-auto pb-1.5 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full lg:flex-wrap lg:pb-0 gap-1">
         {[
           { id: 'todos', label: 'Todas' },
           { id: 'individual', label: 'Mis Tareas' },
           { id: 'aceptacion', label: `Por Aceptar ${pendingAcceptanceCount > 0 ? `(${pendingAcceptanceCount})` : ''}` },
           { id: 'matrimonial', label: 'Conjuntas' },
-          { id: 'ninos', label: 'Niños / Misiones' }
+          { id: 'ninos', label: 'Niños' }
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn ${
+            className={`flex-1 py-2.5 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn snap-start ${
               activeTab === tab.id
                 ? 'segmented-btn-active'
                 : 'segmented-btn-inactive'
@@ -868,7 +868,11 @@ export default function TaskManager() {
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
                 {editingTask ? 'Editar Tarea' : 'Crear Tarea'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <button 
+                type="button"
+                onClick={() => setIsModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-700 bg-transparent border-0 p-1.5 cursor-pointer touch-btn"
+              >
                 <X size={18} />
               </button>
             </div>

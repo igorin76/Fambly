@@ -34,6 +34,11 @@ export default {
       },
       backdropBlur: {
         xs: '2px',
+      },
+      boxShadow: {
+        'premium': '0 8px 30px rgba(0, 0, 0, 0.04)',
+        'premium-hover': '0 12px 40px rgba(0, 0, 0, 0.08)',
+        'glass': '0 4px 30px rgba(0, 0, 0, 0.05)',
       }
     },
   },

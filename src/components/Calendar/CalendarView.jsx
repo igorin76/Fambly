@@ -919,7 +919,7 @@ export default function CalendarView({ setActiveTab }) {
       </div>
 
       {/* FILTROS DE CATEGORÍA (PILLS) */}
-      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-slate-100">
+      <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-100 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full">
         {[
           { id: 'all', label: 'Todos los eventos', count: allEvents.length, colorClass: 'border-slate-200 text-slate-600 bg-slate-50' },
           { id: 'cumpleanos', label: 'Cumpleaños', count: allEvents.filter(e => e.type === 'cumpleanos').length, colorClass: 'border-orange-200 text-orange-600 bg-orange-50/50' },
@@ -933,7 +933,7 @@ export default function CalendarView({ setActiveTab }) {
             <button
               key={filt.id}
               onClick={() => setCategoryFilter(filt.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap touch-btn ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap touch-btn snap-start ${
                 isActive 
                   ? 'bg-slate-800 border-slate-800 text-white shadow shadow-slate-800/10 scale-105' 
                   : `${filt.colorClass} hover:scale-[1.02]`
@@ -978,9 +978,9 @@ export default function CalendarView({ setActiveTab }) {
           </div>
 
           {/* Grilla */}
-          <div className="grid grid-cols-7 gap-1 text-center mt-2">
+          <div className="grid grid-cols-7 gap-[2px] sm:gap-1 text-center mt-2">
             {daysOfWeek.map(d => (
-              <div key={d} className="text-xs font-bold text-slate-400 py-1">{d}</div>
+              <div key={d} className="text-[10px] sm:text-xs font-bold text-slate-400 py-1">{d}</div>
             ))}
 
             {calendarCells.map((cell, index) => {
@@ -993,20 +993,20 @@ export default function CalendarView({ setActiveTab }) {
                 <div
                   key={index}
                   onClick={() => cell.dateString && setSelectedDate(cell.dateString)}
-                  className={`min-h-[50px] sm:min-h-[60px] p-1.5 rounded-xl border flex flex-col justify-between transition-all cursor-pointer touch-btn ${
+                  className={`min-h-[44px] sm:min-h-[60px] p-1 sm:p-1.5 rounded-lg sm:rounded-xl border flex flex-col justify-between transition-all cursor-pointer touch-btn ${
                     !cell.day 
                       ? 'bg-transparent border-transparent cursor-default' 
                       : isSelected
-                        ? 'bg-blue-50 border-blue-200 text-blue-600'
+                        ? 'bg-blue-50 border-blue-200 text-blue-600 font-extrabold'
                         : isToday
                           ? 'bg-blue-50/50 border-blue-500 text-blue-600 font-extrabold'
                           : 'bg-white border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200'
                   }`}
                 >
-                  <span className="text-xs font-bold self-start">{cell.day}</span>
+                  <span className="text-[10px] sm:text-xs font-bold self-start">{cell.day}</span>
                   
                   {hasEvents && (
-                    <div className="flex gap-1 justify-center pb-0.5 flex-wrap max-w-full">
+                    <div className="flex gap-0.5 sm:gap-1 justify-center pb-0.5 flex-wrap max-w-full">
                       {dayEvents.map((evt, idx) => (
                         <span 
                           key={idx} 
@@ -1027,18 +1027,24 @@ export default function CalendarView({ setActiveTab }) {
 
           {/* Eventos seleccionados */}
           {selectedDate && (
-            <div className="mt-2 p-4 bg-slate-50 border border-slate-200 rounded-xl animate-fadeIn">
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Eventos para el {formatDateSpanish(selectedDate)}
-                </h4>
-                <button 
-                  onClick={() => setSelectedDate(null)}
-                  className="text-xs font-bold text-blue-600"
-                >
-                  Ocultar
-                </button>
-              </div>
+            <>
+              {/* Backdrop para mobile */}
+              <div 
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden animate-fadeIn"
+                onClick={() => setSelectedDate(null)}
+              />
+              <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-white border-t border-slate-200/60 p-5 max-h-[70vh] overflow-y-auto animate-slideUp md:relative md:inset-auto md:z-0 md:rounded-xl md:bg-slate-50 md:border md:border-slate-200 md:p-4 md:mt-2 md:max-h-none md:overflow-visible md:animate-fadeIn">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Eventos para el {formatDateSpanish(selectedDate)}
+                  </h4>
+                  <button 
+                    onClick={() => setSelectedDate(null)}
+                    className="text-xs font-bold text-blue-600 px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-100 md:bg-transparent md:border-none md:p-0"
+                  >
+                    Ocultar
+                  </button>
+                </div>
               {selectedDateEvents.length > 0 ? (
                 <div className="flex flex-col gap-2">
                   {selectedDateEvents.map(evt => {
@@ -1131,7 +1137,8 @@ export default function CalendarView({ setActiveTab }) {
               ) : (
                 <p className="text-xs text-slate-400 text-center py-2">No hay eventos planificados que coincidan.</p>
               )}
-            </div>
+              </div>
+            </>
           )}
 
         </div>
@@ -1140,7 +1147,7 @@ export default function CalendarView({ setActiveTab }) {
         <div className="flex flex-col gap-6">
           
           {/* SELECTOR DE PESTAÑAS PARA MÓVIL */}
-          <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 mb-2 border-b border-slate-100">
+          <div className="lg:hidden flex gap-2 overflow-x-auto pb-2 mb-2 border-b border-slate-100 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full">
             {[
               { id: 'cumpleanos', label: 'Cumples', count: birthdaysCurrentMonth.length, icon: Cake, colorActive: 'bg-orange-500 border-orange-500 text-white shadow-orange-500/10' },
               { id: 'hito', label: 'Hitos', count: hitosEventsCurrentMonth.length, icon: Trophy, colorActive: 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10' },
@@ -1154,7 +1161,7 @@ export default function CalendarView({ setActiveTab }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setMobileAgendaTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer touch-btn ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer touch-btn snap-start ${
                     isActive 
                       ? `${tab.colorActive} shadow scale-[1.02]` 
                       : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'

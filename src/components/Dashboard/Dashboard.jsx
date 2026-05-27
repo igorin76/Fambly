@@ -189,70 +189,70 @@ export default function Dashboard({ setActiveTab }) {
       </div>
 
       {/* KPI'S DE UN VISTAZO (Cajas Planas Estilo Captura) */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         
         {/* KPI: TAREAS CADUCADAS */}
         <button 
           onClick={() => setActiveTab('tasks')}
-          className={`flat-card p-5 flex items-center justify-between transition-all group touch-btn ${
+          className={`flat-card p-3.5 sm:p-5 flex items-center justify-between transition-all group touch-btn ${
             expiredTasksCount > 0 
               ? 'border-red-100 bg-red-50/50' 
               : 'hover:bg-slate-50/40'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl ${expiredTasksCount > 0 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
-              <AlertCircle size={22} />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className={`p-2.5 sm:p-3 rounded-xl ${expiredTasksCount > 0 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
+              <AlertCircle size={18} className="sm:w-[22px] sm:h-[22px]" />
             </div>
             <div className="text-left">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tareas Caducadas</p>
-              <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{expiredTasksCount}</h3>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Tareas Caducadas</p>
+              <h3 className="text-base sm:text-xl font-extrabold text-slate-900 mt-1">{expiredTasksCount}</h3>
             </div>
           </div>
-          <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
+          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
         </button>
 
         {/* KPI: CUMPLEAÑOS INFANTIL */}
         <button 
           onClick={() => setActiveTab('calendar')}
-          className="flat-card p-5 flex items-center justify-between hover:bg-slate-50/40 transition-all group touch-btn"
+          className="flat-card p-3.5 sm:p-5 flex items-center justify-between hover:bg-slate-50/40 transition-all group touch-btn"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
-              <Cake size={22} />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-orange-100 text-orange-600">
+              <Cake size={18} className="sm:w-[22px] sm:h-[22px]" />
             </div>
             <div className="text-left">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Próximo Cumpleaños</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Próximo Cumpleaños</p>
               {nextBirthday ? (
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-800 truncate max-w-[160px]">
+                <div className="mt-1">
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-800 truncate max-w-[100px] sm:max-w-[160px] leading-tight">
                     {nextBirthday.target}
                   </h3>
-                  <p className="text-[10px] text-orange-600 font-bold">Faltan {nextBirthday.daysLeft} días</p>
+                  <p className="text-[9px] text-orange-600 font-bold leading-none mt-0.5">Faltan {nextBirthday.daysLeft} d.</p>
                 </div>
               ) : (
-                <h3 className="text-sm font-extrabold text-slate-800">No programado</h3>
+                <h3 className="text-xs sm:text-sm font-extrabold text-slate-800 mt-1">No programado</h3>
               )}
             </div>
           </div>
-          <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
+          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
         </button>
 
         {/* KPI: LISTA DE LA COMPRA */}
         <button 
           onClick={() => setActiveTab('shopping')}
-          className="flat-card p-5 flex items-center justify-between hover:bg-slate-50/40 transition-all group touch-btn"
+          className="flat-card p-3.5 sm:p-5 flex items-center justify-between hover:bg-slate-50/40 transition-all group touch-btn col-span-2 sm:col-span-1"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600">
-              <ShoppingCart size={22} />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-100 text-emerald-600">
+              <ShoppingCart size={18} className="sm:w-[22px] sm:h-[22px]" />
             </div>
             <div className="text-left">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lista de la Compra</p>
-              <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{pendingShoppingCount} pendientes</h3>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Lista de la Compra</p>
+              <h3 className="text-base sm:text-xl font-extrabold text-slate-900 mt-1">{pendingShoppingCount} pendientes</h3>
             </div>
           </div>
-          <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
+          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
         </button>
 
       </div>
@@ -366,13 +366,13 @@ export default function Dashboard({ setActiveTab }) {
           />
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none w-full">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full">
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Filtrar:</span>
           {membersList.map((member) => (
             <button
               key={member.name}
               onClick={() => setSelectedMember(member.name)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shrink-0 touch-btn ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shrink-0 touch-btn snap-start ${
                 selectedMember === member.name
                   ? 'bg-blue-600 border-blue-600 text-white shadow-sm scale-105'
                   : 'bg-white border-slate-200/60 text-slate-500 hover:border-slate-300 hover:text-slate-800'
