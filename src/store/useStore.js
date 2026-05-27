@@ -342,11 +342,18 @@ export const useStore = create(
         const activeUser = get().currentUser;
         const membersList = get().members;
         const activeMember = membersList.find(m => m.firstName === activeUser);
-        const isAdult = activeMember ? (activeMember.role === 'Padre' || activeMember.role === 'Madre') : true;
+        const isCreatorAdmin = activeMember ? activeMember.isAdmin : false;
         
         let defaultAccepted = true;
-        if (isAdult && task.assignedMemberIds && task.assignedMemberIds.length === 1 && !task.assignedMemberIds.includes(activeMember?.id)) {
-          defaultAccepted = false;
+        if (isCreatorAdmin && task.assignedMemberIds) {
+          // Obtener los IDs de otros administradores
+          const otherAdminIds = membersList.filter(m => m.isAdmin && m.id !== activeMember?.id).map(m => m.id);
+          // Si asigna a otro administrador, requiere aceptación
+          const assignsOtherAdmin = task.assignedMemberIds.some(id => otherAdminIds.includes(id));
+          
+          if (assignsOtherAdmin) {
+            defaultAccepted = false;
+          }
         }
 
         const newTask = {
@@ -391,28 +398,65 @@ export const useStore = create(
       },
 
       updateTask: async (taskId, updatedTask) => {
+        const activeUser = get().currentUser;
+        const membersList = get().members;
+        const activeMember = membersList.find(m => m.firstName === activeUser);
+        const isCreatorAdmin = activeMember ? activeMember.isAdmin : false;
+        
+        let finalAccepted = updatedTask.isAccepted;
+
+        if (finalAccepted === undefined && isCreatorAdmin && updatedTask.assignedMemberIds) {
+          const oldTask = get().tasks.find(t => t.id === taskId);
+          const oldAssigned = oldTask ? oldTask.assignedMemberIds || [] : [];
+          const newAssigned = updatedTask.assignedMemberIds;
+          
+          // Verificar si ha cambiado la asignación
+          const assignmentsChanged = JSON.stringify([...oldAssigned].sort()) !== JSON.stringify([...newAssigned].sort());
+          
+          if (assignmentsChanged) {
+            const otherAdminIds = membersList.filter(m => m.isAdmin && m.id !== activeMember?.id).map(m => m.id);
+            const assignsOtherAdmin = newAssigned.some(id => otherAdminIds.includes(id));
+            
+            if (assignsOtherAdmin) {
+              finalAccepted = false;
+            } else {
+              // Si ya no se asigna a otro administrador, se puede activar
+              finalAccepted = true;
+            }
+          } else {
+            // Si no ha cambiado la asignación, mantenemos el valor actual
+            finalAccepted = oldTask ? oldTask.isAccepted : true;
+          }
+        }
+
+        // Si finalAccepted se ha definido, lo agregamos a la tarea
+        const mergedTask = { ...updatedTask };
+        if (finalAccepted !== undefined) {
+          mergedTask.isAccepted = finalAccepted;
+        }
+
         set((state) => ({
-          tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, ...updatedTask } : task))
+          tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, ...mergedTask } : task))
         }));
 
         if (isSupabaseConfigured()) {
           const updatePayload = {
-            title: updatedTask.title,
-            description: updatedTask.description,
-            scope: updatedTask.scope,
-            assignee: updatedTask.assignee || 'Todos',
-            children: updatedTask.children || [],
-            due_date: updatedTask.dueDate || null,
-            completed: updatedTask.completed
+            title: mergedTask.title,
+            description: mergedTask.description,
+            scope: mergedTask.scope,
+            assignee: mergedTask.assignee || 'Todos',
+            children: mergedTask.children || [],
+            due_date: mergedTask.dueDate || null,
+            completed: mergedTask.completed
           };
 
-          if (updatedTask.category !== undefined) updatePayload.category = updatedTask.category;
-          if (updatedTask.priority !== undefined) updatePayload.priority = updatedTask.priority;
-          if (updatedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = updatedTask.assignedMemberIds;
-          if (updatedTask.isAccepted !== undefined) updatePayload.is_accepted = updatedTask.isAccepted;
-          if (updatedTask.attachments !== undefined) updatePayload.attachments = updatedTask.attachments;
-          if (updatedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = updatedTask.completedSuccessfully;
-          if (updatedTask.completedAt !== undefined) updatePayload.completed_at = updatedTask.completedAt;
+          if (mergedTask.category !== undefined) updatePayload.category = mergedTask.category;
+          if (mergedTask.priority !== undefined) updatePayload.priority = mergedTask.priority;
+          if (mergedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = mergedTask.assignedMemberIds;
+          if (mergedTask.isAccepted !== undefined) updatePayload.is_accepted = mergedTask.isAccepted;
+          if (mergedTask.attachments !== undefined) updatePayload.attachments = mergedTask.attachments;
+          if (mergedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = mergedTask.completedSuccessfully;
+          if (mergedTask.completedAt !== undefined) updatePayload.completed_at = mergedTask.completedAt;
 
           await supabase.from('tasks').update(updatePayload).eq('id', taskId);
         }

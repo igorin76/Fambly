@@ -727,6 +727,186 @@ export default function TaskManager() {
   // Contador de pendientes de aceptar
   const pendingAcceptanceCount = tasks.filter(t => t.assignedMemberIds && t.assignedMemberIds.includes(activeMember.id) && !t.isAccepted).length;
 
+  // Renderizado optimizado y modular de cada tarjeta de tarea
+  const renderTaskCard = (task) => {
+    const criticality = getCriticality(task.dueDate, task.priority, task.completed, task.completedSuccessfully);
+    const needsAcceptance = !task.isAccepted && task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+    
+    const scopeNames = task.assignedMemberIds && task.assignedMemberIds.length > 0 
+      ? task.assignedMemberIds.map(mid => members.find(m => m.id === mid)?.firstName).join(', ')
+      : 'Todos';
+
+    const isFocused = task.id === focusedTaskId;
+    
+    // Clases CSS dinámicas para la tarjeta
+    let cardClasses = "";
+    if (task.completed) {
+      cardClasses = task.completedSuccessfully
+        ? 'bg-emerald-50/20 border-l-4 border-l-emerald-500'
+        : 'bg-rose-50/20 border-l-4 border-l-rose-500';
+    } else if (isFocused) {
+      cardClasses = 'bg-indigo-50/80 border-2 border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.01]';
+    } else if (!task.isAccepted) {
+      // Diseño para tareas pendientes de aceptar
+      cardClasses = 'bg-amber-50/30 border-l-4 border-l-amber-500 border border-amber-200/50 hover:bg-amber-50/50 animate-pulse';
+    } else {
+      cardClasses = 'hover:bg-slate-50/10';
+    }
+
+    const isExpanded = expandedTaskIds.includes(task.id);
+    
+    return (
+      <div 
+        key={task.id}
+        id={`task-card-${task.id}`}
+        onClick={() => toggleExpandTask(task.id)}
+        className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 cursor-pointer hover:bg-slate-50/40 select-none ${cardClasses}`}
+      >
+        
+        {/* LADO IZQUIERDO: CHECKBOX Y TEXTOS */}
+        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+          <button
+            disabled={!task.isAccepted} // No se puede completar si no se ha aceptado
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (task.completed) {
+                toggleTaskCompleted(task.id, null, true);
+              } else {
+                setResolvingTaskId(task.id);
+              }
+            }}
+            className={`h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all mt-0.5 touch-btn ${
+              task.completed 
+                ? task.completedSuccessfully
+                  ? 'bg-emerald-600 border-emerald-600 text-white' 
+                  : 'bg-rose-600 border-rose-600 text-white'
+                : !task.isAccepted 
+                  ? 'border-amber-300 bg-amber-50 text-amber-500 cursor-not-allowed'
+                  : 'border-slate-300 hover:border-blue-500'
+            }`}
+          >
+            {task.completed && (
+              task.completedSuccessfully 
+                ? <Check size={15} className="stroke-[3]" /> 
+                : <X size={15} className="stroke-[3]" />
+            )}
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className={`text-sm font-bold truncate ${task.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-800'}`}>
+                {task.title}
+              </p>
+              
+              {/* Indicador de adjuntos colapsado */}
+              {!isExpanded && task.attachments && task.attachments.length > 0 && (
+                <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center gap-0.5 font-bold" title={`${task.attachments.length} adjuntos`}>
+                  <Paperclip size={10} />
+                  {task.attachments.length}
+                </span>
+              )}
+
+              {/* Categoría Badge - Siempre visible */}
+              <span className="text-[8px] bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded text-slate-500 font-bold uppercase tracking-wider">
+                {task.category}
+              </span>
+              
+              {/* Ámbito/Asignados - Siempre visible */}
+              <span className="text-[9px] text-slate-400 font-bold">
+                👤 {scopeNames}
+              </span>
+            </div>
+            {task.description && (
+              <p className={`text-xs mt-1 text-slate-400 ${task.completed && 'line-through'}`}>
+                {task.description}
+              </p>
+            )}
+            {task.completed && task.completedAt && (
+              <p className={`text-[10px] font-bold mt-1.5 flex items-center gap-1.5 ${
+                task.completedSuccessfully ? 'text-emerald-700' : 'text-rose-700'
+              }`}>
+                <Clock size={11} className="shrink-0" />
+                {task.completedSuccessfully 
+                  ? `Completada el ${formatDateSpanish(task.completedAt.split('T')[0])} a las ${new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                  : `Marcada como no completada el ${formatDateSpanish(task.completedAt.split('T')[0])} a las ${new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                }
+              </p>
+            )}
+            {/* Contenido Adjunto Múltiple (Estilo Tablón) */}
+            {isExpanded && renderAttachmentsList(task.attachments, task.title)}
+
+            {/* Alerta de Aceptación */}
+            {!task.isAccepted && (
+              <div className="mt-2.5 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                {needsAcceptance ? (
+                  <>
+                    <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                      Delegada - Pendiente de aceptar
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); acceptTask(task.id); }}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm transition-all hover:scale-[1.02] touch-btn"
+                    >
+                      <ThumbsUp size={11} />
+                      Aceptar Tarea
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
+                    <Clock size={10} />
+                    Espera de aceptación por {scopeNames}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* LADO DERECHO: CRITICIDAD Y ACCIONES */}
+        <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
+          
+          {/* Badge de Matriz de Criticidad - Siempre visible */}
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1 whitespace-nowrap ${criticality.color}`}>
+            {criticality.level === 'critica' && <AlertTriangle size={11} className="shrink-0" />}
+            {criticality.level === 'advertencia' && <Info size={11} className="shrink-0" />}
+            {task.dueDate ? formatDateSpanish(task.dueDate) : 'Sin fecha'}
+          </span>
+
+          {/* Acciones */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleOpenEdit(task); }}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all touch-btn"
+              title="Editar"
+            >
+              <Edit2 size={15} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm('¿Eliminar esta tarea?')) deleteTask(task.id);
+              }}
+              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-btn"
+              title="Eliminar"
+            >
+              <Trash2 size={15} />
+            </button>
+            
+            {/* Indicador Chevron de Expansión */}
+            <span className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors ml-1 touch-btn">
+              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
+  // Dividir tareas filtradas en activas/completadas y pendientes de aceptar
+  const activeAndCompletedTasks = sortedTasks.filter(t => t.isAccepted !== false);
+  const tasksToAccept = sortedTasks.filter(t => t.isAccepted === false);
+
   return (
     <div className="flex flex-col gap-6">
       
@@ -750,185 +930,97 @@ export default function TaskManager() {
         {[
           { id: 'todos', label: 'Todas' },
           { id: 'individual', label: 'Mis Tareas' },
-          { id: 'aceptacion', label: `Por Aceptar ${pendingAcceptanceCount > 0 ? `(${pendingAcceptanceCount})` : ''}` },
           { id: 'matrimonial', label: 'Conjuntas' },
-          { id: 'ninos', label: 'Niños' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn snap-start ${
-              activeTab === tab.id
-                ? 'segmented-btn-active'
-                : 'segmented-btn-inactive'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { id: 'ninos', label: 'Niños' },
+          { id: 'aceptacion', label: 'Por Aceptar' }
+        ].map((tab) => {
+          const isAceptacionTab = tab.id === 'aceptacion';
+          const isActive = activeTab === tab.id;
+          
+          let btnClasses = "flex-1 py-2.5 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn snap-start flex items-center justify-center gap-1.5 ";
+          
+          if (isActive) {
+            if (isAceptacionTab) {
+              btnClasses += "bg-amber-500 text-white shadow-md shadow-amber-500/10";
+            } else {
+              btnClasses += "segmented-btn-active";
+            }
+          } else {
+            if (isAceptacionTab && pendingAcceptanceCount > 0) {
+              btnClasses += "bg-amber-50 hover:bg-amber-100/80 text-amber-700 border border-amber-200/50 shadow-sm relative";
+            } else {
+              btnClasses += "segmented-btn-inactive";
+            }
+          }
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={btnClasses}
+            >
+              <span>{tab.label}</span>
+              {isAceptacionTab && pendingAcceptanceCount > 0 && (
+                <div className="flex items-center gap-1 ml-0.5">
+                  <span className="flex items-center justify-center bg-amber-200 text-amber-800 text-[10px] w-4 h-4 rounded-full font-black">
+                    {pendingAcceptanceCount}
+                  </span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* LISTADO DE TAREAS */}
       {sortedTasks.length > 0 ? (
-        <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-slate-200/50 bg-white">
-          {sortedTasks.map((task) => {
-            const criticality = getCriticality(task.dueDate, task.priority, task.completed, task.completedSuccessfully);
-            const needsAcceptance = !task.isAccepted && task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
-            
-            const scopeNames = task.assignedMemberIds && task.assignedMemberIds.length > 0 
-              ? task.assignedMemberIds.map(mid => members.find(m => m.id === mid)?.firstName).join(', ')
-              : 'Todos';
+        <div className="flex flex-col gap-4">
+          
+          {/* Bloque de Tareas Activas / Completadas */}
+          {activeAndCompletedTasks.length > 0 && (
+            <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-slate-200/50 bg-white">
+              {activeAndCompletedTasks.map((task) => renderTaskCard(task))}
+            </div>
+          )}
 
-            const isFocused = task.id === focusedTaskId;
-            const cardClasses = task.completed 
-              ? task.completedSuccessfully
-                ? 'bg-emerald-50/20 border-l-4 border-l-emerald-500'
-                : 'bg-rose-50/20 border-l-4 border-l-rose-500'
-              : isFocused 
-                ? 'bg-indigo-50/80 border-2 border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.01]' 
-                : needsAcceptance 
-                  ? 'bg-amber-50/20 border-l-4 border-l-amber-400 animate-pulse' 
-                  : 'hover:bg-slate-50/10';
-
-            const isExpanded = expandedTaskIds.includes(task.id);
-            return (
-              <div 
-                key={task.id}
-                id={`task-card-${task.id}`}
-                onClick={() => toggleExpandTask(task.id)}
-                className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 cursor-pointer hover:bg-slate-50/40 select-none ${cardClasses}`}
-              >
-                
-                {/* LADO IZQUIERDO: CHECKBOX Y TEXTOS */}
-                <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                  <button
-                    disabled={needsAcceptance} // No se puede completar si no se ha aceptado
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      if (task.completed) {
-                        toggleTaskCompleted(task.id, null, true);
-                      } else {
-                        setResolvingTaskId(task.id);
-                      }
-                    }}
-                    className={`h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all mt-0.5 touch-btn ${
-                      task.completed 
-                        ? task.completedSuccessfully
-                          ? 'bg-emerald-600 border-emerald-600 text-white' 
-                          : 'bg-rose-600 border-rose-600 text-white'
-                        : needsAcceptance 
-                          ? 'border-amber-300 bg-amber-50 text-amber-500 cursor-not-allowed'
-                          : 'border-slate-300 hover:border-blue-500'
-                    }`}
-                  >
-                    {task.completed && (
-                      task.completedSuccessfully 
-                        ? <Check size={15} className="stroke-[3]" /> 
-                        : <X size={15} className="stroke-[3]" />
-                    )}
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className={`text-sm font-bold truncate ${task.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-800'}`}>
-                        {task.title}
-                      </p>
-                      
-                      {/* Indicador de adjuntos colapsado */}
-                      {!isExpanded && task.attachments && task.attachments.length > 0 && (
-                        <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center gap-0.5 font-bold" title={`${task.attachments.length} adjuntos`}>
-                          <Paperclip size={10} />
-                          {task.attachments.length}
-                        </span>
-                      )}
-
-                      {/* Categoría Badge - Siempre visible */}
-                      <span className="text-[8px] bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded text-slate-500 font-bold uppercase tracking-wider">
-                        {task.category}
-                      </span>
-                      
-                      {/* Ámbito/Asignados - Siempre visible */}
-                      <span className="text-[9px] text-slate-400 font-bold">
-                        👤 {scopeNames}
-                      </span>
-                    </div>
-                    {task.description && (
-                      <p className={`text-xs mt-1 text-slate-400 ${task.completed && 'line-through'}`}>
-                        {task.description}
-                      </p>
-                    )}
-                    {task.completed && task.completedAt && (
-                      <p className={`text-[10px] font-bold mt-1.5 flex items-center gap-1.5 ${
-                        task.completedSuccessfully ? 'text-emerald-700' : 'text-rose-700'
-                      }`}>
-                        <Clock size={11} className="shrink-0" />
-                        {task.completedSuccessfully 
-                          ? `Completada el ${formatDateSpanish(task.completedAt.split('T')[0])} a las ${new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
-                          : `Marcada como no completada el ${formatDateSpanish(task.completedAt.split('T')[0])} a las ${new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
-                        }
-                      </p>
-                    )}
-                    {/* Contenido Adjunto Múltiple (Estilo Tablón) */}
-                    {isExpanded && renderAttachmentsList(task.attachments, task.title)}
-
-                    {/* Alerta de Aceptación */}
-                    {needsAcceptance && (
-                      <div className="mt-2.5 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider bg-amber-100/55 px-2 py-0.5 rounded border border-amber-200/60">
-                          Delegada - Pendiente de aceptar
-                        </span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); acceptTask(task.id); }}
-                          className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm transition-all touch-btn"
-                        >
-                          <ThumbsUp size={11} />
-                          Aceptar Tarea
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* LADO DERECHO: CRITICIDAD Y ACCIONES */}
-                <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
-                  
-                  {/* Badge de Matriz de Criticidad - Siempre visible */}
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1 whitespace-nowrap ${criticality.color}`}>
-                    {criticality.level === 'critica' && <AlertTriangle size={11} className="shrink-0" />}
-                    {criticality.level === 'advertencia' && <Info size={11} className="shrink-0" />}
-                    {task.dueDate ? formatDateSpanish(task.dueDate) : 'Sin fecha'}
+          {/* Separador y Cabecera de Tareas Pendientes de Aceptar en listado general */}
+          {activeTab !== 'aceptacion' && tasksToAccept.length > 0 && (
+            <div className="mt-6 flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                   </span>
-
-                  {/* Acciones */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(task); }}
-                      className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all touch-btn"
-                      title="Editar"
-                    >
-                      <Edit2 size={15} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm('¿Eliminar esta tarea?')) deleteTask(task.id);
-                      }}
-                      className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-btn"
-                      title="Eliminar"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                    
-                    {/* Indicador Chevron de Expansión */}
-                    <span className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors ml-1 touch-btn">
-                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                    </span>
-                  </div>
-
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-600">
+                    Tareas Pendientes de Aceptar (Sin Iniciar)
+                  </h4>
+                  <span className="text-[10px] bg-amber-50 border border-amber-200/50 text-amber-700 font-bold px-2 py-0.5 rounded-full">
+                    {tasksToAccept.length}
+                  </span>
                 </div>
+                <p className="text-[10px] text-slate-400 hidden sm:block">
+                  Requieren confirmación entre administradores
+                </p>
               </div>
-            );
-          })}
+              
+              <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-amber-200/60 bg-amber-50/5">
+                {tasksToAccept.map((task) => renderTaskCard(task))}
+              </div>
+            </div>
+          )}
+
+          {/* En la pestaña de aceptación, renderizamos directamente las tareas a aceptar sin cabecera extra */}
+          {activeTab === 'aceptacion' && tasksToAccept.length > 0 && (
+            <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-amber-200/60 bg-white">
+              {tasksToAccept.map((task) => renderTaskCard(task))}
+            </div>
+          )}
+
         </div>
       ) : (
         <div className="flat-card p-12 text-center flex flex-col items-center justify-center border border-slate-200/50">
