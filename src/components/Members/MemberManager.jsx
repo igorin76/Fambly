@@ -24,7 +24,10 @@ export default function MemberManager() {
     rewards, 
     addReward, 
     deleteReward,
-    awardPoints
+    awardPoints,
+    familyRoles = [],
+    addFamilyRole,
+    deleteFamilyRole
   } = useStore();
 
   const [activeSubTab, setActiveSubTab] = useState('perfiles');
@@ -32,7 +35,11 @@ export default function MemberManager() {
   // Modales
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+  const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+
+  // Estado Formulario Rol
+  const [newRoleName, setNewRoleName] = useState('');
 
   // Estados Formulario Miembro
   const [firstName, setFirstName] = useState('');
@@ -64,7 +71,7 @@ export default function MemberManager() {
     setLastName('');
     setGender('M');
     setBirthDate('');
-    setRole('Hijo');
+    setRole(familyRoles[0]?.name || 'Hijo');
     setConfidentialInfo('');
     setShoSize('');
     setShirtSize('');
@@ -193,18 +200,42 @@ export default function MemberManager() {
       {/* CONTENIDO PERFILES */}
       {activeSubTab === 'perfiles' && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Miembros Registrados ({members.length})</h3>
-            <button
-              onClick={handleOpenCreateMember}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 text-xs font-bold transition-all touch-btn"
-            >
-              <Plus size={14} /> Añadir Miembro
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsRolesModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 text-slate-655 border border-slate-200 hover:bg-slate-200 text-xs font-bold transition-all touch-btn"
+              >
+                Gestionar Roles
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenCreateMember}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold transition-all shadow-md shadow-blue-500/10 touch-btn"
+              >
+                <Plus size={14} /> Añadir Miembro
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {members.map((m) => {
+            {[...members].sort((a, b) => {
+              // 1. Administradores primero
+              if (a.isAdmin && !b.isAdmin) return -1;
+              if (!a.isAdmin && b.isAdmin) return 1;
+
+              // 2. Ordenar por edad (nacimiento ascendente: mayor a menor)
+              if (a.birthDate && b.birthDate) {
+                return new Date(a.birthDate) - new Date(b.birthDate);
+              }
+              if (a.birthDate && !b.birthDate) return -1;
+              if (!a.birthDate && b.birthDate) return 1;
+
+              // Fallback
+              return a.firstName.localeCompare(b.firstName);
+            }).map((m) => {
               const isKid = m.role === 'Hijo' || m.role === 'Hija';
               const isAdult = m.role === 'Padre' || m.role === 'Madre';
               
@@ -439,13 +470,20 @@ export default function MemberManager() {
                     onChange={(e) => setRole(e.target.value)}
                     className="w-full px-3 py-2 flat-input text-xs text-slate-600"
                   >
-                    <option value="Padre">Padre</option>
-                    <option value="Madre">Madre</option>
-                    <option value="Hijo">Hijo</option>
-                    <option value="Hija">Hija</option>
-                    <option value="Abuelo">Abuelo</option>
-                    <option value="Abuela">Abuela</option>
-                    <option value="Mascota">Mascota</option>
+                    {familyRoles.map(r => (
+                      <option key={r.id} value={r.name}>{r.name}</option>
+                    ))}
+                    {familyRoles.length === 0 && (
+                      <>
+                        <option value="Padre">Padre</option>
+                        <option value="Madre">Madre</option>
+                        <option value="Hijo">Hijo</option>
+                        <option value="Hija">Hija</option>
+                        <option value="Abuelo">Abuelo</option>
+                        <option value="Abuela">Abuela</option>
+                        <option value="Mascota">Mascota</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -692,6 +730,85 @@ export default function MemberManager() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL GESTIONAR ROLES FAMILIARES / BOTTOM SHEET EN MÓVIL */}
+      {isRolesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div 
+            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Gestionar Roles</h3>
+              <button onClick={() => setIsRolesModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {/* Formulario Añadir Rol */}
+              <div className="flex flex-col gap-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nuevo Rol Familiar</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Ej: Tío, Tía, Primo..."
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                    className="flex-1 px-3 py-2 flat-input text-xs"
+                  />
+                  <button
+                    type="button"
+                    disabled={!newRoleName.trim()}
+                    onClick={async () => {
+                      await addFamilyRole(newRoleName);
+                      setNewRoleName('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Añadir
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de Roles */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Roles Disponibles ({familyRoles.length})</span>
+                <div className="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1 bg-white p-1 rounded-xl border border-slate-100">
+                  {familyRoles.map((role) => (
+                    <div key={role.id} className="flex items-center justify-between px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200/50 hover:bg-slate-100/50 transition-colors">
+                      <span className="text-xs font-bold text-slate-700">{role.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`¿Eliminar el rol "${role.name}"? Los miembros existentes con este rol no se eliminarán.`)) {
+                            deleteFamilyRole(role.id);
+                          }
+                        }}
+                        className="text-slate-450 hover:text-red-650 p-1 rounded transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {familyRoles.length === 0 && (
+                    <p className="text-xs text-slate-400 italic text-center py-4">No hay roles familiares creados.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsRolesModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-sm transition-all"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

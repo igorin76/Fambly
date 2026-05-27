@@ -41,6 +41,7 @@ export const useStore = create(
       announcements: initialAnnouncements,
       rewards: initialRewards,
       wishlistCategories: initialWishlistCategories,
+      familyRoles: [],
 
       fetchInitialData: async () => {
         if (!isSupabaseConfigured()) return;
@@ -56,7 +57,8 @@ export const useStore = create(
             { data: dbWishlist, error: errWishlist },
             { data: dbAnnouncements, error: errAnnouncements },
             { data: dbRewards, error: errRewards },
-            { data: dbWishlistCategories, error: errWishlistCategories }
+            { data: dbWishlistCategories, error: errWishlistCategories },
+            { data: dbRoles, error: errRoles }
           ] = await Promise.all([
             supabase.from('tasks').select('*'),
             supabase.from('events').select('*'),
@@ -68,7 +70,8 @@ export const useStore = create(
             supabase.from('wishlist').select('*'),
             supabase.from('announcements').select('*'),
             supabase.from('rewards').select('*'),
-            supabase.from('wishlist_categories').select('*')
+            supabase.from('wishlist_categories').select('*'),
+            supabase.from('family_roles').select('*')
           ]);
 
           if (errTasks) console.error("Error fetching tasks:", errTasks);
@@ -82,6 +85,7 @@ export const useStore = create(
           if (errAnnouncements) console.error("Error fetching announcements:", errAnnouncements);
           if (errRewards) console.error("Error fetching rewards:", errRewards);
           if (errWishlistCategories) console.error("Error fetching wishlist categories:", errWishlistCategories);
+          if (errRoles) console.error("Error fetching family roles:", errRoles);
 
           set({
             tasks: dbTasks ? dbTasks.map(t => ({
@@ -209,7 +213,20 @@ export const useStore = create(
               workspaceId: rew.workspace_id,
               title: rew.title,
               pointsRequired: rew.points_required
-            })) : get().rewards
+            })) : get().rewards,
+
+            familyRoles: dbRoles && dbRoles.length > 0 ? dbRoles.map(r => ({
+              id: r.id,
+              name: r.name
+            })) : [
+              { id: 'role-padre', name: 'Padre' },
+              { id: 'role-madre', name: 'Madre' },
+              { id: 'role-hijo', name: 'Hijo' },
+              { id: 'role-hija', name: 'Hija' },
+              { id: 'role-abuelo', name: 'Abuelo' },
+              { id: 'role-abuela', name: 'Abuela' },
+              { id: 'role-mascota', name: 'Mascota' }
+            ]
           });
         } catch (e) {
           console.error("Error al sincronizar con Supabase al iniciar. Usando datos locales.", e);
@@ -996,6 +1013,30 @@ export const useStore = create(
         }
       },
 
+      addFamilyRole: async (name) => {
+        const newRole = {
+          id: `role-${Date.now()}`,
+          name: name.trim()
+        };
+        set((state) => ({ familyRoles: [...state.familyRoles, newRole] }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('family_roles').insert({
+            id: newRole.id,
+            workspace_id: 'ws-default-1',
+            name: newRole.name
+          });
+        }
+      },
+
+      deleteFamilyRole: async (id) => {
+        set((state) => ({ familyRoles: state.familyRoles.filter(r => r.id !== id) }));
+
+        if (isSupabaseConfigured()) {
+          await supabase.from('family_roles').delete().eq('id', id);
+        }
+      },
+
       resetToDefaultData: () => set({
         tasks: initialTasks,
         events: initialEvents,
@@ -1008,7 +1049,8 @@ export const useStore = create(
         wishlist: initialWishlist,
         announcements: initialAnnouncements,
         rewards: initialRewards,
-        wishlistCategories: initialWishlistCategories
+        wishlistCategories: initialWishlistCategories,
+        familyRoles: []
       })
     }),
     {
