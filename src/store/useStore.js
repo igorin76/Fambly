@@ -88,25 +88,33 @@ export const useStore = create(
           if (errRoles) console.error("Error fetching family roles:", errRoles);
 
           set({
-            tasks: dbTasks ? dbTasks.map(t => ({
-              id: t.id,
-              title: t.title,
-              description: t.description,
-              scope: t.scope,
-              assignee: t.assignee || 'Todos',
-              children: t.children || [],
-              dueDate: t.due_date,
-              completed: t.completed,
-              createdAt: t.created_at ? t.created_at.split('T')[0] : null,
-              workspaceId: t.workspace_id || 'ws-default-1',
-              category: t.category || 'GENERAL',
-              priority: t.priority || 'MEDIA',
-              assignedMemberIds: t.assigned_member_ids || [],
-              isAccepted: t.is_accepted !== false,
-              attachments: t.attachments || [],
-              completedSuccessfully: t.completed_successfully !== false,
-              completedAt: t.completed_at || null
-            })) : get().tasks,
+            tasks: dbTasks ? dbTasks.map(t => {
+              const attachments = t.attachments || [];
+              const creatorMeta = attachments.find(att => att.type === 'metadata_creator');
+              const createdById = creatorMeta ? creatorMeta.createdById : null;
+              const cleanAttachments = attachments.filter(att => att.type !== 'metadata_creator');
+              
+              return {
+                id: t.id,
+                title: t.title,
+                description: t.description,
+                scope: t.scope,
+                assignee: t.assignee || 'Todos',
+                children: t.children || [],
+                dueDate: t.due_date,
+                completed: t.completed,
+                createdAt: t.created_at ? t.created_at.split('T')[0] : null,
+                workspaceId: t.workspace_id || 'ws-default-1',
+                category: t.category || 'GENERAL',
+                priority: t.priority || 'MEDIA',
+                assignedMemberIds: t.assigned_member_ids || [],
+                isAccepted: t.is_accepted !== false,
+                attachments: cleanAttachments,
+                createdById: createdById,
+                completedSuccessfully: t.completed_successfully !== false,
+                completedAt: t.completed_at || null
+              };
+            }) : get().tasks,
 
             events: dbEvents ? dbEvents.map(e => ({
               id: e.id,
@@ -356,6 +364,14 @@ export const useStore = create(
           }
         }
 
+        // Crear el objeto metadata_creator para Supabase
+        const creatorMeta = {
+          id: `meta-creator-${Date.now()}`,
+          type: 'metadata_creator',
+          createdById: activeMember ? activeMember.id : null,
+          createdByName: activeMember ? activeMember.firstName : 'Sistema'
+        };
+
         const newTask = {
           ...task,
           id: `task-${Date.now()}`,
@@ -368,12 +384,19 @@ export const useStore = create(
           priority: task.priority || 'MEDIA',
           assignedMemberIds: task.assignedMemberIds || [],
           isAccepted: defaultAccepted,
-          attachments: task.attachments || [],
+          createdById: activeMember ? activeMember.id : null,
+          attachments: [...(task.attachments || []), creatorMeta],
           assignee: task.assignee || 'Todos',
           children: task.children || []
         };
         
-        set((state) => ({ tasks: [...state.tasks, newTask] }));
+        // Estado local con attachments limpios
+        const localTask = {
+          ...newTask,
+          attachments: (task.attachments || []).filter(att => att.type !== 'metadata_creator')
+        };
+
+        set((state) => ({ tasks: [...state.tasks, localTask] }));
 
         if (isSupabaseConfigured()) {
           await supabase.from('tasks').insert({
@@ -403,11 +426,16 @@ export const useStore = create(
         const activeMember = membersList.find(m => m.firstName === activeUser);
         const isCreatorAdmin = activeMember ? activeMember.isAdmin : false;
         
+        const oldTask = get().tasks.find(t => t.id === taskId);
+        const oldAssigned = oldTask ? oldTask.assignedMemberIds || [] : [];
+        
+        // Conservamos o inferimos el creador original de la tarea
+        const finalCreatedById = oldTask ? oldTask.createdById : (activeMember ? activeMember.id : null);
+        const finalCreatedByName = oldTask ? oldTask.createdByName : (activeMember ? activeMember.firstName : 'Sistema');
+
         let finalAccepted = updatedTask.isAccepted;
 
         if (finalAccepted === undefined && isCreatorAdmin && updatedTask.assignedMemberIds) {
-          const oldTask = get().tasks.find(t => t.id === taskId);
-          const oldAssigned = oldTask ? oldTask.assignedMemberIds || [] : [];
           const newAssigned = updatedTask.assignedMemberIds;
           
           // Verificar si ha cambiado la asignación
@@ -435,11 +463,28 @@ export const useStore = create(
           mergedTask.isAccepted = finalAccepted;
         }
 
+        // Almacenamos localmente en Zustand con attachments limpios
+        const cleanAttachments = (mergedTask.attachments || oldTask?.attachments || []).filter(att => att.type !== 'metadata_creator');
+        const localMergedTask = {
+          ...mergedTask,
+          createdById: finalCreatedById,
+          attachments: cleanAttachments
+        };
+
         set((state) => ({
-          tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, ...mergedTask } : task))
+          tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, ...localMergedTask } : task))
         }));
 
         if (isSupabaseConfigured()) {
+          // Inyectamos el metadato del creador en attachments para Supabase
+          const creatorMeta = {
+            id: `meta-creator-${Date.now()}`,
+            type: 'metadata_creator',
+            createdById: finalCreatedById,
+            createdByName: finalCreatedByName
+          };
+          const attachmentsToSave = [...cleanAttachments, creatorMeta];
+
           const updatePayload = {
             title: mergedTask.title,
             description: mergedTask.description,
@@ -454,7 +499,7 @@ export const useStore = create(
           if (mergedTask.priority !== undefined) updatePayload.priority = mergedTask.priority;
           if (mergedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = mergedTask.assignedMemberIds;
           if (mergedTask.isAccepted !== undefined) updatePayload.is_accepted = mergedTask.isAccepted;
-          if (mergedTask.attachments !== undefined) updatePayload.attachments = mergedTask.attachments;
+          updatePayload.attachments = attachmentsToSave;
           if (mergedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = mergedTask.completedSuccessfully;
           if (mergedTask.completedAt !== undefined) updatePayload.completed_at = mergedTask.completedAt;
 

@@ -660,7 +660,7 @@ export default function TaskManager() {
     }
     
     if (activeTab === 'aceptacion') {
-      return involvesActiveMember && !task.isAccepted;
+      return involvesActiveMember && !task.isAccepted && task.createdById !== activeMember.id;
     }
     
     if (activeTab === 'matrimonial') {
@@ -725,12 +725,12 @@ export default function TaskManager() {
   });
 
   // Contador de pendientes de aceptar
-  const pendingAcceptanceCount = tasks.filter(t => t.assignedMemberIds && t.assignedMemberIds.includes(activeMember.id) && !t.isAccepted).length;
+  const pendingAcceptanceCount = tasks.filter(t => t.assignedMemberIds && t.assignedMemberIds.includes(activeMember.id) && !t.isAccepted && t.createdById !== activeMember.id).length;
 
   // Renderizado optimizado y modular de cada tarjeta de tarea
   const renderTaskCard = (task) => {
     const criticality = getCriticality(task.dueDate, task.priority, task.completed, task.completedSuccessfully);
-    const needsAcceptance = !task.isAccepted && task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+    const needsAcceptance = !task.isAccepted && task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id) && task.createdById !== activeMember.id;
     
     const scopeNames = task.assignedMemberIds && task.assignedMemberIds.length > 0 
       ? task.assignedMemberIds.map(mid => members.find(m => m.id === mid)?.firstName).join(', ')
