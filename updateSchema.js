@@ -22,6 +22,10 @@ async function run() {
     console.log("Altering events...");
     await client.query("ALTER TABLE events ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb;");
 
+    console.log("Altering tasks for resolution details...");
+    await client.query("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS completed_successfully BOOLEAN DEFAULT true;");
+    await client.query("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;");
+
     // Create wishlist_categories table
     console.log("Creating wishlist_categories...");
     await client.query(`

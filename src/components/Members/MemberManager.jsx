@@ -47,6 +47,8 @@ export default function MemberManager() {
   const [allergiesText, setAllergiesText] = useState('');
   const [bloodType, setBloodType] = useState('');
   const [dietaryText, setDietaryText] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [associatedMemberIds, setAssociatedMemberIds] = useState([]);
 
   // Estados Formulario Premio
   const [rewardTitle, setRewardTitle] = useState('');
@@ -70,6 +72,8 @@ export default function MemberManager() {
     setAllergiesText('');
     setBloodType('');
     setDietaryText('');
+    setIsAdmin(false);
+    setAssociatedMemberIds([]);
     setIsMemberModalOpen(true);
   };
 
@@ -87,6 +91,8 @@ export default function MemberManager() {
     setAllergiesText(member.allergies ? member.allergies.join(', ') : '');
     setBloodType(member.bloodType || '');
     setDietaryText(member.dietaryRestrictions ? member.dietaryRestrictions.join(', ') : '');
+    setIsAdmin(member.isAdmin || false);
+    setAssociatedMemberIds(member.associatedMemberIds || []);
     setIsMemberModalOpen(true);
   };
 
@@ -109,7 +115,9 @@ export default function MemberManager() {
       pantsSize,
       allergies,
       bloodType,
-      dietaryRestrictions
+      dietaryRestrictions,
+      isAdmin,
+      associatedMemberIds
     };
 
     if (editingMember) {
@@ -213,7 +221,19 @@ export default function MemberManager() {
                       </div>
                       <div>
                         <h4 className="text-sm font-extrabold text-slate-800">{m.firstName} {m.lastName}</h4>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{m.role}</span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{m.role}</span>
+                          {m.isAdmin && (
+                            <span className="text-[8px] bg-blue-50 border border-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
+                              🛡️ Admin
+                            </span>
+                          )}
+                          {m.isAdmin && m.associatedMemberIds && m.associatedMemberIds.length > 0 && (
+                            <span className="text-[8px] bg-slate-50 border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-bold" title={`${m.associatedMemberIds.length} miembros asociados`}>
+                              👥 {m.associatedMemberIds.length} asociados
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -522,8 +542,66 @@ export default function MemberManager() {
                 />
               </div>
 
+              {/* ROL ADMINISTRADOR Y MIEMBROS ASOCIADOS */}
+              <div className="flex flex-col gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isAdminCheckbox"
+                    checked={isAdmin}
+                    onChange={(e) => {
+                      setIsAdmin(e.target.checked);
+                      if (!e.target.checked) setAssociatedMemberIds([]);
+                    }}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="isAdminCheckbox" className="text-xs font-bold text-slate-700 select-none cursor-pointer">
+                    ¿Es Administrador del Hogar? (ej. Padre/Madre)
+                  </label>
+                </div>
+
+                {isAdmin && (
+                  <div className="flex flex-col gap-1.5 border-t border-slate-200/50 pt-2.5">
+                    <span className="text-[9px] font-bold text-slate-450 uppercase tracking-wide">
+                      Miembros del Hogar Asociados a este Perfil
+                    </span>
+                    <p className="text-[9px] text-slate-400 leading-normal">
+                      Este administrador verá y gestionará las tareas de los perfiles asociados marcados abajo.
+                    </p>
+                    <div className="flex flex-col gap-1 max-h-36 overflow-y-auto pr-1 mt-1 bg-white p-2 rounded-lg border border-slate-200/50">
+                      {members
+                        .filter(m => !editingMember || m.id !== editingMember.id)
+                        .map(m => {
+                          const isChecked = associatedMemberIds.includes(m.id);
+                          return (
+                            <label key={m.id} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded cursor-pointer select-none text-xs">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {
+                                  if (isChecked) {
+                                    setAssociatedMemberIds(associatedMemberIds.filter(id => id !== m.id));
+                                  } else {
+                                    setAssociatedMemberIds([...associatedMemberIds, m.id]);
+                                  }
+                                }}
+                                className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="font-semibold text-slate-700">{m.firstName} {m.lastName}</span>
+                              <span className="text-[8px] bg-slate-100 border border-slate-200/60 text-slate-500 px-1 rounded uppercase tracking-wider font-bold">{m.role}</span>
+                            </label>
+                          );
+                        })}
+                      {members.filter(m => !editingMember || m.id !== editingMember.id).length === 0 && (
+                        <p className="text-[9px] text-slate-400 italic">No hay otros miembros creados para asociar.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex flex-col gap-1 bg-red-50/30 border border-red-100/50 p-3 rounded-xl">
-                <label className="text-[10px] font-bold text-red-600 uppercase tracking-wide flex items-center gap-1">
+                <label className="text-[10px] font-bold text-red-650 uppercase tracking-wide flex items-center gap-1">
                   <ShieldAlert size={12} />
                   Información Confidencial (Oculta en Tablón)
                 </label>

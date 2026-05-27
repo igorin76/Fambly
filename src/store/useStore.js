@@ -99,7 +99,9 @@ export const useStore = create(
               priority: t.priority || 'MEDIA',
               assignedMemberIds: t.assigned_member_ids || [],
               isAccepted: t.is_accepted !== false,
-              attachments: t.attachments || []
+              attachments: t.attachments || [],
+              completedSuccessfully: t.completed_successfully !== false,
+              completedAt: t.completed_at || null
             })) : get().tasks,
 
             events: dbEvents ? dbEvents.map(e => ({
@@ -135,7 +137,9 @@ export const useStore = create(
               bloodType: m.blood_type || '',
               dietaryRestrictions: m.dietary_restrictions || [],
               points: m.points || 0,
-              neededItems: m.needed_items || ''
+              neededItems: m.needed_items || '',
+              isAdmin: m.is_admin === true,
+              associatedMemberIds: m.associated_member_ids || []
             })) : get().members,
 
             clothingLogistics: dbMembers ? dbMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
@@ -225,7 +229,9 @@ export const useStore = create(
           pantsSize: member.pantsSize || '',
           allergies: member.allergies || [],
           bloodType: member.bloodType || '',
-          dietaryRestrictions: member.dietaryRestrictions || []
+          dietaryRestrictions: member.dietaryRestrictions || [],
+          isAdmin: member.isAdmin || false,
+          associatedMemberIds: member.associatedMemberIds || []
         };
         set((state) => {
           const updatedMembers = [...state.members, newMember];
@@ -255,7 +261,9 @@ export const useStore = create(
             blood_type: newMember.bloodType || '',
             dietary_restrictions: newMember.dietaryRestrictions || [],
             points: newMember.points || 0,
-            needed_items: ''
+            needed_items: '',
+            is_admin: newMember.isAdmin || false,
+            associated_member_ids: newMember.associatedMemberIds || []
           });
         }
       },
@@ -288,6 +296,8 @@ export const useStore = create(
           if (updatedFields.dietaryRestrictions !== undefined) updatePayload.dietary_restrictions = updatedFields.dietaryRestrictions;
           if (updatedFields.points !== undefined) updatePayload.points = updatedFields.points;
           if (updatedFields.neededItems !== undefined) updatePayload.needed_items = updatedFields.neededItems;
+          if (updatedFields.isAdmin !== undefined) updatePayload.is_admin = updatedFields.isAdmin;
+          if (updatedFields.associatedMemberIds !== undefined) updatePayload.associated_member_ids = updatedFields.associatedMemberIds;
 
           await supabase.from('members').update(updatePayload).eq('id', id);
         }
@@ -326,6 +336,8 @@ export const useStore = create(
           ...task,
           id: `task-${Date.now()}`,
           completed: false,
+          completedSuccessfully: true,
+          completedAt: null,
           createdAt: new Date().toISOString().split('T')[0],
           workspaceId: 'ws-default-1',
           category: task.category || 'GENERAL',
@@ -349,6 +361,8 @@ export const useStore = create(
             children: newTask.children,
             due_date: newTask.dueDate || null,
             completed: newTask.completed,
+            completed_successfully: true,
+            completed_at: null,
             workspace_id: newTask.workspaceId,
             category: newTask.category,
             priority: newTask.priority,
@@ -380,6 +394,8 @@ export const useStore = create(
           if (updatedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = updatedTask.assignedMemberIds;
           if (updatedTask.isAccepted !== undefined) updatePayload.is_accepted = updatedTask.isAccepted;
           if (updatedTask.attachments !== undefined) updatePayload.attachments = updatedTask.attachments;
+          if (updatedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = updatedTask.completedSuccessfully;
+          if (updatedTask.completedAt !== undefined) updatePayload.completed_at = updatedTask.completedAt;
 
           await supabase.from('tasks').update(updatePayload).eq('id', taskId);
         }
@@ -395,15 +411,30 @@ export const useStore = create(
         }
       },
 
-      toggleTaskCompleted: async (taskId) => {
+      toggleTaskCompleted: async (taskId, completedSuccessfully = true, isUndoing = false) => {
         let isCompleted = false;
+        let finalCompletedSuccessfully = true;
+        let finalCompletedAt = null;
         let taskRef = null;
         
         set((state) => {
           const updated = state.tasks.map((task) => {
             if (task.id === taskId) {
-              isCompleted = !task.completed;
-              taskRef = { ...task, completed: isCompleted };
+              if (isUndoing) {
+                isCompleted = false;
+                finalCompletedSuccessfully = true;
+                finalCompletedAt = null;
+              } else {
+                isCompleted = true;
+                finalCompletedSuccessfully = completedSuccessfully;
+                finalCompletedAt = new Date().toISOString();
+              }
+              taskRef = { 
+                ...task, 
+                completed: isCompleted,
+                completedSuccessfully: finalCompletedSuccessfully,
+                completedAt: finalCompletedAt
+              };
               return taskRef;
             }
             return task;
@@ -412,10 +443,14 @@ export const useStore = create(
         });
 
         if (isSupabaseConfigured()) {
-          await supabase.from('tasks').update({ completed: isCompleted }).eq('id', taskId);
+          await supabase.from('tasks').update({ 
+            completed: isCompleted,
+            completed_successfully: finalCompletedSuccessfully,
+            completed_at: finalCompletedAt
+          }).eq('id', taskId);
           
-          // GAMIFICACIÓN: Si la tarea se completó y está asignada a niños, sumarle puntos al niño! (10 puntos por misión)
-          if (isCompleted && taskRef && taskRef.scope === 'ninos' && taskRef.assignedMemberIds) {
+          // GAMIFICACIÓN: Si la tarea se completó exitosamente y está asignada a niños, sumarle puntos al niño! (10 puntos por misión)
+          if (isCompleted && finalCompletedSuccessfully && taskRef && taskRef.scope === 'ninos' && taskRef.assignedMemberIds) {
             for (const childId of taskRef.assignedMemberIds) {
               await get().awardPoints(childId, 10);
             }

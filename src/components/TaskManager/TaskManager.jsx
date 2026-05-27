@@ -78,6 +78,7 @@ export default function TaskManager() {
   const [activeTab, setActiveTab] = useState('todos'); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [resolvingTaskId, setResolvingTaskId] = useState(null);
 
   // Estados Formulario
   const [title, setTitle] = useState('');
@@ -604,8 +605,12 @@ export default function TaskManager() {
   };
 
   // --- MATRIZ DE CRITICIDAD VISUAL ---
-  const getCriticality = (dueDate, priority, completed) => {
-    if (completed) return { level: 'completada', label: 'Completada', color: 'bg-slate-100 text-slate-500 border-slate-200/50' };
+  const getCriticality = (dueDate, priority, completed, completedSuccessfully = true) => {
+    if (completed) {
+      return completedSuccessfully
+        ? { level: 'completada', label: 'Completada', color: 'bg-emerald-50 text-emerald-700 border-emerald-100/50' }
+        : { level: 'completada', label: 'No completada', color: 'bg-rose-50 text-rose-700 border-rose-100/50' };
+    }
     if (!dueDate) return { level: 'tiempo', label: 'En tiempo', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' };
 
     const today = new Date();
@@ -639,33 +644,84 @@ export default function TaskManager() {
     const isAssignee = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
     const isGlobal = !task.assignedMemberIds || task.assignedMemberIds.length === 0;
 
-    if (activeTab === 'todos') {
-      return true;
+    // Obtener los otros administradores de la familia
+    const otherAdminIds = members.filter(m => m.isAdmin && m.id !== activeMember.id).map(m => m.id);
+    const involvesOtherAdmins = task.assignedMemberIds && task.assignedMemberIds.some(id => otherAdminIds.includes(id));
+    const involvesActiveMember = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+
+    // Si la tarea involucra a otros administradores y el activo no está implicado, NUNCA es visible
+    if (involvesOtherAdmins && !involvesActiveMember) {
+      return false;
     }
+
     if (activeTab === 'individual') {
-      return isAssignee;
+      // Solo el usuario activo
+      return task.assignedMemberIds && task.assignedMemberIds.length === 1 && involvesActiveMember;
     }
+    
     if (activeTab === 'aceptacion') {
-      return isAssignee && !task.isAccepted;
+      return involvesActiveMember && !task.isAccepted;
     }
+    
     if (activeTab === 'matrimonial') {
-      return task.scope === 'matrimonial';
+      // El usuario activo y otra persona (longitud > 1)
+      return involvesActiveMember && task.assignedMemberIds && task.assignedMemberIds.length > 1;
     }
+    
     if (activeTab === 'ninos') {
-      return task.scope === 'ninos';
+      // En la pestaña de niños, si el usuario es administrador, puede ver las tareas de niños
+      // si son sus asociados, o si el usuario no es admin pero está asignado
+      if (activeMember.isAdmin) {
+        const associatedIds = activeMember.associatedMemberIds || [];
+        return task.scope === 'ninos' && task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id));
+      }
+      return task.scope === 'ninos' && involvesActiveMember;
     }
-    return true;
+
+    // Por defecto activeTab === 'todos' (Todas)
+    if (activeMember.isAdmin) {
+      // Administrador ve:
+      // 1. Sus propias tareas
+      // 2. Las tareas de sus asociados
+      // 3. Tareas globales
+      const associatedIds = activeMember.associatedMemberIds || [];
+      const involvesAssociated = task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id));
+      
+      return involvesActiveMember || involvesAssociated || isGlobal;
+    } else {
+      // No administrador solo ve sus propias tareas o las globales donde esté implicado
+      return involvesActiveMember || isGlobal;
+    }
   });
 
   const sortedTasks = [...filteredTasks].sort((a, b) => {
+    // 1. Ordenar por completadas vs pendientes (pendientes primero)
     if (a.completed && !b.completed) return 1;
     if (!a.completed && b.completed) return -1;
     
-    // Ordenar por nivel de criticidad (crítica -> advertencia -> tiempo)
-    const critA = getCriticality(a.dueDate, a.priority, a.completed).level;
-    const critB = getCriticality(b.dueDate, b.priority, b.completed).level;
-    const weights = { critica: 0, advertencia: 1, tiempo: 2, completada: 3 };
-    return weights[critA] - weights[critB];
+    // Si ambas están pendientes:
+    if (!a.completed && !b.completed) {
+      // Si ambas tienen fecha límite:
+      if (a.dueDate && b.dueDate) {
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      }
+      // Si solo una tiene fecha límite, la que tiene va primero
+      if (a.dueDate && !b.dueDate) return -1;
+      if (!a.dueDate && b.dueDate) return 1;
+      
+      // Si ninguna tiene fecha límite, ordenamos por prioridad
+      const priorityWeight = { ALTA: 0, MEDIA: 1, BAJA: 2 };
+      return (priorityWeight[a.priority] || 1) - (priorityWeight[b.priority] || 1);
+    }
+    
+    // Si ambas están completadas, mostrar las resueltas más recientemente primero (orden descendente por completedAt)
+    if (a.completedAt && b.completedAt) {
+      return new Date(b.completedAt) - new Date(a.completedAt);
+    }
+    if (a.completedAt && !b.completedAt) return -1;
+    if (!a.completedAt && b.completedAt) return 1;
+    
+    return 0;
   });
 
   // Contador de pendientes de aceptar
@@ -716,7 +772,7 @@ export default function TaskManager() {
       {sortedTasks.length > 0 ? (
         <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-slate-200/50 bg-white">
           {sortedTasks.map((task) => {
-            const criticality = getCriticality(task.dueDate, task.priority, task.completed);
+            const criticality = getCriticality(task.dueDate, task.priority, task.completed, task.completedSuccessfully);
             const needsAcceptance = !task.isAccepted && task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
             
             const scopeNames = task.assignedMemberIds && task.assignedMemberIds.length > 0 
@@ -725,7 +781,9 @@ export default function TaskManager() {
 
             const isFocused = task.id === focusedTaskId;
             const cardClasses = task.completed 
-              ? 'bg-slate-50/50' 
+              ? task.completedSuccessfully
+                ? 'bg-emerald-50/20 border-l-4 border-l-emerald-500'
+                : 'bg-rose-50/20 border-l-4 border-l-rose-500'
               : isFocused 
                 ? 'bg-indigo-50/80 border-2 border-indigo-500 shadow-md ring-2 ring-indigo-500/20 scale-[1.01]' 
                 : needsAcceptance 
@@ -745,16 +803,29 @@ export default function TaskManager() {
                 <div className="flex items-start gap-3.5 flex-1 min-w-0">
                   <button
                     disabled={needsAcceptance} // No se puede completar si no se ha aceptado
-                    onClick={(e) => { e.stopPropagation(); toggleTaskCompleted(task.id); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (task.completed) {
+                        toggleTaskCompleted(task.id, null, true);
+                      } else {
+                        setResolvingTaskId(task.id);
+                      }
+                    }}
                     className={`h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all mt-0.5 touch-btn ${
                       task.completed 
-                        ? 'bg-blue-600 border-blue-600 text-white' 
+                        ? task.completedSuccessfully
+                          ? 'bg-emerald-600 border-emerald-600 text-white' 
+                          : 'bg-rose-600 border-rose-600 text-white'
                         : needsAcceptance 
                           ? 'border-amber-300 bg-amber-50 text-amber-500 cursor-not-allowed'
                           : 'border-slate-300 hover:border-blue-500'
                     }`}
                   >
-                    {task.completed && <Check size={15} className="stroke-[3]" />}
+                    {task.completed && (
+                      task.completedSuccessfully 
+                        ? <Check size={15} className="stroke-[3]" /> 
+                        : <X size={15} className="stroke-[3]" />
+                    )}
                   </button>
 
                   <div className="min-w-0 flex-1">
@@ -784,6 +855,17 @@ export default function TaskManager() {
                     {task.description && (
                       <p className={`text-xs mt-1 text-slate-400 ${task.completed && 'line-through'}`}>
                         {task.description}
+                      </p>
+                    )}
+                    {task.completed && task.completedAt && (
+                      <p className={`text-[10px] font-bold mt-1.5 flex items-center gap-1.5 ${
+                        task.completedSuccessfully ? 'text-emerald-700' : 'text-rose-700'
+                      }`}>
+                        <Clock size={11} className="shrink-0" />
+                        {task.completedSuccessfully 
+                          ? `Completada el ${formatDateSpanish(task.completedAt.split('T')[0])} a las ${new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                          : `Marcada como no completada el ${formatDateSpanish(task.completedAt.split('T')[0])} a las ${new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                        }
                       </p>
                     )}
                     {/* Contenido Adjunto Múltiple (Estilo Tablón) */}
@@ -1449,6 +1531,66 @@ export default function TaskManager() {
                 className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 cursor-pointer bg-white transition-colors"
               >
                 Cerrar Visor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* DIÁLOGO / BOTTOM SHEET DE RESOLUCIÓN DE TAREA */}
+      {resolvingTaskId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div 
+            className="w-full sm:max-w-xs bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-10 sm:pb-6 shadow-2xl sm:shadow-xl relative animate-slideUp sm:animate-fadeIn"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
+                Resolver Tarea
+              </h3>
+              <button 
+                type="button"
+                onClick={() => setResolvingTaskId(null)} 
+                className="text-slate-400 hover:text-slate-700 bg-transparent border-0 p-1.5 cursor-pointer touch-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+              ¿Cómo quieres registrar esta tarea en el historial familiar?
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  toggleTaskCompleted(resolvingTaskId, true);
+                  setResolvingTaskId(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] touch-btn"
+              >
+                <Check size={16} className="stroke-[3]" />
+                Completada exitosamente
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  toggleTaskCompleted(resolvingTaskId, false);
+                  setResolvingTaskId(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/10 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] touch-btn"
+              >
+                <X size={16} className="stroke-[3]" />
+                Cerrar sin completar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setResolvingTaskId(null)}
+                className="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center transition-all touch-btn"
+              >
+                Cancelar
               </button>
             </div>
           </div>
