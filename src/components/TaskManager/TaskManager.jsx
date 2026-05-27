@@ -640,6 +640,56 @@ export default function TaskManager() {
     return { level: 'tiempo', label: 'Verde En tiempo', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' };
   };
 
+  const getTasksCountForTab = (tabId) => {
+    return tasks.filter(task => {
+      const isAssignee = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+      const isGlobal = !task.assignedMemberIds || task.assignedMemberIds.length === 0;
+
+      // Obtener los otros administradores de la familia
+      const otherAdminIds = members.filter(m => m.isAdmin && m.id !== activeMember.id).map(m => m.id);
+      const involvesOtherAdmins = task.assignedMemberIds && task.assignedMemberIds.some(id => otherAdminIds.includes(id));
+      const involvesActiveMember = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+
+      // Si la tarea involucra a otros administradores y el activo no está implicado, NUNCA es visible
+      if (involvesOtherAdmins && !involvesActiveMember) {
+        return false;
+      }
+
+      if (tabId === 'individual') {
+        return task.assignedMemberIds && task.assignedMemberIds.length === 1 && involvesActiveMember;
+      }
+      
+      if (tabId === 'aceptacion') {
+        return task.isAccepted === false && involvesActiveMember && task.createdById !== activeMember.id;
+      }
+      
+      if (tabId === 'matrimonial') {
+        return involvesActiveMember && task.assignedMemberIds && task.assignedMemberIds.length > 1;
+      }
+      
+      if (tabId === 'ninos') {
+        const childMemberIds = members.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => m.id);
+        const involvesChildren = task.assignedMemberIds && task.assignedMemberIds.some(id => childMemberIds.includes(id));
+        
+        if (activeMember.isAdmin) {
+          const associatedIds = activeMember.associatedMemberIds || [];
+          const involvesAssociatedChildren = task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id) && childMemberIds.includes(id));
+          return task.scope === 'ninos' || involvesAssociatedChildren;
+        }
+        return (task.scope === 'ninos' || involvesChildren) && involvesActiveMember;
+      }
+
+      // Por defecto 'todos' (Todas)
+      if (activeMember.isAdmin) {
+        const associatedIds = activeMember.associatedMemberIds || [];
+        const involvesAssociated = task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id));
+        return involvesActiveMember || involvesAssociated || isGlobal;
+      } else {
+        return involvesActiveMember || isGlobal;
+      }
+    }).length;
+  };
+
   const filteredTasks = tasks.filter(task => {
     const isAssignee = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
     const isGlobal = !task.assignedMemberIds || task.assignedMemberIds.length === 0;
@@ -669,13 +719,16 @@ export default function TaskManager() {
     }
     
     if (activeTab === 'ninos') {
-      // En la pestaña de niños, si el usuario es administrador, puede ver las tareas de niños
-      // si son sus asociados, o si el usuario no es admin pero está asignado
+      // El filtro Hijos afecta a todos los catalogados como hijos (Hijo o Hija)
+      const childMemberIds = members.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => m.id);
+      const involvesChildren = task.assignedMemberIds && task.assignedMemberIds.some(id => childMemberIds.includes(id));
+      
       if (activeMember.isAdmin) {
         const associatedIds = activeMember.associatedMemberIds || [];
-        return task.scope === 'ninos' && task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id));
+        const involvesAssociatedChildren = task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id) && childMemberIds.includes(id));
+        return task.scope === 'ninos' || involvesAssociatedChildren;
       }
-      return task.scope === 'ninos' && involvesActiveMember;
+      return (task.scope === 'ninos' || involvesChildren) && involvesActiveMember;
     }
 
     // Por defecto activeTab === 'todos' (Todas)
@@ -925,55 +978,74 @@ export default function TaskManager() {
         </button>
       </div>
 
-      {/* TABS DE ÁMBITO (Segmented Control) */}
-      <div className="segmented-container max-w-2xl overflow-x-auto pb-1.5 hide-scrollbar snap-x snap-mandatory scroll-smooth w-full lg:flex-wrap lg:pb-0 gap-1">
-        {[
-          { id: 'todos', label: 'Todas' },
-          { id: 'individual', label: 'Mis Tareas' },
-          { id: 'matrimonial', label: 'Conjuntas' },
-          { id: 'ninos', label: 'Niños' },
-          { id: 'aceptacion', label: 'Por Aceptar' }
-        ].map((tab) => {
-          const isAceptacionTab = tab.id === 'aceptacion';
-          const isActive = activeTab === tab.id;
-          
-          let btnClasses = "flex-1 py-2.5 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn snap-start flex items-center justify-center gap-1.5 ";
-          
-          if (isActive) {
-            if (isAceptacionTab) {
-              btnClasses += "bg-amber-500 text-white shadow-md shadow-amber-500/10";
-            } else {
-              btnClasses += "segmented-btn-active";
-            }
-          } else {
-            if (isAceptacionTab && pendingAcceptanceCount > 0) {
-              btnClasses += "bg-amber-50 hover:bg-amber-100/80 text-amber-700 border border-amber-200/50 shadow-sm relative";
-            } else {
-              btnClasses += "segmented-btn-inactive";
-            }
-          }
+      {/* TABS DE ÁMBITO (Segmented Control y Filtro Independiente) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
+        
+        {/* FILTROS PRINCIPALES (Segmented Control) */}
+        <div className="segmented-container max-w-2xl overflow-x-auto pb-1 hide-scrollbar snap-x snap-mandatory scroll-smooth flex-1 flex gap-1 bg-slate-100/80 p-1 rounded-xl">
+          {[
+            { id: 'todos', label: 'Todas' },
+            { id: 'individual', label: 'Mis Tareas' },
+            { id: 'matrimonial', label: 'Conjuntas' },
+            { id: 'ninos', label: 'Hijos' }
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            const count = getTasksCountForTab(tab.id);
+            
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 py-2 px-3 text-center text-xs font-bold rounded-lg transition-all shrink-0 touch-btn snap-start flex items-center justify-center gap-1.5 ${
+                  isActive
+                    ? 'segmented-btn-active'
+                    : 'segmented-btn-inactive'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black transition-colors ${
+                  isActive
+                    ? 'bg-blue-600/15 text-blue-800'
+                    : 'bg-slate-200/80 text-slate-500'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={btnClasses}
-            >
-              <span>{tab.label}</span>
-              {isAceptacionTab && pendingAcceptanceCount > 0 && (
-                <div className="flex items-center gap-1 ml-0.5">
-                  <span className="flex items-center justify-center bg-amber-200 text-amber-800 text-[10px] w-4 h-4 rounded-full font-black">
-                    {pendingAcceptanceCount}
-                  </span>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                  </span>
-                </div>
-              )}
-            </button>
-          );
-        })}
+        {/* FILTRO INDEPENDIENTE: POR ACEPTAR */}
+        <div className="flex shrink-0">
+          <button
+            onClick={() => setActiveTab('aceptacion')}
+            className={`w-full md:w-auto py-2.5 px-4 text-center text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm border ${
+              activeTab === 'aceptacion'
+                ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/10'
+                : pendingAcceptanceCount > 0
+                  ? 'bg-amber-50 hover:bg-amber-100/80 text-amber-700 border-amber-200/60 animate-pulse'
+                  : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+            }`}
+          >
+            <span>Por Aceptar</span>
+            <span className={`flex items-center justify-center text-[10px] w-5 h-5 rounded-full font-black transition-all ${
+              activeTab === 'aceptacion'
+                ? 'bg-amber-600 text-white'
+                : pendingAcceptanceCount > 0
+                  ? 'bg-amber-200 text-amber-800'
+                  : 'bg-slate-100 text-slate-500'
+            }`}>
+              {pendingAcceptanceCount}
+            </span>
+            {pendingAcceptanceCount > 0 && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+            )}
+          </button>
+        </div>
+
       </div>
 
       {/* LISTADO DE TAREAS */}
