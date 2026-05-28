@@ -703,6 +703,35 @@ export const useStore = create(
         }
       },
 
+      toggleAllShoppingItems: async (completed) => {
+        const items = get().shoppingItems;
+        set(() => ({
+          shoppingItems: items.map(item => ({ ...item, completed }))
+        }));
+
+        if (isSupabaseConfigured() && items.length > 0) {
+          const ids = items.map(item => item.id);
+          await supabase.from('shopping_items').update({ completed }).in('id', ids);
+        }
+      },
+
+      toggleCategoryShoppingItems: async (category, completed) => {
+        const items = get().shoppingItems;
+        set(() => ({
+          shoppingItems: items.map(item => 
+            item.category === category ? { ...item, completed } : item
+          )
+        }));
+
+        if (isSupabaseConfigured()) {
+          const categoryItems = items.filter(item => item.category === category);
+          if (categoryItems.length > 0) {
+            const ids = categoryItems.map(item => item.id);
+            await supabase.from('shopping_items').update({ completed }).in('id', ids);
+          }
+        }
+      },
+
       // --- LOGÍSTICA ROPA ---
       updateClothingLogistics: async (id, currentSize, neededItems) => {
         set((state) => ({

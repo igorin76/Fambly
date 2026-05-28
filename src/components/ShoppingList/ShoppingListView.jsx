@@ -25,6 +25,8 @@ export default function ShoppingListView() {
     toggleShoppingItem,
     deleteShoppingItem,
     clearCompletedShoppingItems,
+    toggleAllShoppingItems,
+    toggleCategoryShoppingItems,
     clothingLogistics,
     updateClothingLogistics,
     wishlist = [],
@@ -336,16 +338,38 @@ export default function ShoppingListView() {
           {/* LISTAS POR CATEGORÍAS */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Carrito de Compra</h3>
-              {shoppingItems.some(i => i.completed) && (
-                <button
-                  onClick={clearCompletedShoppingItems}
-                  className="flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 font-bold transition-colors"
-                >
-                  <Trash size={12} />
-                  Vaciar Comprados
-                </button>
+              {shoppingItems.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    onClick={() => toggleAllShoppingItems(true)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-bold transition-colors"
+                    title="Marcar todos los artículos como comprados"
+                  >
+                    Marcar todo
+                  </button>
+                  <span className="text-slate-200 text-xs hidden sm:inline">|</span>
+                  <button
+                    onClick={() => toggleAllShoppingItems(false)}
+                    className="text-xs text-slate-500 hover:text-slate-650 font-bold transition-colors"
+                    title="Desmarcar todos los artículos"
+                  >
+                    Desmarcar todo
+                  </button>
+                  {shoppingItems.some(i => i.completed) && (
+                    <>
+                      <span className="text-slate-200 text-xs">|</span>
+                      <button
+                        onClick={clearCompletedShoppingItems}
+                        className="flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-650 font-bold transition-colors"
+                      >
+                        <Trash size={12} />
+                        Vaciar Comprados
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </div>
 
@@ -372,6 +396,25 @@ export default function ShoppingListView() {
                           <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700">
                             {category}
                           </span>
+                          
+                          {/* Controles de marcación por categoría */}
+                          <div className="flex items-center gap-2 ml-2">
+                            <button
+                              onClick={() => toggleCategoryShoppingItems(category, true)}
+                              className="text-[9px] font-bold text-slate-400 hover:text-blue-600 transition-colors px-1 py-0.5 rounded bg-slate-50/50 hover:bg-slate-100/50 border border-slate-200/30"
+                              title={`Marcar todo en ${category} como comprado`}
+                            >
+                              Marcar
+                            </button>
+                            <button
+                              onClick={() => toggleCategoryShoppingItems(category, false)}
+                              className="text-[9px] font-bold text-slate-400 hover:text-slate-600 transition-colors px-1 py-0.5 rounded bg-slate-50/50 hover:bg-slate-100/50 border border-slate-200/30"
+                              title={`Desmarcar todo en ${category}`}
+                            >
+                              Desmarcar
+                            </button>
+                          </div>
+                          
                           <span className={`ml-auto text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${categoryColors.bg}`}>
                             {items.length} {items.length === 1 ? 'artículo' : 'artículos'}
                           </span>
