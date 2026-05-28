@@ -565,27 +565,61 @@ export default function TaskManager() {
     e.preventDefault();
     if (!title.trim()) return;
 
-    let resolvedScope = scope;
+    // Auto-guardar adjuntos que se hayan rellenado pero no insertado con el botón pequeño
+    let finalAttachments = [...attachmentsList];
+    if (contentType === 'text' && textContent.trim()) {
+      finalAttachments.push({
+        id: `att-${Date.now()}`,
+        type: 'text',
+        textContent: textContent.trim()
+      });
+    } else if ((contentType === 'document' || contentType === 'image') && fileUrl) {
+      finalAttachments.push({
+        id: `att-${Date.now()}`,
+        type: contentType,
+        fileUrl: fileUrl,
+        fileName: selectedFileName || (contentType === 'image' ? 'Imagen' : 'Documento')
+      });
+    } else if (contentType === 'voice' && fileUrl) {
+      finalAttachments.push({
+        id: `att-${Date.now()}`,
+        type: 'voice',
+        fileUrl: fileUrl,
+        fileName: selectedFileName || 'Nota de voz'
+      });
+    } else if (contentType === 'url' && tempUrl.trim()) {
+      let formattedUrl = tempUrl.trim();
+      if (!/^https?:\/\//i.test(formattedUrl)) {
+        formattedUrl = 'https://' + formattedUrl;
+      }
+      finalAttachments.push({
+        id: `att-${Date.now()}`,
+        type: 'url',
+        url: formattedUrl,
+        label: tempUrlLabel.trim() || tempUrl.trim()
+      });
+    }
+
+    // Corregir la consistencia de ámbito (scope) al guardar/editar
+    let resolvedScope = 'individual';
     if (assignedMemberIds.length > 1) {
       resolvedScope = 'matrimonial';
-    } else {
+    } else if (assignedMemberIds.length === 1) {
       const assigned = members.find(m => m.id === assignedMemberIds[0]);
       if (assigned && (assigned.role === 'Hijo' || assigned.role === 'Hija')) {
         resolvedScope = 'ninos';
       }
     }
 
-    const resolvedAttachments = attachmentsList;
-
     const taskData = {
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       scope: resolvedScope,
       assignedMemberIds,
       dueDate,
       category,
       priority,
-      attachments: resolvedAttachments,
+      attachments: finalAttachments,
       assignee: assignedMemberIds.map(id => members.find(m => m.id === id)?.firstName || '').join(', ') || 'Todos',
       children: assignedMemberIds.map(id => members.find(m => m.id === id)?.firstName || '')
     };
@@ -1123,7 +1157,7 @@ export default function TaskManager() {
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="w-full h-[100dvh] sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl relative flex flex-col overflow-hidden animate-slideUp sm:animate-none"
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp sm:animate-none"
           >
             
             {/* Cabecera fija */}
@@ -1650,7 +1684,10 @@ export default function TaskManager() {
             </div> {/* Cierre Cuerpo Scroll */}
 
             {/* Footer fijo con botones de acción */}
-            <div className="flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-white shrink-0">
+            <div 
+              className="flex items-center gap-3 px-5 sm:px-6 pt-3 pb-3 sm:py-4 border-t border-slate-100 bg-white shrink-0"
+              style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 12px))' }}
+            >
               <button
                 type="button"
                 onClick={handleCloseModal}
