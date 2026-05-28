@@ -349,7 +349,7 @@ export default function ShoppingListView() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {categories.map((category) => {
                 const items = itemsByCategory(category);
                 
@@ -384,7 +384,7 @@ export default function ShoppingListView() {
                                 onChange={() => toggleShoppingItem(item.id)}
                                 className="custom-checkbox"
                               />
-                              <span className={`text-xs truncate font-bold ${item.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-700'}`}>
+                              <span className={`text-xs font-bold break-words ${item.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-700'}`}>
                                 {item.name}
                               </span>
                             </label>
