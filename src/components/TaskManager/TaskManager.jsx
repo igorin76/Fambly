@@ -1117,13 +1117,13 @@ export default function TaskManager() {
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-6 bg-slate-900/50 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-start p-0 sm:p-6 sm:pt-[105px] sm:pb-12 bg-slate-900/50 backdrop-blur-sm overflow-y-auto animate-fadeIn"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-4rem)] sm:min-h-[min(70vh,600px)] overflow-hidden animate-slideUp sm:animate-fadeIn"
+            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-none overflow-hidden sm:overflow-visible animate-slideUp sm:animate-fadeIn"
           >
             
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -1139,7 +1139,7 @@ export default function TaskManager() {
               </button>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+            <div className="flex-1 min-h-0 sm:min-h-fit overflow-y-auto sm:overflow-visible px-6 py-4 flex flex-col gap-4">
               
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título *</label>
