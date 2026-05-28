@@ -78,7 +78,7 @@ export default function ShoppingListView() {
     return selectedFilterCategories.includes(item.category);
   });
 
-  const categories = ['Frescos', 'Despensa', 'Limpieza'];
+  const categories = ['Frescos', 'Lácteos', 'Refrigerados', 'Despensa', 'Congelados', 'Limpieza', 'Higiene'];
 
   const itemsByCategory = (category) => {
     return shoppingItems.filter(item => item.category === category);
@@ -304,17 +304,17 @@ export default function ShoppingListView() {
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setNewItemCategory(cat)}
-                      className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                         newItemCategory === cat
-                          ? 'bg-blue-50 border-blue-200 text-blue-600'
+                          ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm'
                           : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
                       }`}
                     >
@@ -349,13 +349,18 @@ export default function ShoppingListView() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {categories.map((category) => {
                 const items = itemsByCategory(category);
                 
                 const categoryColor = 
                   category === 'Frescos' ? 'text-emerald-600 border-emerald-100 bg-emerald-50/15' :
-                  category === 'Despensa' ? 'text-amber-600 border-amber-100 bg-amber-50/15' : 'text-blue-600 border-blue-100 bg-blue-50/15';
+                  category === 'Lácteos' ? 'text-sky-600 border-sky-100 bg-sky-50/15' :
+                  category === 'Refrigerados' ? 'text-cyan-600 border-cyan-100 bg-cyan-50/15' :
+                  category === 'Despensa' ? 'text-amber-600 border-amber-100 bg-amber-50/15' :
+                  category === 'Congelados' ? 'text-blue-600 border-blue-100 bg-blue-50/15' :
+                  category === 'Limpieza' ? 'text-violet-600 border-violet-100 bg-violet-50/15' :
+                  'text-rose-600 border-rose-100 bg-rose-50/15'; // Higiene
 
                 return (
                   <div key={category} className="flat-card p-4 flex flex-col gap-3 h-fit min-h-[220px] border border-slate-200/60 bg-white">

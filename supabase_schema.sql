@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.events (
 CREATE TABLE IF NOT EXISTS public.shopping_items (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    category TEXT NOT NULL CHECK (category IN ('Frescos', 'Despensa', 'Limpieza')),
+    category TEXT NOT NULL CHECK (category IN ('Frescos', 'Lácteos', 'Lacteos', 'Refrigerados', 'Despensa', 'Congelados', 'Limpieza', 'Higiene')),
     completed BOOLEAN DEFAULT false
 );
 
