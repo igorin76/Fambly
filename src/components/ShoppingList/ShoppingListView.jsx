@@ -349,64 +349,78 @@ export default function ShoppingListView() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {categories.map((category) => {
-                const items = itemsByCategory(category);
-                
-                const categoryColor = 
-                  category === 'Frescos' ? 'text-emerald-600 border-emerald-100 bg-emerald-50/15' :
-                  category === 'Lácteos' ? 'text-sky-600 border-sky-100 bg-sky-50/15' :
-                  category === 'Refrigerados' ? 'text-cyan-600 border-cyan-100 bg-cyan-50/15' :
-                  category === 'Despensa' ? 'text-amber-600 border-amber-100 bg-amber-50/15' :
-                  category === 'Congelados' ? 'text-blue-600 border-blue-100 bg-blue-50/15' :
-                  category === 'Limpieza' ? 'text-violet-600 border-violet-100 bg-violet-50/15' :
-                  'text-rose-600 border-rose-100 bg-rose-50/15'; // Higiene
+            <div className="flat-card p-6 border border-slate-200/60 bg-white flex flex-col gap-6">
+              {shoppingItems.length > 0 ? (
+                <div className="flex flex-col gap-6">
+                  {categories.map((category) => {
+                    const items = itemsByCategory(category);
+                    if (items.length === 0) return null;
+                    
+                    const categoryColors = 
+                      category === 'Frescos' ? { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' } :
+                      category === 'Lácteos' ? { bg: 'bg-sky-50 text-sky-700 border-sky-100', dot: 'bg-sky-500' } :
+                      category === 'Refrigerados' ? { bg: 'bg-cyan-50 text-cyan-700 border-cyan-100', dot: 'bg-cyan-500' } :
+                      category === 'Despensa' ? { bg: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' } :
+                      category === 'Congelados' ? { bg: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500' } :
+                      category === 'Limpieza' ? { bg: 'bg-violet-50 text-violet-700 border-violet-100', dot: 'bg-violet-500' } :
+                      { bg: 'bg-rose-50 text-rose-700 border-rose-100', dot: 'bg-rose-500' }; // Higiene
 
-                return (
-                  <div key={category} className="flat-card p-4 flex flex-col gap-3 h-fit min-h-[220px] border border-slate-200/60 bg-white">
-                    <h4 className={`text-xs font-bold uppercase tracking-wider ${categoryColor} border border-slate-200/30 px-2.5 py-1.5 rounded-xl text-center`}>
-                      {category} ({items.length})
-                    </h4>
+                    return (
+                      <div key={category} className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                          <span className={`w-2 h-2 rounded-full ${categoryColors.dot}`} />
+                          <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700">
+                            {category}
+                          </span>
+                          <span className={`ml-auto text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${categoryColors.bg}`}>
+                            {items.length} {items.length === 1 ? 'artículo' : 'artículos'}
+                          </span>
+                        </div>
 
-                    {items.length > 0 ? (
-                      <div className="flex flex-col gap-1.5 mt-1">
-                        {items.map((item) => (
-                          <div 
-                            key={item.id}
-                            className={`flex items-center justify-between p-2 rounded-xl bg-slate-50/40 border border-slate-100 group transition-all ${
-                              item.completed ? 'opacity-50' : ''
-                            }`}
-                          >
-                            <label className="flex items-center gap-2 cursor-pointer select-none min-w-0 flex-1">
-                              <input
-                                type="checkbox"
-                                checked={item.completed}
-                                onChange={() => toggleShoppingItem(item.id)}
-                                className="custom-checkbox"
-                              />
-                              <span className={`text-xs font-bold break-words ${item.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-700'}`}>
-                                {item.name}
-                              </span>
-                            </label>
-                                                        <button
-                              onClick={() => deleteShoppingItem(item.id)}
-                              className="action-btn-mobile text-slate-450 hover:text-red-600 p-2 transition-all shrink-0 ml-1 touch-btn"
-                              title="Eliminar"
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {items.map((item) => (
+                            <div 
+                              key={item.id}
+                              className={`flex items-center justify-between p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 border border-slate-100/80 group transition-all duration-200 ${
+                                item.completed ? 'opacity-60 bg-slate-50/30' : ''
+                              }`}
                             >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        ))}
+                              <label className="flex items-center gap-2.5 cursor-pointer select-none min-w-0 flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={item.completed}
+                                  onChange={() => toggleShoppingItem(item.id)}
+                                  className="custom-checkbox"
+                                />
+                                <span className={`text-xs font-bold break-words pr-2 ${item.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-700'}`}>
+                                  {item.name}
+                                </span>
+                              </label>
+                              <button
+                                onClick={() => deleteShoppingItem(item.id)}
+                                className="action-btn-mobile text-slate-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all shrink-0 ml-1 touch-btn"
+                                title="Eliminar"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="flex-1 flex flex-col items-center justify-center text-center py-6 text-slate-400">
-                        <CheckCircle size={20} className="mb-1 text-slate-300" />
-                        <p className="text-[10px] font-bold">Vacío</p>
-                      </div>
-                    )}
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-12 text-slate-400">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 text-slate-300 border border-slate-100">
+                    <ShoppingCart size={24} />
                   </div>
-                );
-              })}
+                  <p className="text-sm font-bold text-slate-500">El carrito está vacío</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-[280px]">
+                    Añade artículos desde el formulario para planificar tu próxima compra familiar.
+                  </p>
+                </div>
+              )}
             </div>
             
           </div>
