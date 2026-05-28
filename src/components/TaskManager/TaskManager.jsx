@@ -1117,13 +1117,14 @@ export default function TaskManager() {
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-hidden"
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-8 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
+          style={{ overflowY: 'auto' }}
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-[28px] rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col h-[95svh] sm:h-auto sm:max-h-[calc(100vh-4rem)] sm:min-h-[min(70vh,600px)] overflow-hidden animate-slideUp sm:animate-fadeIn"
+            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-[28px] rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-2xl relative flex flex-col h-[95svh] sm:h-[min(90vh,700px)] overflow-hidden animate-slideUp sm:animate-none"
           >
             
             {/* Barra de arrastre solo en móvil */}
@@ -1132,8 +1133,8 @@ export default function TaskManager() {
             </div>
 
             {/* Cabecera fija */}
-            <div className="flex items-center justify-between px-6 py-3 sm:py-4 border-b border-slate-100 shrink-0">
-              <div className="flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+              <div className="flex flex-col gap-0.5">
                 <h3 className="text-sm font-bold tracking-tight text-slate-800">
                   {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
                 </h3>
@@ -1641,17 +1642,17 @@ export default function TaskManager() {
             </div>
 
             {/* Footer fijo con botones de acción */}
-            <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-100 bg-white shrink-0 pb-safe">
+            <div className="flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-white shrink-0">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition-all border-0 cursor-pointer"
+                className="flex-1 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm sm:text-xs transition-all border-0 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-2 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all border-0 cursor-pointer"
+                className="px-6 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold text-sm sm:text-xs shadow-md shadow-blue-500/20 transition-all border-0 cursor-pointer"
                 style={{ flexGrow: 2 }}
               >
                 {editingTask ? 'Guardar Cambios' : '+ Crear Tarea'}
