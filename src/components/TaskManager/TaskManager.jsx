@@ -1157,11 +1157,11 @@ export default function TaskManager() {
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp sm:animate-none"
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-y-auto animate-slideUp sm:animate-none"
           >
             
-            {/* Cabecera fija */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
               <div className="flex flex-col gap-0.5">
                 <h3 className="text-sm font-bold tracking-tight text-slate-800">
                   {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
@@ -1179,11 +1179,8 @@ export default function TaskManager() {
               </button>
             </div>
 
-            {/* Cuerpo con scroll nativo y grid de dos columnas */}
-            <div 
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-5 pb-36 sm:pb-6" 
-              style={{ WebkitOverflowScrolling: 'touch' }}
-            >
+            {/* Cuerpo con grid de dos columnas */}
+            <div className="px-6 py-5 pb-8 sm:pb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Columna Izquierda: Información básica de la Tarea */}
@@ -1683,9 +1680,9 @@ export default function TaskManager() {
               </div> {/* Cierre Grid 2 Columnas */}
             </div> {/* Cierre Cuerpo Scroll */}
 
-            {/* Footer fijo con botones de acción */}
+            {/* Footer sticky con botones de acción */}
             <div 
-              className="flex items-center gap-3 px-5 sm:px-6 pt-3 pb-3 sm:py-4 border-t border-slate-100 bg-white shrink-0"
+              className="flex items-center gap-3 px-5 sm:px-6 pt-3 pb-3 sm:py-4 border-t border-slate-100 bg-white sticky bottom-0 z-20 shrink-0"
               style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 12px))' }}
             >
               <button
