@@ -15,7 +15,9 @@ import {
   Users,
   UploadCloud,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Check,
+  RotateCcw
 } from 'lucide-react';
 
 export default function ShoppingListView() {
@@ -338,34 +340,37 @@ export default function ShoppingListView() {
           {/* LISTAS POR CATEGORÍAS */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Carrito de Compra</h3>
               {shoppingItems.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex items-center gap-1.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200/40 shadow-sm">
                   <button
                     onClick={() => toggleAllShoppingItems(true)}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-bold transition-colors"
-                    title="Marcar todos los artículos como comprados"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-white transition-all duration-150 cursor-pointer border-0 bg-transparent"
+                    title="Marcar todo como comprado"
                   >
-                    Marcar todo
+                    <Check size={11} className="stroke-[2.5]" />
+                    <span>Marcar todo</span>
                   </button>
-                  <span className="text-slate-200 text-xs hidden sm:inline">|</span>
+                  <div className="w-[1px] h-3 bg-slate-200" />
                   <button
                     onClick={() => toggleAllShoppingItems(false)}
-                    className="text-xs text-slate-500 hover:text-slate-650 font-bold transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-500 hover:text-slate-700 hover:bg-white transition-all duration-150 cursor-pointer border-0 bg-transparent"
                     title="Desmarcar todos los artículos"
                   >
-                    Desmarcar todo
+                    <RotateCcw size={11} className="stroke-[2.5]" />
+                    <span>Desmarcar todo</span>
                   </button>
                   {shoppingItems.some(i => i.completed) && (
                     <>
-                      <span className="text-slate-200 text-xs">|</span>
+                      <div className="w-[1px] h-3 bg-slate-200" />
                       <button
                         onClick={clearCompletedShoppingItems}
-                        className="flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-650 font-bold transition-colors"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-rose-500 hover:text-rose-600 hover:bg-white transition-all duration-150 cursor-pointer border-0 bg-transparent"
+                        title="Vaciar artículos comprados"
                       >
-                        <Trash size={12} />
-                        Vaciar Comprados
+                        <Trash size={11} />
+                        <span>Vaciar</span>
                       </button>
                     </>
                   )}
@@ -398,20 +403,20 @@ export default function ShoppingListView() {
                           </span>
                           
                           {/* Controles de marcación por categoría */}
-                          <div className="flex items-center gap-2 ml-2">
+                          <div className="flex items-center gap-0.5 bg-slate-100/60 p-0.5 rounded-lg border border-slate-200/20 ml-2">
                             <button
                               onClick={() => toggleCategoryShoppingItems(category, true)}
-                              className="text-[9px] font-bold text-slate-400 hover:text-blue-600 transition-colors px-1 py-0.5 rounded bg-slate-50/50 hover:bg-slate-100/50 border border-slate-200/30"
+                              className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-white transition-all duration-150 cursor-pointer border-0 bg-transparent flex"
                               title={`Marcar todo en ${category} como comprado`}
                             >
-                              Marcar
+                              <Check size={11} className="stroke-[2.5]" />
                             </button>
                             <button
                               onClick={() => toggleCategoryShoppingItems(category, false)}
-                              className="text-[9px] font-bold text-slate-400 hover:text-slate-600 transition-colors px-1 py-0.5 rounded bg-slate-50/50 hover:bg-slate-100/50 border border-slate-200/30"
+                              className="p-1 rounded text-slate-400 hover:text-slate-650 hover:bg-white transition-all duration-150 cursor-pointer border-0 bg-transparent flex"
                               title={`Desmarcar todo en ${category}`}
                             >
-                              Desmarcar
+                              <RotateCcw size={11} className="stroke-[2.5]" />
                             </button>
                           </div>
                           
