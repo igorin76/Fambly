@@ -112,7 +112,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       </header>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 md:pb-6">
+      <div className="relative mx-auto flex w-full max-w-7xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 md:pb-6">
         
         {/* SIDEBAR ESCRITORIO (md+) */}
         <aside className="hidden md:flex w-64 flex-col gap-2 pr-6">
