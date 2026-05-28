@@ -1117,29 +1117,41 @@ export default function TaskManager() {
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-6 bg-slate-900/50 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-hidden"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-4rem)] sm:min-h-[min(70vh,600px)] overflow-hidden animate-slideUp sm:animate-fadeIn"
+            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-[28px] rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col h-[95svh] sm:h-auto sm:max-h-[calc(100vh-4rem)] sm:min-h-[min(70vh,600px)] overflow-hidden animate-slideUp sm:animate-fadeIn"
           >
             
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
-                {editingTask ? 'Editar Tarea' : 'Crear Tarea'}
-              </h3>
+            {/* Barra de arrastre solo en móvil */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-slate-200" />
+            </div>
+
+            {/* Cabecera fija */}
+            <div className="flex items-center justify-between px-6 py-3 sm:py-4 border-b border-slate-100 shrink-0">
+              <div className="flex flex-col">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                  {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {editingTask ? 'Modifica los detalles y guarda' : 'Completa los campos y crea la tarea'}
+                </span>
+              </div>
               <button 
                 type="button"
                 onClick={handleCloseModal} 
-                className="text-slate-400 hover:text-slate-700 bg-transparent border-0 p-1.5 cursor-pointer touch-btn"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+            {/* Cuerpo con scroll nativo */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 flex flex-col gap-4">
               
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título *</label>
@@ -1628,19 +1640,21 @@ export default function TaskManager() {
 
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-none sm:rounded-b-2xl">
+            {/* Footer fijo con botones de acción */}
+            <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-100 bg-white shrink-0 pb-safe">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="text-xs font-bold text-slate-400 px-3.5 py-2 hover:text-slate-600 transition-colors"
+                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition-all border-0 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10 hover:scale-[1.01] transition-transform"
+                className="flex-2 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all border-0 cursor-pointer"
+                style={{ flexGrow: 2 }}
               >
-                {editingTask ? 'Guardar Cambios' : 'Crear Tarea'}
+                {editingTask ? 'Guardar Cambios' : '+ Crear Tarea'}
               </button>
             </div>
 
