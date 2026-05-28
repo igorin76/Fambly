@@ -1060,70 +1060,16 @@ export default function TaskManager() {
 
       </div>
 
-      {/* LISTADO DE TAREAS */}
-      {sortedTasks.length > 0 ? (
-        <div className="flex flex-col gap-4">
-          
-          {/* Bloque de Tareas Activas / Completadas */}
-          {activeAndCompletedTasks.length > 0 && (
-            <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-slate-200/50 bg-white">
-              {activeAndCompletedTasks.map((task) => renderTaskCard(task))}
-            </div>
-          )}
-
-          {/* Separador y Cabecera de Tareas Pendientes de Aceptar en listado general */}
-          {activeTab !== 'aceptacion' && tasksToAccept.length > 0 && (
-            <div className="mt-6 flex flex-col gap-3">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                  </span>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-600">
-                    Tareas Pendientes de Aceptar (Sin Iniciar)
-                  </h4>
-                  <span className="text-[10px] bg-amber-50 border border-amber-200/50 text-amber-700 font-bold px-2 py-0.5 rounded-full">
-                    {tasksToAccept.length}
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-400 hidden sm:block">
-                  Requieren confirmación entre administradores
-                </p>
-              </div>
-              
-              <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-amber-200/60 bg-amber-50/5">
-                {tasksToAccept.map((task) => renderTaskCard(task))}
-              </div>
-            </div>
-          )}
-
-          {/* En la pestaña de aceptación, renderizamos directamente las tareas a aceptar sin cabecera extra */}
-          {activeTab === 'aceptacion' && tasksToAccept.length > 0 && (
-            <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-amber-200/60 bg-white">
-              {tasksToAccept.map((task) => renderTaskCard(task))}
-            </div>
-          )}
-
-        </div>
-      ) : (
-        <div className="flat-card p-12 text-center flex flex-col items-center justify-center border border-slate-200/50">
-          <FileText className="h-10 w-10 text-slate-300 mb-2.5" />
-          <h3 className="text-sm font-bold text-slate-600">No hay tareas</h3>
-          <p className="text-xs text-slate-400 mt-1">Todas las tareas están completadas o no hay tareas en este filtro.</p>
-        </div>
-      )}
-
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-start p-0 sm:p-6 sm:pt-[105px] sm:pb-12 bg-slate-900/50 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+          className="fixed sm:relative inset-0 sm:inset-auto z-50 sm:z-10 flex items-end sm:items-stretch justify-center sm:justify-start p-0 bg-slate-900/50 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none overflow-y-auto sm:overflow-visible sm:mb-6 animate-fadeIn"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-none overflow-hidden sm:overflow-visible animate-slideUp sm:animate-fadeIn"
+            className="w-full sm:max-w-none bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-sm relative flex flex-col max-h-[85vh] sm:max-h-none overflow-hidden sm:overflow-visible animate-slideUp sm:animate-fadeIn"
           >
             
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -1645,6 +1591,61 @@ export default function TaskManager() {
             </div>
 
           </form>
+        </div>
+      )}
+
+
+      {/* LISTADO DE TAREAS */}
+      {sortedTasks.length > 0 ? (
+        <div className="flex flex-col gap-4">
+          
+          {/* Bloque de Tareas Activas / Completadas */}
+          {activeAndCompletedTasks.length > 0 && (
+            <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-slate-200/50 bg-white">
+              {activeAndCompletedTasks.map((task) => renderTaskCard(task))}
+            </div>
+          )}
+
+          {/* Separador y Cabecera de Tareas Pendientes de Aceptar en listado general */}
+          {activeTab !== 'aceptacion' && tasksToAccept.length > 0 && (
+            <div className="mt-6 flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                  </span>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-600">
+                    Tareas Pendientes de Aceptar (Sin Iniciar)
+                  </h4>
+                  <span className="text-[10px] bg-amber-50 border border-amber-200/50 text-amber-700 font-bold px-2 py-0.5 rounded-full">
+                    {tasksToAccept.length}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 hidden sm:block">
+                  Requieren confirmación entre administradores
+                </p>
+              </div>
+              
+              <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-amber-200/60 bg-amber-50/5">
+                {tasksToAccept.map((task) => renderTaskCard(task))}
+              </div>
+            </div>
+          )}
+
+          {/* En la pestaña de aceptación, renderizamos directamente las tareas a aceptar sin cabecera extra */}
+          {activeTab === 'aceptacion' && tasksToAccept.length > 0 && (
+            <div className="flat-card divide-y divide-slate-100 overflow-hidden border border-amber-200/60 bg-white">
+              {tasksToAccept.map((task) => renderTaskCard(task))}
+            </div>
+          )}
+
+        </div>
+      ) : (
+        <div className="flat-card p-12 text-center flex flex-col items-center justify-center border border-slate-200/50">
+          <FileText className="h-10 w-10 text-slate-300 mb-2.5" />
+          <h3 className="text-sm font-bold text-slate-600">No hay tareas</h3>
+          <p className="text-xs text-slate-400 mt-1">Todas las tareas están completadas o no hay tareas en este filtro.</p>
         </div>
       )}
 
