@@ -122,9 +122,9 @@ export default function TaskManager() {
     };
   }, [recordingTimer]);
 
-  // Bloquear scroll del body al abrir el modal para mejorar la usabilidad
+  // Bloquear scroll del body al abrir el modal solo en móvil para mejorar la usabilidad
   useEffect(() => {
-    if (isModalOpen) {
+    if (isModalOpen && window.innerWidth < 640) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
