@@ -1116,10 +1116,14 @@ export default function TaskManager() {
 
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-start p-0 sm:p-4 sm:pt-10 bg-slate-900/50 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-6 bg-slate-900/50 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
+        >
           <form 
             onSubmit={handleSaveTask}
-            className="w-full sm:max-w-lg bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-[85vh] overflow-hidden animate-slideUp sm:animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-xl bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-[calc(100vh-5rem)] overflow-hidden animate-slideUp sm:animate-fadeIn sm:my-auto"
           >
             
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
