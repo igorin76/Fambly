@@ -1114,24 +1114,18 @@ export default function TaskManager() {
         </div>
       )}
 
-      {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
+      {/* MODAL CREAR/EDITAR TAREA / PANTALLA COMPLETA EN MÓVIL Y GRID 2 COLUMNAS EN PC */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-8 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
-          style={{ overflowY: 'auto' }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-2xl bg-white border-t sm:border border-slate-200/60 rounded-t-[28px] rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-2xl relative flex flex-col h-[95svh] sm:h-[min(90vh,700px)] overflow-hidden animate-slideUp sm:animate-none"
+            className="w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl relative flex flex-col overflow-hidden animate-slideUp sm:animate-none"
           >
             
-            {/* Barra de arrastre solo en móvil */}
-            <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 rounded-full bg-slate-200" />
-            </div>
-
             {/* Cabecera fija */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
               <div className="flex flex-col gap-0.5">
@@ -1151,387 +1145,256 @@ export default function TaskManager() {
               </button>
             </div>
 
-            {/* Cuerpo con scroll nativo */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 flex flex-col gap-4">
-              
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Reunión escolar Rodrigo"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 flat-input text-xs"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Descripción</label>
-                <textarea
-                  rows={2}
-                  placeholder="Detalles adicionales..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3.5 py-2.5 flat-input text-xs"
-                />
-              </div>
-
-              {/* Categoría y Prioridad */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 flat-input text-xs text-slate-600"
-                  >
-                    <option value="GENERAL">General</option>
-                    <option value="COLEGIO">Colegio 🏫</option>
-                    <option value="TRABAJO">Trabajo 💼</option>
-                    <option value="TRÁMITES">Trámites 📄</option>
-                    <option value="CUMPLEAÑOS">Cumpleaños 🎂</option>
-                    <option value="REGALOS">Regalos 🎁</option>
-                    <option value="SALUD">Salud 🏥</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
-                  <div className="grid grid-cols-3 gap-1 h-[38px]">
-                    {['BAJA', 'MEDIA', 'ALTA'].map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setPriority(p)}
-                        className={`text-[9px] font-bold rounded-xl border transition-all ${
-                          priority === p
-                            ? p === 'ALTA' ? 'bg-red-50 border-red-200 text-red-600' :
-                              p === 'MEDIA' ? 'bg-amber-50 border-amber-200 text-amber-600' :
-                              'bg-emerald-50 border-emerald-200 text-emerald-600'
-                            : 'bg-white border-slate-200 text-slate-500'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Asignación de Miembros */}
-              <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Asignar a Miembros del Hogar</label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleMemberToggle('todos')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shrink-0 ${
-                      assignedMemberIds.length === members.length
-                        ? 'bg-indigo-600 border-indigo-600 text-white'
-                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-                    }`}
-                  >
-                    Todos
-                  </button>
-                  {members.map((m) => {
-                    const isSelected = assignedMemberIds.includes(m.id);
-                    const isKid = m.role === 'Hijo' || m.role === 'Hija';
-                    const pillBg = isSelected 
-                      ? isKid ? 'bg-orange-500 border-orange-500 text-white' : 'bg-blue-600 border-blue-600 text-white'
-                      : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300';
-
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => handleMemberToggle(m.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shrink-0 ${pillBg}`}
-                      >
-                        {m.firstName}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fecha de Límite</label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 flat-input text-xs"
-                />
-              </div>
-
-              {/* LISTADO DE ADJUNTOS ACTUALES */}
-              {attachmentsList.length > 0 && (
-                <div className="flex flex-col gap-2 bg-blue-50/20 p-3 rounded-xl border border-blue-100/50">
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Adjuntos de esta Tarea ({attachmentsList.length})</span>
-                  <div className="flex flex-col gap-1.5">
-                    {attachmentsList.map((att, idx) => (
-                      <div key={att.id || idx} className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-slate-100 text-xs shadow-sm">
-                        <span className="font-semibold text-slate-700 truncate max-w-[240px]">
-                          {att.type === 'text' && `📝 Nota: ${att.textContent.substring(0, 30)}${att.textContent.length > 30 ? '...' : ''}`}
-                          {att.type === 'document' && `📄 Doc: ${att.fileName || 'Archivo'}`}
-                          {att.type === 'image' && `🖼️ Imagen`}
-                          {att.type === 'voice' && `🎤 Nota de Voz`}
-                          {att.type === 'url' && `🔗 Web: ${att.label || att.url}`}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setAttachmentsList(attachmentsList.filter((_, i) => i !== idx))}
-                          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-slate-50 transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* SECCIÓN AÑADIR ADJUNTOS */}
-              <div className="flex flex-col gap-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                  Añadir Adjuntos
-                </label>
+            {/* Cuerpo con scroll nativo y grid de dos columnas */}
+            <div 
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-5 pb-36 sm:pb-6" 
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <div className="grid grid-cols-3 gap-1 mb-2">
-                  {[
-                    { id: 'text', label: 'Texto/Nota' },
-                    { id: 'document', label: 'PDF/Doc' },
-                    { id: 'image', label: 'Imagen' },
-                    { id: 'voice', label: 'Voz' },
-                    { id: 'url', label: 'Enlace URL' }
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setContentType(contentType === item.id ? '' : item.id);
-                        setFileUrl('');
-                        setTextContent('');
-                        setRecordedAudioUrl('');
-                        setSelectedFileName('');
-                        setSelectedFileSize(0);
-                        setFileErrorMsg('');
-                        setVoiceInputMode('record');
-                        setVoiceFileErrorMsg('');
-                        setTempUrl('');
-                        setTempUrlLabel('');
-                        if (isRecording) stopRecording();
-                      }}
-                      className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-                        contentType === item.id
-                          ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm'
-                          : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
+                {/* Columna Izquierda: Información básica de la Tarea */}
+                <div className="flex flex-col gap-4">
+                  
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: Reunión escolar Rodrigo"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full px-3.5 py-2.5 flat-input text-xs"
+                    />
+                  </div>
 
-                {contentType === 'text' && (
-                  <div className="flex flex-col gap-1.5 mt-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Nota Adjunta *</label>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Descripción</label>
                     <textarea
                       rows={3}
-                      placeholder="Escribe el contenido de la nota aquí..."
-                      value={textContent}
-                      onChange={(e) => setTextContent(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700"
+                      placeholder="Detalles adicionales..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full px-3.5 py-2.5 flat-input text-xs"
                     />
-                    <button
-                      type="button"
-                      disabled={!textContent.trim()}
-                      onClick={() => {
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: 'text',
-                          textContent: textContent
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setTextContent('');
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Insertar Nota
-                    </button>
                   </div>
-                )}
 
-                {(contentType === 'document' || contentType === 'image') && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
-                      {contentType === 'image' ? 'Seleccionar Imagen *' : 'Seleccionar Documento *'}
+                  {/* Categoría y Prioridad */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-3 py-2.5 flat-input text-xs text-slate-600"
+                      >
+                        <option value="GENERAL">General</option>
+                        <option value="COLEGIO">Colegio 🏫</option>
+                        <option value="TRABAJO">Trabajo 💼</option>
+                        <option value="TRÁMITES">Trámites 📄</option>
+                        <option value="CUMPLEAÑOS">Cumpleaños 🎂</option>
+                        <option value="REGALOS">Regalos 🎁</option>
+                        <option value="SALUD">Salud 🏥</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
+                      <div className="grid grid-cols-3 gap-1 h-[38px]">
+                        {['BAJA', 'MEDIA', 'ALTA'].map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setPriority(p)}
+                            className={`text-[9px] font-bold rounded-xl border transition-all ${
+                              priority === p
+                                ? p === 'ALTA' ? 'bg-red-50 border-red-200 text-red-600' :
+                                  p === 'MEDIA' ? 'bg-amber-50 border-amber-200 text-amber-600' :
+                                  'bg-emerald-50 border-emerald-200 text-emerald-600'
+                                : 'bg-white border-slate-200 text-slate-500'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Asignación de Miembros */}
+                  <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Asignar a Miembros del Hogar</label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMemberToggle('todos')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shrink-0 ${
+                          assignedMemberIds.length === members.length
+                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                        }`}
+                      >
+                        Todos
+                      </button>
+                      {members.map((m) => {
+                        const isSelected = assignedMemberIds.includes(m.id);
+                        const isKid = m.role === 'Hijo' || m.role === 'Hija';
+                        const pillBg = isSelected 
+                          ? isKid ? 'bg-orange-500 border-orange-500 text-white' : 'bg-blue-600 border-blue-600 text-white'
+                          : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300';
+
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => handleMemberToggle(m.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shrink-0 ${pillBg}`}
+                          >
+                            {m.firstName}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fecha de Límite</label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 flat-input text-xs"
+                    />
+                  </div>
+
+                </div>
+
+                {/* Columna Derecha: Gestión de Archivos y Adjuntos */}
+                <div className="flex flex-col gap-4">
+                  
+                  {/* LISTADO DE ADJUNTOS ACTUALES */}
+                  {attachmentsList.length > 0 && (
+                    <div className="flex flex-col gap-2 bg-blue-50/20 p-3 rounded-xl border border-blue-100/50">
+                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Adjuntos de esta Tarea ({attachmentsList.length})</span>
+                      <div className="flex flex-col gap-1.5">
+                        {attachmentsList.map((att, idx) => (
+                          <div key={att.id || idx} className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-slate-100 text-xs shadow-sm">
+                            <span className="font-semibold text-slate-700 truncate max-w-[240px]">
+                              {att.type === 'text' && `📝 Nota: ${att.textContent.substring(0, 30)}${att.textContent.length > 30 ? '...' : ''}`}
+                              {att.type === 'document' && `📄 Doc: ${att.fileName || 'Archivo'}`}
+                              {att.type === 'image' && `🖼️ Imagen`}
+                              {att.type === 'voice' && `🎤 Nota de Voz`}
+                              {att.type === 'url' && `🔗 Web: ${att.label || att.url}`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setAttachmentsList(attachmentsList.filter((_, i) => i !== idx))}
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-slate-50 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SECCIÓN AÑADIR ADJUNTOS */}
+                  <div className="flex flex-col gap-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                      Añadir Adjuntos
                     </label>
                     
-                    <div className="relative border border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-4 transition-colors bg-white flex flex-col items-center justify-center text-center group cursor-pointer">
-                      <input
-                        type="file"
-                        accept={contentType === 'image' ? 'image/*' : '.pdf,.txt,.doc,.docx,.xls,.xlsx,.rtf'}
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      
-                      {fileUrl ? (
-                        <div className="flex flex-col items-center gap-1.5 w-full">
-                          {contentType === 'image' ? (
-                            <img src={fileUrl} alt="Preview" className="max-h-20 object-contain rounded border border-slate-100 p-0.5 bg-slate-50" />
-                          ) : (
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-full">
-                              <FileText size={20} />
-                            </div>
-                          )}
-                          <div className="text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
-                            {selectedFileName || 'Archivo cargado'}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setFileUrl('');
-                              setSelectedFileName('');
-                              setSelectedFileSize(0);
-                            }}
-                            className="text-[9px] text-red-500 font-bold hover:underline"
-                          >
-                            Quitar archivo
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <UploadCloud size={20} className="text-slate-400 group-hover:scale-110 transition-transform shadow-sm mb-1" />
-                          <p className="text-[10px] font-bold text-slate-600">Subir {contentType === 'image' ? 'imagen' : 'documento'}</p>
-                          <p className="text-[8px] text-slate-400 font-bold">Máx. 5MB</p>
-                        </>
-                      )}
+                    <div className="grid grid-cols-3 gap-1 mb-2">
+                      {[
+                        { id: 'text', label: 'Texto/Nota' },
+                        { id: 'document', label: 'PDF/Doc' },
+                        { id: 'image', label: 'Imagen' },
+                        { id: 'voice', label: 'Voz' },
+                        { id: 'url', label: 'Enlace URL' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setContentType(contentType === item.id ? '' : item.id);
+                            setFileUrl('');
+                            setTextContent('');
+                            setRecordedAudioUrl('');
+                            setSelectedFileName('');
+                            setSelectedFileSize(0);
+                            setFileErrorMsg('');
+                            setVoiceInputMode('record');
+                            setVoiceFileErrorMsg('');
+                            setTempUrl('');
+                            setTempUrlLabel('');
+                            if (isRecording) stopRecording();
+                          }}
+                          className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                            contentType === item.id
+                              ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm'
+                              : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
                     </div>
-                    
-                    {fileErrorMsg && (
-                      <p className="text-[9px] text-red-500 font-bold text-center">{fileErrorMsg}</p>
+
+                    {contentType === 'text' && (
+                      <div className="flex flex-col gap-1.5 mt-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Nota Adjunta *</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Escribe el contenido de la nota aquí..."
+                          value={textContent}
+                          onChange={(e) => setTextContent(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700"
+                        />
+                        <button
+                          type="button"
+                          disabled={!textContent.trim()}
+                          onClick={() => {
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: 'text',
+                              textContent: textContent
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setTextContent('');
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Insertar Nota
+                        </button>
+                      </div>
                     )}
 
-                    <button
-                      type="button"
-                      disabled={!fileUrl}
-                      onClick={() => {
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: contentType,
-                          fileUrl: fileUrl,
-                          fileName: selectedFileName || (contentType === 'image' ? 'Imagen' : 'Documento')
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setFileUrl('');
-                        setSelectedFileName('');
-                        setSelectedFileSize(0);
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Insertar Archivo
-                    </button>
-                  </div>
-                )}
-
-                {contentType === 'voice' && (
-                  <div className="flex flex-col gap-2.5 bg-white border border-slate-200/50 p-3 rounded-xl mt-1 text-center">
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoiceInputMode('record');
-                          setFileUrl('');
-                          setRecordedAudioUrl('');
-                          setSelectedFileName('');
-                          setSelectedFileSize(0);
-                          setVoiceFileErrorMsg('');
-                        }}
-                        className={`flex-1 py-1 rounded text-[9px] font-bold transition-all ${
-                          voiceInputMode === 'record'
-                            ? 'bg-white text-slate-800 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                      >
-                        Grabar Micrófono
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoiceInputMode('upload');
-                          setFileUrl('');
-                          setRecordedAudioUrl('');
-                          setSelectedFileName('');
-                          setSelectedFileSize(0);
-                          setVoiceFileErrorMsg('');
-                          if (isRecording) stopRecording();
-                        }}
-                        className={`flex-1 py-1 rounded text-[9px] font-bold transition-all ${
-                          voiceInputMode === 'upload'
-                            ? 'bg-white text-slate-800 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                      >
-                        Cargar Audio
-                      </button>
-                    </div>
-
-                    {voiceInputMode === 'record' ? (
-                      <div className="flex flex-col items-center gap-2 py-1.5">
-                        {isRecording ? (
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-[10px] font-bold text-red-500 animate-pulse">Grabando... {formatTime(recordingSeconds)}</span>
-                            <button
-                              type="button"
-                              onClick={stopRecording}
-                              className="h-9 w-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow shadow-red-500/20"
-                            >
-                              <Square size={16} fill="white" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-[9px] text-slate-400 font-bold">Pulsa para empezar a grabar</span>
-                            <button
-                              type="button"
-                              onClick={startRecording}
-                              className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow shadow-blue-500/20"
-                            >
-                              <Mic size={16} />
-                            </button>
-                          </div>
-                        )}
-
-                        {recordedAudioUrl && (
-                          <div className="w-full flex flex-col gap-1 mt-1 border-t border-slate-100 pt-2">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Preescucha de Grabación:</span>
-                            <audio src={recordedAudioUrl} controls className="w-full h-8" />
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2 py-1">
+                    {(contentType === 'document' || contentType === 'image') && (
+                      <div className="flex flex-col gap-2 mt-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                          {contentType === 'image' ? 'Seleccionar Imagen *' : 'Seleccionar Documento *'}
+                        </label>
+                        
                         <div className="relative border border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-4 transition-colors bg-white flex flex-col items-center justify-center text-center group cursor-pointer">
                           <input
                             type="file"
-                            accept="audio/*"
-                            onChange={handleVoiceFileChange}
+                            accept={contentType === 'image' ? 'image/*' : '.pdf,.txt,.doc,.docx,.xls,.xlsx,.rtf'}
+                            onChange={handleFileChange}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           />
                           
                           {fileUrl ? (
                             <div className="flex flex-col items-center gap-1.5 w-full">
-                              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-full">
-                                <Volume2 size={18} />
-                              </div>
+                              {contentType === 'image' ? (
+                                <img src={fileUrl} alt="Preview" className="max-h-20 object-contain rounded border border-slate-100 p-0.5 bg-slate-50" />
+                              ) : (
+                                <div className="p-2 bg-blue-50 text-blue-600 rounded-full">
+                                  <FileText size={20} />
+                                </div>
+                              )}
                               <div className="text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
-                                {selectedFileName || 'Audio cargado'}
+                                {selectedFileName || 'Archivo cargado'}
                               </div>
                               <button
                                 type="button"
@@ -1539,107 +1402,252 @@ export default function TaskManager() {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   setFileUrl('');
-                                  setRecordedAudioUrl('');
                                   setSelectedFileName('');
                                   setSelectedFileSize(0);
                                 }}
                                 className="text-[9px] text-red-500 font-bold hover:underline"
                               >
-                                Quitar audio
+                                Quitar archivo
                               </button>
                             </div>
                           ) : (
                             <>
                               <UploadCloud size={20} className="text-slate-400 group-hover:scale-110 transition-transform shadow-sm mb-1" />
-                              <p className="text-[10px] font-bold text-slate-600">Subir archivo de audio</p>
-                              <p className="text-[8px] text-slate-400 font-bold">Formatos: MP3, WAV, WebM (Máx. 8MB)</p>
+                              <p className="text-[10px] font-bold text-slate-600">Subir {contentType === 'image' ? 'imagen' : 'documento'}</p>
+                              <p className="text-[8px] text-slate-400 font-bold">Máx. 5MB</p>
                             </>
                           )}
                         </div>
-
-                        {recordedAudioUrl && (
-                          <div className="w-full mt-1.5 text-left bg-slate-50 p-2 rounded-lg border border-slate-100">
-                            <span className="text-[9px] font-bold text-slate-400 block mb-1">Preescucha del archivo:</span>
-                            <audio src={recordedAudioUrl} controls className="w-full h-8" />
-                          </div>
+                        
+                        {fileErrorMsg && (
+                          <p className="text-[9px] text-red-500 font-bold text-center">{fileErrorMsg}</p>
                         )}
 
-                        {voiceFileErrorMsg && (
-                          <p className="text-[9px] text-red-500 font-bold text-center mt-1">{voiceFileErrorMsg}</p>
-                        )}
+                        <button
+                          type="button"
+                          disabled={!fileUrl}
+                          onClick={() => {
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: contentType,
+                              fileUrl: fileUrl,
+                              fileName: selectedFileName || (contentType === 'image' ? 'Imagen' : 'Documento')
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setFileUrl('');
+                            setSelectedFileName('');
+                            setSelectedFileSize(0);
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Insertar Archivo
+                        </button>
                       </div>
                     )}
 
-                    <button
-                      type="button"
-                      disabled={!fileUrl}
-                      onClick={() => {
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: 'voice',
-                          fileUrl: fileUrl,
-                          fileName: selectedFileName || 'Nota de voz'
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setFileUrl('');
-                        setRecordedAudioUrl('');
-                        setSelectedFileName('');
-                        setSelectedFileSize(0);
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Insertar Nota de Voz
-                    </button>
-                  </div>
-                )}
+                    {contentType === 'voice' && (
+                      <div className="flex flex-col gap-2.5 bg-white border border-slate-200/50 p-3 rounded-xl mt-1 text-center">
+                        <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVoiceInputMode('record');
+                              setFileUrl('');
+                              setRecordedAudioUrl('');
+                              setSelectedFileName('');
+                              setSelectedFileSize(0);
+                              setVoiceFileErrorMsg('');
+                            }}
+                            className={`flex-1 py-1 rounded text-[9px] font-bold transition-all ${
+                              voiceInputMode === 'record'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          >
+                            Grabar Micrófono
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVoiceInputMode('upload');
+                              setFileUrl('');
+                              setRecordedAudioUrl('');
+                              setSelectedFileName('');
+                              setSelectedFileSize(0);
+                              setVoiceFileErrorMsg('');
+                              if (isRecording) stopRecording();
+                            }}
+                            className={`flex-1 py-1 rounded text-[9px] font-bold transition-all ${
+                              voiceInputMode === 'upload'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          >
+                            Cargar Audio
+                          </button>
+                        </div>
 
-                {contentType === 'url' && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Dirección Web (URL) *</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: https://colegio.com/boletin"
-                      value={tempUrl}
-                      onChange={(e) => setTempUrl(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700"
-                    />
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Etiqueta del enlace</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Portal Escolar"
-                      value={tempUrlLabel}
-                      onChange={(e) => setTempUrlLabel(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700"
-                    />
-                    <button
-                      type="button"
-                      disabled={!tempUrl.trim()}
-                      onClick={() => {
-                        let formattedUrl = tempUrl.trim();
-                        if (!/^https?:\/\//i.test(formattedUrl)) {
-                          formattedUrl = 'https://' + formattedUrl;
-                        }
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: 'url',
-                          url: formattedUrl,
-                          label: tempUrlLabel.trim() || tempUrl.trim()
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setTempUrl('');
-                        setTempUrlLabel('');
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Insertar Enlace URL
-                    </button>
-                  </div>
-                )}
-              </div>
+                        {voiceInputMode === 'record' ? (
+                          <div className="flex flex-col items-center gap-2 py-1.5">
+                            {isRecording ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[10px] font-bold text-red-500 animate-pulse">Grabando... {formatTime(recordingSeconds)}</span>
+                                <button
+                                  type="button"
+                                  onClick={stopRecording}
+                                  className="h-9 w-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow shadow-red-500/20"
+                                >
+                                  <Square size={16} fill="white" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[9px] text-slate-400 font-bold">Pulsa para empezar a grabar</span>
+                                <button
+                                  type="button"
+                                  onClick={startRecording}
+                                  className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow shadow-blue-500/20"
+                                >
+                                  <Mic size={16} />
+                                </button>
+                              </div>
+                            )}
 
-            </div>
+                            {recordedAudioUrl && (
+                              <div className="w-full flex flex-col gap-1 mt-1 border-t border-slate-100 pt-2">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Preescucha de Grabación:</span>
+                                <audio src={recordedAudioUrl} controls className="w-full h-8" />
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2 py-1">
+                            <div className="relative border border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-4 transition-colors bg-white flex flex-col items-center justify-center text-center group cursor-pointer">
+                              <input
+                                type="file"
+                                accept="audio/*"
+                                onChange={handleVoiceFileChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              />
+                              
+                              {fileUrl ? (
+                                <div className="flex flex-col items-center gap-1.5 w-full">
+                                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-full">
+                                    <Volume2 size={18} />
+                                  </div>
+                                  <div className="text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
+                                    {selectedFileName || 'Audio cargado'}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setFileUrl('');
+                                      setRecordedAudioUrl('');
+                                      setSelectedFileName('');
+                                      setSelectedFileSize(0);
+                                    }}
+                                    className="text-[9px] text-red-500 font-bold hover:underline"
+                                  >
+                                    Quitar audio
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <UploadCloud size={20} className="text-slate-400 group-hover:scale-110 transition-transform shadow-sm mb-1" />
+                                  <p className="text-[10px] font-bold text-slate-600">Subir archivo de audio</p>
+                                  <p className="text-[8px] text-slate-400 font-bold">Formatos: MP3, WAV, WebM (Máx. 8MB)</p>
+                                </>
+                              )}
+                            </div>
+
+                            {recordedAudioUrl && (
+                              <div className="w-full mt-1.5 text-left bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                <span className="text-[9px] font-bold text-slate-400 block mb-1">Preescucha del archivo:</span>
+                                <audio src={recordedAudioUrl} controls className="w-full h-8" />
+                              </div>
+                            )}
+
+                            {voiceFileErrorMsg && (
+                              <p className="text-[9px] text-red-500 font-bold text-center mt-1">{voiceFileErrorMsg}</p>
+                            )}
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={!fileUrl}
+                          onClick={() => {
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: 'voice',
+                              fileUrl: fileUrl,
+                              fileName: selectedFileName || 'Nota de voz'
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setFileUrl('');
+                            setRecordedAudioUrl('');
+                            setSelectedFileName('');
+                            setSelectedFileSize(0);
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Insertar Nota de Voz
+                        </button>
+                      </div>
+                    )}
+
+                    {contentType === 'url' && (
+                      <div className="flex flex-col gap-2 mt-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Dirección Web (URL) *</label>
+                        <input
+                          type="text"
+                          placeholder="Ej: https://colegio.com/boletin"
+                          value={tempUrl}
+                          onChange={(e) => setTempUrl(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700"
+                        />
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Etiqueta del enlace</label>
+                        <input
+                          type="text"
+                          placeholder="Ej: Portal Escolar"
+                          value={tempUrlLabel}
+                          onChange={(e) => setTempUrlLabel(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700"
+                        />
+                        <button
+                          type="button"
+                          disabled={!tempUrl.trim()}
+                          onClick={() => {
+                            let formattedUrl = tempUrl.trim();
+                            if (!/^https?:\/\//i.test(formattedUrl)) {
+                              formattedUrl = 'https://' + formattedUrl;
+                            }
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: 'url',
+                              url: formattedUrl,
+                              label: tempUrlLabel.trim() || tempUrl.trim()
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setTempUrl('');
+                            setTempUrlLabel('');
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Insertar Enlace URL
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                </div> {/* Cierre Columna Derecha */}
+              </div> {/* Cierre Grid 2 Columnas */}
+            </div> {/* Cierre Cuerpo Scroll */}
 
             {/* Footer fijo con botones de acción */}
             <div className="flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-white shrink-0">
