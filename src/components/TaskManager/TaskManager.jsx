@@ -122,6 +122,18 @@ export default function TaskManager() {
     };
   }, [recordingTimer]);
 
+  // Bloquear scroll del body al abrir el modal para mejorar la usabilidad
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isModalOpen]);
+
   // Manejo de la subida de archivos (PDF/Documento, Imagen)
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -1105,25 +1117,25 @@ export default function TaskManager() {
       {/* MODAL CREAR/EDITAR TAREA / BOTTOM SHEET EN MÓVIL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh] animate-slideUp sm:animate-fadeIn" 
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          <form 
+            onSubmit={handleSaveTask}
+            className="w-full sm:max-w-lg bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl shadow-2xl sm:shadow-xl relative flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden animate-slideUp sm:animate-fadeIn"
           >
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
                 {editingTask ? 'Editar Tarea' : 'Crear Tarea'}
               </h3>
               <button 
                 type="button"
-                onClick={() => setIsModalOpen(false)} 
+                onClick={handleCloseModal} 
                 className="text-slate-400 hover:text-slate-700 bg-transparent border-0 p-1.5 cursor-pointer touch-btn"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveTask} className="flex flex-col gap-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 flex flex-col gap-4">
               
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título *</label>
@@ -1610,25 +1622,25 @@ export default function TaskManager() {
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="text-xs font-bold text-slate-400 px-3 py-2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10"
-                >
-                  {editingTask ? 'Guardar Cambios' : 'Crear Tarea'}
-                </button>
-              </div>
+            </div>
 
-            </form>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-none sm:rounded-b-2xl">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="text-xs font-bold text-slate-400 px-3.5 py-2 hover:text-slate-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10 hover:scale-[1.01] transition-transform"
+              >
+                {editingTask ? 'Guardar Cambios' : 'Crear Tarea'}
+              </button>
+            </div>
 
-          </div>
+          </form>
         </div>
       )}
 
