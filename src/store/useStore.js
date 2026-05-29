@@ -434,13 +434,26 @@ export const useStore = create(
           
           assignedAdmins.forEach(admin => {
             if (admin.email) {
+              // Obtener otras tareas pendientes activas del administrador
+              const adminTasks = get().tasks.filter(t => 
+                t.assignedMemberIds && 
+                t.assignedMemberIds.includes(admin.id) && 
+                !t.completed &&
+                t.id !== newTask.id
+              );
+              
+              const otherTasksText = adminTasks.length > 0 
+                ? adminTasks.map(t => `- ${t.title}${t.dueDate ? ` (Límite: ${t.dueDate})` : ''} [Prioridad: ${t.priority}]`).join('\n')
+                : 'No tienes otras tareas pendientes.';
+
               sendPendingTaskNotification({
                 adminEmail: admin.email,
                 adminName: admin.firstName,
                 taskTitle: newTask.title,
                 creatorName: activeMember ? activeMember.firstName : 'Sistema',
                 dueDate: newTask.dueDate,
-                priority: newTask.priority
+                priority: newTask.priority,
+                otherPendingTasks: otherTasksText
               });
             }
           });
@@ -550,13 +563,26 @@ export const useStore = create(
 
           newAssignedAdmins.forEach(admin => {
             if (admin.email) {
+              // Obtener otras tareas pendientes activas del administrador
+              const adminTasks = get().tasks.filter(t => 
+                t.assignedMemberIds && 
+                t.assignedMemberIds.includes(admin.id) && 
+                !t.completed &&
+                t.id !== taskId
+              );
+              
+              const otherTasksText = adminTasks.length > 0 
+                ? adminTasks.map(t => `- ${t.title}${t.dueDate ? ` (Límite: ${t.dueDate})` : ''} [Prioridad: ${t.priority}]`).join('\n')
+                : 'No tienes otras tareas pendientes.';
+
               sendPendingTaskNotification({
                 adminEmail: admin.email,
                 adminName: admin.firstName,
                 taskTitle: localMergedTask.title || oldTask?.title || '',
                 creatorName: activeMember ? activeMember.firstName : 'Sistema',
                 dueDate: localMergedTask.dueDate || oldTask?.dueDate,
-                priority: localMergedTask.priority || oldTask?.priority
+                priority: localMergedTask.priority || oldTask?.priority,
+                otherPendingTasks: otherTasksText
               });
             }
           });

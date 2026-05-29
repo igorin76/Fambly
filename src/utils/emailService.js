@@ -16,7 +16,8 @@ export async function sendPendingTaskNotification({
   taskTitle,
   creatorName,
   dueDate,
-  priority
+  priority,
+  otherPendingTasks
 }) {
   if (!adminEmail) {
     console.warn("[emailService] No admin email provided, skipping notification.");
@@ -39,6 +40,11 @@ ${creatorName} ha asignado una tarea en HomeHub que requiere tu aceptación:
 - Fecha límite: ${dueDate || 'Sin fecha asignada'}
 - Prioridad: ${priority || 'MEDIA'}
 
+-----------------------------------------
+📋 RECORDATORIO DE TUS TAREAS ACTIVAS PENDIENTES:
+${otherPendingTasks || 'No tienes otras tareas pendientes.'}
+-----------------------------------------
+
 Por favor, entra en HomeHub para confirmar la tarea en tu panel de "Tareas por Aceptar".
 =========================================
 `;
@@ -53,7 +59,7 @@ Por favor, entra en HomeHub para confirmar la tarea en tu panel de "Tareas por A
     return { 
       success: true, 
       simulated: true, 
-      emailData: { adminEmail, adminName, taskTitle, creatorName, dueDate, priority } 
+      emailData: { adminEmail, adminName, taskTitle, creatorName, dueDate, priority, otherPendingTasks } 
     };
   }
 
@@ -74,7 +80,8 @@ Por favor, entra en HomeHub para confirmar la tarea en tu panel de "Tareas por A
           task_title: taskTitle,
           creator_name: creatorName,
           due_date: dueDate || 'Sin fecha asignada',
-          priority: priority || 'MEDIA'
+          priority: priority || 'MEDIA',
+          other_pending_tasks: otherPendingTasks || 'No tienes otras tareas pendientes.'
         }
       })
     });
