@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useStore } from '../../store/useStore';
 import { getTaskStatus, formatDateSpanish } from '../../utils/dateHelpers';
 import { 
@@ -1150,9 +1151,9 @@ export default function TaskManager() {
       )}
 
       {/* MODAL CREAR/EDITAR TAREA / PANTALLA COMPLETA EN MÓVIL Y GRID 2 COLUMNAS EN PC */}
-      {isModalOpen && (
+      {isModalOpen && ReactDOM.createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
@@ -1703,7 +1704,8 @@ export default function TaskManager() {
             </div>
 
           </form>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* VISOR LIGHTBOX IMÁGENES (PANTALLA COMPLETA) */}
