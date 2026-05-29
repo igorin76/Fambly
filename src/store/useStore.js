@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../utils/supabaseClient';
+import { sendPendingTaskNotification } from '../utils/emailService';
 
 // Arrays de datos semilla vacíos
 const initialTasks = [];
@@ -151,7 +152,8 @@ export const useStore = create(
               points: m.points || 0,
               neededItems: m.needed_items || '',
               isAdmin: m.is_admin === true,
-              associatedMemberIds: m.associated_member_ids || []
+              associatedMemberIds: m.associated_member_ids || [],
+              email: m.email || ''
             })) : get().members,
 
             clothingLogistics: dbMembers ? dbMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
@@ -256,7 +258,8 @@ export const useStore = create(
           bloodType: member.bloodType || '',
           dietaryRestrictions: member.dietaryRestrictions || [],
           isAdmin: member.isAdmin || false,
-          associatedMemberIds: member.associatedMemberIds || []
+          associatedMemberIds: member.associatedMemberIds || [],
+          email: member.email || ''
         };
         set((state) => {
           const updatedMembers = [...state.members, newMember];
@@ -288,7 +291,8 @@ export const useStore = create(
             points: newMember.points || 0,
             needed_items: '',
             is_admin: newMember.isAdmin || false,
-            associated_member_ids: newMember.associatedMemberIds || []
+            associated_member_ids: newMember.associatedMemberIds || [],
+            email: newMember.email || ''
           });
         }
       },
@@ -323,6 +327,7 @@ export const useStore = create(
           if (updatedFields.neededItems !== undefined) updatePayload.needed_items = updatedFields.neededItems;
           if (updatedFields.isAdmin !== undefined) updatePayload.is_admin = updatedFields.isAdmin;
           if (updatedFields.associatedMemberIds !== undefined) updatePayload.associated_member_ids = updatedFields.associatedMemberIds;
+          if (updatedFields.email !== undefined) updatePayload.email = updatedFields.email;
 
           await supabase.from('members').update(updatePayload).eq('id', id);
         }
@@ -418,6 +423,28 @@ export const useStore = create(
             attachments: newTask.attachments
           });
         }
+
+        // Notificar por email a los administradores correspondientes si la tarea requiere confirmación (no está aceptada)
+        if (!newTask.isAccepted) {
+          const assignedAdmins = membersList.filter(m => 
+            m.isAdmin && 
+            newTask.assignedMemberIds.includes(m.id) && 
+            m.id !== (activeMember ? activeMember.id : null)
+          );
+          
+          assignedAdmins.forEach(admin => {
+            if (admin.email) {
+              sendPendingTaskNotification({
+                adminEmail: admin.email,
+                adminName: admin.firstName,
+                taskTitle: newTask.title,
+                creatorName: activeMember ? activeMember.firstName : 'Sistema',
+                dueDate: newTask.dueDate,
+                priority: newTask.priority
+              });
+            }
+          });
+        }
       },
 
       updateTask: async (taskId, updatedTask) => {
@@ -504,6 +531,35 @@ export const useStore = create(
           if (mergedTask.completedAt !== undefined) updatePayload.completed_at = mergedTask.completedAt;
 
           await supabase.from('tasks').update(updatePayload).eq('id', taskId);
+        }
+
+        // Notificar por email a los administradores si la tarea pasa a requerir confirmación
+        const wasAcceptedBefore = oldTask ? oldTask.isAccepted !== false : true;
+        const isAcceptedNow = localMergedTask.isAccepted !== false;
+        
+        if (!isAcceptedNow) {
+          const oldAssigned = oldTask ? oldTask.assignedMemberIds || [] : [];
+          const newAssigned = localMergedTask.assignedMemberIds || oldAssigned;
+          
+          const newAssignedAdmins = membersList.filter(m => 
+            m.isAdmin && 
+            newAssigned.includes(m.id) && 
+            m.id !== (activeMember ? activeMember.id : null) &&
+            (wasAcceptedBefore || !oldAssigned.includes(m.id))
+          );
+
+          newAssignedAdmins.forEach(admin => {
+            if (admin.email) {
+              sendPendingTaskNotification({
+                adminEmail: admin.email,
+                adminName: admin.firstName,
+                taskTitle: localMergedTask.title || oldTask?.title || '',
+                creatorName: activeMember ? activeMember.firstName : 'Sistema',
+                dueDate: localMergedTask.dueDate || oldTask?.dueDate,
+                priority: localMergedTask.priority || oldTask?.priority
+              });
+            }
+          });
         }
       },
 

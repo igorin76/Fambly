@@ -56,6 +56,8 @@ export default function MemberManager() {
   const [dietaryText, setDietaryText] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [associatedMemberIds, setAssociatedMemberIds] = useState([]);
+  const [email, setEmail] = useState('');
+  const [formError, setFormError] = useState('');
 
   // Estados Formulario Premio
   const [rewardTitle, setRewardTitle] = useState('');
@@ -81,6 +83,8 @@ export default function MemberManager() {
     setDietaryText('');
     setIsAdmin(false);
     setAssociatedMemberIds([]);
+    setEmail('');
+    setFormError('');
     setIsMemberModalOpen(true);
   };
 
@@ -100,12 +104,26 @@ export default function MemberManager() {
     setDietaryText(member.dietaryRestrictions ? member.dietaryRestrictions.join(', ') : '');
     setIsAdmin(member.isAdmin || false);
     setAssociatedMemberIds(member.associatedMemberIds || []);
+    setEmail(member.email || '');
+    setFormError('');
     setIsMemberModalOpen(true);
   };
 
   const handleSaveMember = (e) => {
     e.preventDefault();
     if (!firstName.trim()) return;
+
+    if (isAdmin && !email.trim()) {
+      setFormError('La dirección de correo electrónico es obligatoria para los administradores.');
+      return;
+    }
+
+    if (email.trim() && !/\S+@\S+\.\S+/.test(email)) {
+      setFormError('Por favor, introduce una dirección de correo electrónico válida.');
+      return;
+    }
+
+    setFormError('');
 
     const allergies = allergiesText.split(',').map(s => s.trim()).filter(Boolean);
     const dietaryRestrictions = dietaryText.split(',').map(s => s.trim()).filter(Boolean);
@@ -124,7 +142,8 @@ export default function MemberManager() {
       bloodType,
       dietaryRestrictions,
       isAdmin,
-      associatedMemberIds
+      associatedMemberIds,
+      email: email.trim()
     };
 
     if (editingMember) {
@@ -265,6 +284,11 @@ export default function MemberManager() {
                             </span>
                           )}
                         </div>
+                        {m.email && (
+                          <div className="text-[10px] text-slate-500 font-medium mt-1 truncate max-w-[180px]" title={m.email}>
+                            ✉️ {m.email}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -436,8 +460,14 @@ export default function MemberManager() {
               </button>
             </div>
             
-            <form onSubmit={handleSaveMember} className="flex flex-col gap-4">
+             <form onSubmit={handleSaveMember} className="flex flex-col gap-4">
               
+              {formError && (
+                <div className="p-3 bg-red-50 border border-red-100 text-red-650 rounded-xl text-xs font-semibold leading-relaxed">
+                  {formError}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nombre *</label>
@@ -460,6 +490,19 @@ export default function MemberManager() {
                     className="w-full px-3 py-2 flat-input text-xs"
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                  Correo Electrónico {isAdmin ? '*' : '(Opcional)'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="ejemplo@correo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 flat-input text-xs"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-2">

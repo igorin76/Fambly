@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.members (
     blood_type TEXT DEFAULT '',
     dietary_restrictions TEXT[] DEFAULT '{}',
     points INTEGER DEFAULT 0, -- Puntos para Modo Niño
+    email TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -87,13 +88,13 @@ VALUES ('ws-default-1', 'Hogar Principal')
 ON CONFLICT (id) DO NOTHING;
 
 -- Insertar perfiles familiares por defecto
-INSERT INTO public.members (id, workspace_id, first_name, last_name, gender, role, confidential_info, shoe_size, shirt_size, pants_size, points)
+INSERT INTO public.members (id, workspace_id, first_name, last_name, gender, role, confidential_info, shoe_size, shirt_size, pants_size, points, email)
 VALUES
-('mem-igor', 'ws-default-1', 'Igor', '', 'M', 'Padre', 'DNI: 12345678A / SS: 281234567890', '', '', '', 0),
-('mem-diana', 'ws-default-1', 'Diana', '', 'F', 'Madre', 'DNI: 87654321B / SS: 280987654321', '', '', '', 0),
-('mem-valentina', 'ws-default-1', 'Valentina', '', 'F', 'Hija', 'DNI: 11223344C', 'Z35', 'T10', 'T10', 30),
-('mem-rodrigo', 'ws-default-1', 'Rodrigo', '', 'M', 'Hijo', 'DNI: 55667788D', 'Z32', 'T8', 'T8', 15),
-('mem-martin', 'ws-default-1', 'Martín', '', 'M', 'Hijo', 'DNI: 99001122E', 'Z28', 'T5', 'T5', 0)
+('mem-igor', 'ws-default-1', 'Igor', '', 'M', 'Padre', 'DNI: 12345678A / SS: 281234567890', '', '', '', 0, 'igor@example.com'),
+('mem-diana', 'ws-default-1', 'Diana', '', 'F', 'Madre', 'DNI: 87654321B / SS: 280987654321', '', '', '', 0, 'diana@example.com'),
+('mem-valentina', 'ws-default-1', 'Valentina', '', 'F', 'Hija', 'DNI: 11223344C', 'Z35', 'T10', 'T10', 30, ''),
+('mem-rodrigo', 'ws-default-1', 'Rodrigo', '', 'M', 'Hijo', 'DNI: 55667788D', 'Z32', 'T8', 'T8', 15, ''),
+('mem-martin', 'ws-default-1', 'Martín', '', 'M', 'Hijo', 'DNI: 99001122E', 'Z28', 'T5', 'T5', 0, '')
 ON CONFLICT (id) DO NOTHING;
 
 -- Asociar tareas existentes (si las hubiera) al workspace por defecto

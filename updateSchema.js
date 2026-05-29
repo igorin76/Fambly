@@ -15,6 +15,9 @@ async function run() {
     await client.query("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS description TEXT;");
     await client.query("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb;");
     
+    console.log("Altering members...");
+    await client.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS email TEXT DEFAULT '';");
+    
     console.log("Altering wishlist...");
     await client.query("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS category TEXT;");
     await client.query("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS member_ids JSONB;");
