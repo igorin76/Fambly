@@ -122,9 +122,10 @@ export default function TaskManager() {
     };
   }, [recordingTimer]);
 
-  // Bloquear scroll del body al abrir el modal para mejorar la usabilidad
+  // Bloquear scroll del body al abrir el modal para mejorar la usabilidad (solo en PC)
   useEffect(() => {
-    if (isModalOpen) {
+    const isMobile = window.innerWidth < 640;
+    if (isModalOpen && !isMobile) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -1157,7 +1158,7 @@ export default function TaskManager() {
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-y-auto animate-slideUp sm:animate-none"
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none"
           >
             
             {/* Cabecera sticky */}
@@ -1680,9 +1681,9 @@ export default function TaskManager() {
               </div> {/* Cierre Grid 2 Columnas */}
             </div> {/* Cierre Cuerpo Scroll */}
 
-            {/* Footer sticky con botones de acción */}
+            {/* Footer sticky en PC / Normal en Móvil */}
             <div 
-              className="flex items-center gap-3 px-5 sm:px-6 pt-3 pb-3 sm:py-4 border-t border-slate-100 bg-white sticky bottom-0 z-20 shrink-0"
+              className="flex items-center gap-3 px-5 sm:px-6 pt-3 pb-3 sm:py-4 border-t border-slate-100 bg-white sm:sticky sm:bottom-0 z-20 shrink-0"
               style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 12px))' }}
             >
               <button
