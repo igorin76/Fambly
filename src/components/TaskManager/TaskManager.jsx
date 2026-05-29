@@ -1152,13 +1152,13 @@ export default function TaskManager() {
       {/* MODAL CREAR/EDITAR TAREA / PANTALLA COMPLETA EN MÓVIL Y GRID 2 COLUMNAS EN PC */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
           <form 
             onSubmit={handleSaveTask}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none"
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
             
             {/* Cabecera sticky */}
