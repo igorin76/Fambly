@@ -698,8 +698,8 @@ export default function TaskManager() {
       const involvesOtherAdmins = task.assignedMemberIds && task.assignedMemberIds.some(id => otherAdminIds.includes(id));
       const involvesActiveMember = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
 
-      // Si la tarea involucra a otros administradores y el activo no está implicado, NUNCA es visible
-      if (involvesOtherAdmins && !involvesActiveMember) {
+      // Si la tarea involucra a otros administradores y el activo no está implicado, y no es el creador, NUNCA es visible
+      if (involvesOtherAdmins && !involvesActiveMember && task.createdById !== activeMember.id) {
         return false;
       }
 
@@ -708,7 +708,7 @@ export default function TaskManager() {
       }
       
       if (tabId === 'aceptacion') {
-        return task.isAccepted === false && involvesActiveMember && task.createdById !== activeMember.id;
+        return task.isAccepted === false && activeMember.isAdmin && involvesActiveMember && task.createdById !== activeMember.id;
       }
       
       if (tabId === 'matrimonial') {
@@ -747,8 +747,8 @@ export default function TaskManager() {
     const involvesOtherAdmins = task.assignedMemberIds && task.assignedMemberIds.some(id => otherAdminIds.includes(id));
     const involvesActiveMember = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
 
-    // Si la tarea involucra a otros administradores y el activo no está implicado, NUNCA es visible
-    if (involvesOtherAdmins && !involvesActiveMember) {
+    // Si la tarea involucra a otros administradores y el activo no está implicado, y no es el creador, NUNCA es visible
+    if (involvesOtherAdmins && !involvesActiveMember && task.createdById !== activeMember.id) {
       return false;
     }
 
@@ -758,7 +758,7 @@ export default function TaskManager() {
     }
     
     if (activeTab === 'aceptacion') {
-      return involvesActiveMember && !task.isAccepted && task.createdById !== activeMember.id;
+      return involvesActiveMember && !task.isAccepted && activeMember.isAdmin && task.createdById !== activeMember.id;
     }
     
     if (activeTab === 'matrimonial') {
@@ -826,16 +826,39 @@ export default function TaskManager() {
   });
 
   // Contador de pendientes de aceptar
-  const pendingAcceptanceCount = tasks.filter(t => t.assignedMemberIds && t.assignedMemberIds.includes(activeMember.id) && !t.isAccepted && t.createdById !== activeMember.id).length;
+  const pendingAcceptanceCount = tasks.filter(t => 
+    !t.isAccepted && 
+    activeMember && 
+    activeMember.isAdmin && 
+    t.assignedMemberIds && 
+    t.assignedMemberIds.includes(activeMember.id) && 
+    t.createdById !== activeMember.id
+  ).length;
 
   // Renderizado optimizado y modular de cada tarjeta de tarea
   const renderTaskCard = (task) => {
     const criticality = getCriticality(task.dueDate, task.priority, task.completed, task.completedSuccessfully);
-    const needsAcceptance = !task.isAccepted && task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id) && task.createdById !== activeMember.id;
+    const needsAcceptance = !task.isAccepted && 
+      activeMember && 
+      activeMember.isAdmin && 
+      task.assignedMemberIds && 
+      task.assignedMemberIds.includes(activeMember.id) && 
+      task.createdById !== activeMember.id;
     
     const scopeNames = task.assignedMemberIds && task.assignedMemberIds.length > 0 
       ? task.assignedMemberIds.map(mid => members.find(m => m.id === mid)?.firstName).join(', ')
       : 'Todos';
+
+    // Administradores pendientes de aceptación (excluyendo el creador)
+    const pendingAdmins = members.filter(m => 
+      m.isAdmin && 
+      task.assignedMemberIds && 
+      task.assignedMemberIds.includes(m.id) && 
+      m.id !== task.createdById
+    );
+    const pendingAcceptanceNames = pendingAdmins.length > 0 
+      ? pendingAdmins.map(m => m.firstName).join(', ')
+      : 'Administradores';
 
     const isFocused = task.id === focusedTaskId;
     
@@ -955,7 +978,7 @@ export default function TaskManager() {
                 ) : (
                   <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
                     <Clock size={10} />
-                    Espera de aceptación por {scopeNames}
+                    Espera de aceptación por {pendingAcceptanceNames}
                   </span>
                 )}
               </div>

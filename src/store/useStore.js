@@ -354,7 +354,7 @@ export const useStore = create(
       addTask: async (task) => {
         const activeUser = get().currentUser;
         const membersList = get().members;
-        const activeMember = membersList.find(m => m.firstName === activeUser);
+        const activeMember = membersList.find(m => m.firstName.toLowerCase() === activeUser.toLowerCase());
         const isCreatorAdmin = activeMember ? activeMember.isAdmin : false;
         
         let defaultAccepted = true;
@@ -404,24 +404,31 @@ export const useStore = create(
         set((state) => ({ tasks: [...state.tasks, localTask] }));
 
         if (isSupabaseConfigured()) {
-          await supabase.from('tasks').insert({
-            id: newTask.id,
-            title: newTask.title,
-            description: newTask.description,
-            scope: newTask.scope,
-            assignee: newTask.assignee,
-            children: newTask.children,
-            due_date: newTask.dueDate || null,
-            completed: newTask.completed,
-            completed_successfully: true,
-            completed_at: null,
-            workspace_id: newTask.workspaceId,
-            category: newTask.category,
-            priority: newTask.priority,
-            assigned_member_ids: newTask.assignedMemberIds,
-            is_accepted: newTask.isAccepted,
-            attachments: newTask.attachments
-          });
+          try {
+            const { error } = await supabase.from('tasks').insert({
+              id: newTask.id,
+              title: newTask.title,
+              description: newTask.description,
+              scope: newTask.scope,
+              assignee: newTask.assignee,
+              children: newTask.children,
+              due_date: newTask.dueDate || null,
+              completed: newTask.completed,
+              completed_successfully: true,
+              completed_at: null,
+              workspace_id: newTask.workspaceId,
+              category: newTask.category,
+              priority: newTask.priority,
+              assigned_member_ids: newTask.assignedMemberIds,
+              is_accepted: newTask.isAccepted,
+              attachments: newTask.attachments
+            });
+            if (error) {
+              console.error("[Supabase Error] Error inserting task:", error);
+            }
+          } catch (err) {
+            console.error("[Supabase Exception] Error inserting task:", err);
+          }
         }
 
         // Notificar por email a los administradores correspondientes si la tarea requiere confirmación (no está aceptada)
@@ -490,7 +497,7 @@ export const useStore = create(
       updateTask: async (taskId, updatedTask) => {
         const activeUser = get().currentUser;
         const membersList = get().members;
-        const activeMember = membersList.find(m => m.firstName === activeUser);
+        const activeMember = membersList.find(m => m.firstName.toLowerCase() === activeUser.toLowerCase());
         const isCreatorAdmin = activeMember ? activeMember.isAdmin : false;
         
         const oldTask = get().tasks.find(t => t.id === taskId);
@@ -543,34 +550,41 @@ export const useStore = create(
         }));
 
         if (isSupabaseConfigured()) {
-          // Inyectamos el metadato del creador en attachments para Supabase
-          const creatorMeta = {
-            id: `meta-creator-${Date.now()}`,
-            type: 'metadata_creator',
-            createdById: finalCreatedById,
-            createdByName: finalCreatedByName
-          };
-          const attachmentsToSave = [...cleanAttachments, creatorMeta];
+          try {
+            // Inyectamos el metadato del creador en attachments para Supabase
+            const creatorMeta = {
+              id: `meta-creator-${Date.now()}`,
+              type: 'metadata_creator',
+              createdById: finalCreatedById,
+              createdByName: finalCreatedByName
+            };
+            const attachmentsToSave = [...cleanAttachments, creatorMeta];
 
-          const updatePayload = {
-            title: mergedTask.title,
-            description: mergedTask.description,
-            scope: mergedTask.scope,
-            assignee: mergedTask.assignee || 'Todos',
-            children: mergedTask.children || [],
-            due_date: mergedTask.dueDate || null,
-            completed: mergedTask.completed
-          };
+            const updatePayload = {
+              title: mergedTask.title,
+              description: mergedTask.description,
+              scope: mergedTask.scope,
+              assignee: mergedTask.assignee || 'Todos',
+              children: mergedTask.children || [],
+              due_date: mergedTask.dueDate || null,
+              completed: mergedTask.completed
+            };
 
-          if (mergedTask.category !== undefined) updatePayload.category = mergedTask.category;
-          if (mergedTask.priority !== undefined) updatePayload.priority = mergedTask.priority;
-          if (mergedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = mergedTask.assignedMemberIds;
-          if (mergedTask.isAccepted !== undefined) updatePayload.is_accepted = mergedTask.isAccepted;
-          updatePayload.attachments = attachmentsToSave;
-          if (mergedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = mergedTask.completedSuccessfully;
-          if (mergedTask.completedAt !== undefined) updatePayload.completed_at = mergedTask.completedAt;
+            if (mergedTask.category !== undefined) updatePayload.category = mergedTask.category;
+            if (mergedTask.priority !== undefined) updatePayload.priority = mergedTask.priority;
+            if (mergedTask.assignedMemberIds !== undefined) updatePayload.assigned_member_ids = mergedTask.assignedMemberIds;
+            if (mergedTask.isAccepted !== undefined) updatePayload.is_accepted = mergedTask.isAccepted;
+            updatePayload.attachments = attachmentsToSave;
+            if (mergedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = mergedTask.completedSuccessfully;
+            if (mergedTask.completedAt !== undefined) updatePayload.completed_at = mergedTask.completedAt;
 
-          await supabase.from('tasks').update(updatePayload).eq('id', taskId);
+            const { error } = await supabase.from('tasks').update(updatePayload).eq('id', taskId);
+            if (error) {
+              console.error("[Supabase Error] Error updating task:", error);
+            }
+          } catch (err) {
+            console.error("[Supabase Exception] Error updating task:", err);
+          }
         }
 
         // Notificar por email a los administradores si la tarea pasa a requerir confirmación
@@ -651,7 +665,12 @@ export const useStore = create(
         }));
 
         if (isSupabaseConfigured()) {
-          await supabase.from('tasks').delete().eq('id', taskId);
+          try {
+            const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+            if (error) console.error("[Supabase Error] Error deleting task:", error);
+          } catch (err) {
+            console.error("[Supabase Exception] Error deleting task:", err);
+          }
         }
       },
 
@@ -710,7 +729,12 @@ export const useStore = create(
         }));
 
         if (isSupabaseConfigured()) {
-          await supabase.from('tasks').update({ is_accepted: true }).eq('id', taskId);
+          try {
+            const { error } = await supabase.from('tasks').update({ is_accepted: true }).eq('id', taskId);
+            if (error) console.error("[Supabase Error] Error accepting task:", error);
+          } catch (err) {
+            console.error("[Supabase Exception] Error accepting task:", err);
+          }
         }
       },
 
