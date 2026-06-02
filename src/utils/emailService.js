@@ -20,7 +20,8 @@ export async function sendPendingTaskNotification({
   otherPendingTasks,
   taskDescription,
   taskAssignees,
-  taskAttachments
+  taskAttachments,
+  taskCategory
 }) {
   if (!adminEmail) {
     console.warn("[emailService] No admin email provided, skipping notification.");
@@ -40,6 +41,7 @@ Hola ${adminName},
 
 ${creatorName} ha asignado una tarea en Fambly que requiere tu aceptación:
 - Tarea: "${taskTitle}"
+- Categoría: "${taskCategory || 'GENERAL'}"
 - Descripción: "${taskDescription || 'Sin descripción.'}"
 - Miembros asignados: ${taskAssignees || 'Todos'}
 - Fecha límite: ${dueDate || 'Sin fecha asignada'}
@@ -67,7 +69,7 @@ Por favor, entra en Fambly para confirmar la tarea en tu panel de "Tareas por Ac
     return { 
       success: true, 
       simulated: true, 
-      emailData: { adminEmail, adminName, taskTitle, creatorName, dueDate, priority, otherPendingTasks, taskDescription, taskAssignees, taskAttachments } 
+      emailData: { adminEmail, adminName, taskTitle, creatorName, dueDate, priority, otherPendingTasks, taskDescription, taskAssignees, taskAttachments, taskCategory } 
     };
   }
 
@@ -92,7 +94,8 @@ Por favor, entra en Fambly para confirmar la tarea en tu panel de "Tareas por Ac
           other_pending_tasks: otherPendingTasks || 'No tienes otras tareas pendientes.',
           task_description: taskDescription || 'Sin descripción.',
           task_assignees: taskAssignees || 'Todos',
-          task_attachments: taskAttachments || 'Ninguno'
+          task_attachments: taskAttachments || 'Ninguno',
+          task_category: taskCategory || 'GENERAL'
         }
       })
     });

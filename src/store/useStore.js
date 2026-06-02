@@ -477,7 +477,8 @@ export const useStore = create(
                 otherPendingTasks: otherTasksText,
                 taskDescription,
                 taskAssignees,
-                taskAttachments
+                taskAttachments,
+                taskCategory: newTask.category || 'GENERAL'
               });
             }
           });
@@ -632,7 +633,8 @@ export const useStore = create(
                 otherPendingTasks: otherTasksText,
                 taskDescription,
                 taskAssignees,
-                taskAttachments
+                taskAttachments,
+                taskCategory: localMergedTask.category || oldTask?.category || 'GENERAL'
               });
             }
           });
