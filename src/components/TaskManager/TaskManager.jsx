@@ -569,33 +569,32 @@ export default function TaskManager() {
 
     // Auto-guardar adjuntos que se hayan rellenado pero no insertado con el botón pequeño
     let finalAttachments = [...attachmentsList];
-    if (contentType === 'text' && textContent.trim()) {
+    if (textContent.trim()) {
       finalAttachments.push({
-        id: `att-${Date.now()}`,
+        id: `att-text-${Date.now()}`,
         type: 'text',
         textContent: textContent.trim()
       });
-    } else if ((contentType === 'document' || contentType === 'image') && fileUrl) {
+    }
+    if (fileUrl) {
+      const resolvedType = (contentType === 'image' || contentType === 'voice' || contentType === 'document')
+        ? contentType
+        : (fileUrl.startsWith('data:image/') ? 'image' : fileUrl.startsWith('data:audio/') ? 'voice' : 'document');
+      
       finalAttachments.push({
-        id: `att-${Date.now()}`,
-        type: contentType,
+        id: `att-file-${Date.now()}`,
+        type: resolvedType,
         fileUrl: fileUrl,
-        fileName: selectedFileName || (contentType === 'image' ? 'Imagen' : 'Documento')
+        fileName: selectedFileName || (resolvedType === 'image' ? 'Imagen' : resolvedType === 'voice' ? 'Nota de voz' : 'Documento')
       });
-    } else if (contentType === 'voice' && fileUrl) {
-      finalAttachments.push({
-        id: `att-${Date.now()}`,
-        type: 'voice',
-        fileUrl: fileUrl,
-        fileName: selectedFileName || 'Nota de voz'
-      });
-    } else if (contentType === 'url' && tempUrl.trim()) {
+    }
+    if (tempUrl.trim()) {
       let formattedUrl = tempUrl.trim();
       if (!/^https?:\/\//i.test(formattedUrl)) {
         formattedUrl = 'https://' + formattedUrl;
       }
       finalAttachments.push({
-        id: `att-${Date.now()}`,
+        id: `att-url-${Date.now()}`,
         type: 'url',
         url: formattedUrl,
         label: tempUrlLabel.trim() || tempUrl.trim()
@@ -1373,16 +1372,6 @@ export default function TaskManager() {
                           type="button"
                           onClick={() => {
                             setContentType(contentType === item.id ? '' : item.id);
-                            setFileUrl('');
-                            setTextContent('');
-                            setRecordedAudioUrl('');
-                            setSelectedFileName('');
-                            setSelectedFileSize(0);
-                            setFileErrorMsg('');
-                            setVoiceInputMode('record');
-                            setVoiceFileErrorMsg('');
-                            setTempUrl('');
-                            setTempUrlLabel('');
                             if (isRecording) stopRecording();
                           }}
                           className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${

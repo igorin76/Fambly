@@ -462,7 +462,7 @@ export const useStore = create(
               const taskAttachments = newTask.attachments && newTask.attachments.length > 0
                 ? newTask.attachments.filter(att => att.type !== 'metadata_creator').map((att, idx) => {
                     const type = att.type || 'adjunto';
-                    const label = att.label || `Archivo ${idx + 1}`;
+                    const label = att.label || att.fileName || `Archivo ${idx + 1}`;
                     if (type === 'text') {
                       return `- [Nota]: "${att.textContent || ''}"`;
                     } else if (type === 'url') {
@@ -627,7 +627,7 @@ export const useStore = create(
               const taskAttachments = finalAtts.length > 0
                 ? finalAtts.filter(att => att.type !== 'metadata_creator').map((att, idx) => {
                     const type = att.type || 'adjunto';
-                    const label = att.label || `Archivo ${idx + 1}`;
+                    const label = att.label || att.fileName || `Archivo ${idx + 1}`;
                     if (type === 'text') {
                       return `- [Nota]: "${att.textContent || ''}"`;
                     } else if (type === 'url') {
