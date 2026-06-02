@@ -30,12 +30,12 @@ export async function sendPendingTaskNotification({
 =========================================
 [SIMULACIÓN DE NOTIFICACIÓN POR EMAIL]
 Para: ${adminName} <${adminEmail}>
-De: HomeHub Sistema de Notificaciones <noreply@homehub.family>
+De: Fambly Sistema de Notificaciones <noreply@fambly.family>
 Asunto: ⚠️ Tarea pendiente de confirmación: "${taskTitle}"
 
 Hola ${adminName},
 
-${creatorName} ha asignado una tarea en HomeHub que requiere tu aceptación:
+${creatorName} ha asignado una tarea en Fambly que requiere tu aceptación:
 - Tarea: "${taskTitle}"
 - Fecha límite: ${dueDate || 'Sin fecha asignada'}
 - Prioridad: ${priority || 'MEDIA'}
@@ -45,7 +45,7 @@ ${creatorName} ha asignado una tarea en HomeHub que requiere tu aceptación:
 ${otherPendingTasks || 'No tienes otras tareas pendientes.'}
 -----------------------------------------
 
-Por favor, entra en HomeHub para confirmar la tarea en tu panel de "Tareas por Aceptar".
+Por favor, entra en Fambly para confirmar la tarea en tu panel de "Tareas por Aceptar".
 =========================================
 `;
     console.log(logMsg);
