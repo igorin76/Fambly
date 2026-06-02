@@ -68,10 +68,14 @@ export default function CalendarView({ setActiveTab }) {
 
   const allEvents = [...events, ...virtualBirthdayEvents, ...virtualTaskEvents];
   
-  const baseDate = new Date(2026, 4, 25);
+  const baseDate = new Date();
   const [currentYear, setCurrentYear] = useState(baseDate.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(baseDate.getMonth()); 
-  const [selectedDate, setSelectedDate] = useState(null);
+  
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  const [selectedDate, setSelectedDate] = useState(todayStr);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Pestaña de agenda activa en móviles
@@ -985,7 +989,7 @@ export default function CalendarView({ setActiveTab }) {
 
             {calendarCells.map((cell, index) => {
               const dayEvents = getEventsForDay(cell.dateString);
-              const isToday = cell.dateString === '2026-05-25'; 
+              const isToday = cell.dateString === todayStr; 
               const isSelected = selectedDate === cell.dateString;
               const hasEvents = dayEvents.length > 0;
 
