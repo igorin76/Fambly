@@ -462,7 +462,9 @@ export const useStore = create(
                       return `- [Enlace]: ${label} (${att.fileUrl || att.url || ''})`;
                     } else {
                       const typeStr = type === 'image' ? 'Imagen' : type === 'document' ? 'Documento' : type === 'voice' ? 'Nota de voz' : 'Archivo';
-                      return `- [${typeStr}]: ${label} (${att.fileUrl || ''})`;
+                      const isBase64 = att.fileUrl && att.fileUrl.startsWith('data:');
+                      const urlDisplay = isBase64 ? 'Cargado en App' : (att.fileUrl || 'Sin enlace');
+                      return `- [${typeStr}]: ${label} (${urlDisplay})`;
                     }
                   }).join('\n')
                 : 'Ninguno';
@@ -618,7 +620,9 @@ export const useStore = create(
                       return `- [Enlace]: ${label} (${att.fileUrl || att.url || ''})`;
                     } else {
                       const typeStr = type === 'image' ? 'Imagen' : type === 'document' ? 'Documento' : type === 'voice' ? 'Nota de voz' : 'Archivo';
-                      return `- [${typeStr}]: ${label} (${att.fileUrl || ''})`;
+                      const isBase64 = att.fileUrl && att.fileUrl.startsWith('data:');
+                      const urlDisplay = isBase64 ? 'Cargado en App' : (att.fileUrl || 'Sin enlace');
+                      return `- [${typeStr}]: ${label} (${urlDisplay})`;
                     }
                   }).join('\n')
                 : 'Ninguno';
