@@ -17,7 +17,10 @@ export async function sendPendingTaskNotification({
   creatorName,
   dueDate,
   priority,
-  otherPendingTasks
+  otherPendingTasks,
+  taskDescription,
+  taskAssignees,
+  taskAttachments
 }) {
   if (!adminEmail) {
     console.warn("[emailService] No admin email provided, skipping notification.");
@@ -37,8 +40,13 @@ Hola ${adminName},
 
 ${creatorName} ha asignado una tarea en Fambly que requiere tu aceptación:
 - Tarea: "${taskTitle}"
+- Descripción: "${taskDescription || 'Sin descripción.'}"
+- Miembros asignados: ${taskAssignees || 'Todos'}
 - Fecha límite: ${dueDate || 'Sin fecha asignada'}
 - Prioridad: ${priority || 'MEDIA'}
+
+📎 ADJUNTOS DE LA TAREA:
+${taskAttachments || 'Ninguno'}
 
 -----------------------------------------
 📋 RECORDATORIO DE TUS TAREAS ACTIVAS PENDIENTES:
@@ -59,7 +67,7 @@ Por favor, entra en Fambly para confirmar la tarea en tu panel de "Tareas por Ac
     return { 
       success: true, 
       simulated: true, 
-      emailData: { adminEmail, adminName, taskTitle, creatorName, dueDate, priority, otherPendingTasks } 
+      emailData: { adminEmail, adminName, taskTitle, creatorName, dueDate, priority, otherPendingTasks, taskDescription, taskAssignees, taskAttachments } 
     };
   }
 
@@ -81,7 +89,10 @@ Por favor, entra en Fambly para confirmar la tarea en tu panel de "Tareas por Ac
           creator_name: creatorName,
           due_date: dueDate || 'Sin fecha asignada',
           priority: priority || 'MEDIA',
-          other_pending_tasks: otherPendingTasks || 'No tienes otras tareas pendientes.'
+          other_pending_tasks: otherPendingTasks || 'No tienes otras tareas pendientes.',
+          task_description: taskDescription || 'Sin descripción.',
+          task_assignees: taskAssignees || 'Todos',
+          task_attachments: taskAttachments || 'Ninguno'
         }
       })
     });

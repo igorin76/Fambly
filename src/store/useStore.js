@@ -446,6 +446,27 @@ export const useStore = create(
                 ? adminTasks.map(t => `- ${t.title}${t.dueDate ? ` (Límite: ${t.dueDate})` : ''} [Prioridad: ${t.priority}]`).join('\n')
                 : 'No tienes otras tareas pendientes.';
 
+              const taskDescription = newTask.description || 'Sin descripción.';
+
+              const taskAssignees = newTask.assignedMemberIds && newTask.assignedMemberIds.length > 0
+                ? newTask.assignedMemberIds.map(id => membersList.find(m => m.id === id)?.firstName || '').filter(Boolean).join(', ')
+                : 'Todos';
+
+              const taskAttachments = newTask.attachments && newTask.attachments.length > 0
+                ? newTask.attachments.filter(att => att.type !== 'metadata_creator').map((att, idx) => {
+                    const type = att.type || 'adjunto';
+                    const label = att.label || `Archivo ${idx + 1}`;
+                    if (type === 'text') {
+                      return `- [Nota]: "${att.textContent || ''}"`;
+                    } else if (type === 'url') {
+                      return `- [Enlace]: ${label} (${att.fileUrl || att.url || ''})`;
+                    } else {
+                      const typeStr = type === 'image' ? 'Imagen' : type === 'document' ? 'Documento' : type === 'voice' ? 'Nota de voz' : 'Archivo';
+                      return `- [${typeStr}]: ${label} (${att.fileUrl || ''})`;
+                    }
+                  }).join('\n')
+                : 'Ninguno';
+
               sendPendingTaskNotification({
                 adminEmail: admin.email,
                 adminName: admin.firstName,
@@ -453,7 +474,10 @@ export const useStore = create(
                 creatorName: activeMember ? activeMember.firstName : 'Sistema',
                 dueDate: newTask.dueDate,
                 priority: newTask.priority,
-                otherPendingTasks: otherTasksText
+                otherPendingTasks: otherTasksText,
+                taskDescription,
+                taskAssignees,
+                taskAttachments
               });
             }
           });
@@ -575,6 +599,29 @@ export const useStore = create(
                 ? adminTasks.map(t => `- ${t.title}${t.dueDate ? ` (Límite: ${t.dueDate})` : ''} [Prioridad: ${t.priority}]`).join('\n')
                 : 'No tienes otras tareas pendientes.';
 
+              const taskDescription = localMergedTask.description || oldTask?.description || 'Sin descripción.';
+
+              const newAssignedList = localMergedTask.assignedMemberIds || oldTask?.assignedMemberIds || [];
+              const taskAssignees = newAssignedList.length > 0
+                ? newAssignedList.map(id => membersList.find(m => m.id === id)?.firstName || '').filter(Boolean).join(', ')
+                : 'Todos';
+
+              const finalAtts = localMergedTask.attachments || oldTask?.attachments || [];
+              const taskAttachments = finalAtts.length > 0
+                ? finalAtts.filter(att => att.type !== 'metadata_creator').map((att, idx) => {
+                    const type = att.type || 'adjunto';
+                    const label = att.label || `Archivo ${idx + 1}`;
+                    if (type === 'text') {
+                      return `- [Nota]: "${att.textContent || ''}"`;
+                    } else if (type === 'url') {
+                      return `- [Enlace]: ${label} (${att.fileUrl || att.url || ''})`;
+                    } else {
+                      const typeStr = type === 'image' ? 'Imagen' : type === 'document' ? 'Documento' : type === 'voice' ? 'Nota de voz' : 'Archivo';
+                      return `- [${typeStr}]: ${label} (${att.fileUrl || ''})`;
+                    }
+                  }).join('\n')
+                : 'Ninguno';
+
               sendPendingTaskNotification({
                 adminEmail: admin.email,
                 adminName: admin.firstName,
@@ -582,7 +629,10 @@ export const useStore = create(
                 creatorName: activeMember ? activeMember.firstName : 'Sistema',
                 dueDate: localMergedTask.dueDate || oldTask?.dueDate,
                 priority: localMergedTask.priority || oldTask?.priority,
-                otherPendingTasks: otherTasksText
+                otherPendingTasks: otherTasksText,
+                taskDescription,
+                taskAssignees,
+                taskAttachments
               });
             }
           });
