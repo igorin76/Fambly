@@ -80,3 +80,75 @@ export const formatDateSpanish = (dateString) => {
   ];
   return `${day} de ${months[month - 1]}`;
 };
+
+/**
+ * Devuelve un saludo contextual según la hora actual del día.
+ * @returns {{ text: string, emoji: string }}
+ */
+export const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 13) return { text: 'Buenos días', emoji: '☀️' };
+  if (hour >= 13 && hour < 20) return { text: 'Buenas tardes', emoji: '🌤️' };
+  return { text: 'Buenas noches', emoji: '🌙' };
+};
+
+/**
+ * Formatea una fecha Date a formato largo en español: "Jueves, 12 de Junio de 2026"
+ * @param {Date} [date] - Fecha a formatear (por defecto: hoy)
+ * @returns {string}
+ */
+export const formatDateLong = (date = new Date()) => {
+  const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+};
+
+/**
+ * Comprueba si una fecha en formato YYYY-MM-DD corresponde al día de hoy.
+ * @param {string} dateString - Fecha en formato YYYY-MM-DD
+ * @returns {boolean}
+ */
+export const isToday = (dateString) => {
+  if (!dateString) return false;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return dateString === today;
+};
+
+/**
+ * Comprueba si una fecha en formato YYYY-MM-DD cae dentro de la semana actual (Lunes-Domingo).
+ * @param {string} dateString - Fecha en formato YYYY-MM-DD
+ * @returns {boolean}
+ */
+export const isThisWeek = (dateString) => {
+  if (!dateString) return false;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Calcular lunes de esta semana
+  const dayOfWeek = today.getDay(); // 0=Dom, 1=Lun...
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const [year, month, day] = dateString.split('-').map(Number);
+  const target = new Date(year, month - 1, day);
+  return target >= monday && target <= sunday;
+};
+
+/**
+ * Formatea un número como moneda EUR (español): "1.250,50 €"
+ * @param {number} amount
+ * @returns {string}
+ */
+export const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2
+  }).format(amount);
+};
