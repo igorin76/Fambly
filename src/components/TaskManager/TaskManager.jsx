@@ -689,6 +689,9 @@ export default function TaskManager() {
 
   const getTasksCountForTab = (tabId) => {
     return tasks.filter(task => {
+      // Excluir completadas y pendientes de aceptar
+      if (task.completed || task.isAccepted === false) return false;
+
       const isAssignee = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
       const isGlobal = !task.assignedMemberIds || task.assignedMemberIds.length === 0;
 
@@ -704,10 +707,6 @@ export default function TaskManager() {
 
       if (tabId === 'individual') {
         return task.assignedMemberIds && task.assignedMemberIds.length === 1 && involvesActiveMember;
-      }
-      
-      if (tabId === 'aceptacion') {
-        return task.isAccepted === false && activeMember.isAdmin && involvesActiveMember && task.createdById !== activeMember.id;
       }
       
       if (tabId === 'matrimonial') {
@@ -738,6 +737,13 @@ export default function TaskManager() {
   };
 
   const filteredTasks = tasks.filter(task => {
+    // 1. Filtrar por estado de completada
+    if (activeTab === 'realizadas') {
+      if (!task.completed) return false;
+    } else {
+      if (task.completed) return false;
+    }
+
     const isAssignee = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
     const isGlobal = !task.assignedMemberIds || task.assignedMemberIds.length === 0;
 
@@ -749,6 +755,17 @@ export default function TaskManager() {
     // Si la tarea involucra a otros administradores y el activo no está implicado, y no es el creador, NUNCA es visible
     if (involvesOtherAdmins && !involvesActiveMember && task.createdById !== activeMember.id) {
       return false;
+    }
+
+    if (activeTab === 'realizadas') {
+      // Si es la pestaña de realizadas, mostramos todas las tareas completadas visibles para el usuario actual
+      if (activeMember.isAdmin) {
+        const associatedIds = activeMember.associatedMemberIds || [];
+        const involvesAssociated = task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id));
+        return involvesActiveMember || involvesAssociated || isGlobal;
+      } else {
+        return involvesActiveMember || isGlobal;
+      }
     }
 
     if (activeTab === 'individual') {
@@ -833,6 +850,32 @@ export default function TaskManager() {
     t.assignedMemberIds.includes(activeMember.id) && 
     t.createdById !== activeMember.id
   ).length;
+
+  // Contador de realizadas
+  const completedCount = tasks.filter(task => {
+    if (!task.completed) return false;
+    
+    const isAssignee = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+    const isGlobal = !task.assignedMemberIds || task.assignedMemberIds.length === 0;
+
+    // Obtener los otros administradores de la familia
+    const otherAdminIds = members.filter(m => m.isAdmin && m.id !== activeMember.id).map(m => m.id);
+    const involvesOtherAdmins = task.assignedMemberIds && task.assignedMemberIds.some(id => otherAdminIds.includes(id));
+    const involvesActiveMember = task.assignedMemberIds && task.assignedMemberIds.includes(activeMember.id);
+
+    // Si la tarea involucra a otros administradores y el activo no está implicado, y no es el creador, NUNCA es visible
+    if (involvesOtherAdmins && !involvesActiveMember && task.createdById !== activeMember.id) {
+      return false;
+    }
+
+    if (activeMember.isAdmin) {
+      const associatedIds = activeMember.associatedMemberIds || [];
+      const involvesAssociated = task.assignedMemberIds && task.assignedMemberIds.some(id => associatedIds.includes(id));
+      return involvesActiveMember || involvesAssociated || isGlobal;
+    } else {
+      return involvesActiveMember || isGlobal;
+    }
+  }).length;
 
   // Renderizado optimizado y modular de cada tarjeta de tarea
   const renderTaskCard = (task) => {
@@ -1085,11 +1128,12 @@ export default function TaskManager() {
           })}
         </div>
 
-        {/* FILTRO INDEPENDIENTE: POR ACEPTAR */}
-        <div className="flex shrink-0">
+        {/* BOTONES DE FILTRO INDEPENDIENTES: POR ACEPTAR Y REALIZADAS */}
+        <div className="flex gap-2 shrink-0">
+          {/* POR ACEPTAR */}
           <button
             onClick={() => setActiveTab('aceptacion')}
-            className={`w-full md:w-auto py-2.5 px-4 text-center text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm border ${
+            className={`py-2.5 px-4 text-center text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm border ${
               activeTab === 'aceptacion'
                 ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/10'
                 : pendingAcceptanceCount > 0
@@ -1113,6 +1157,25 @@ export default function TaskManager() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
               </span>
             )}
+          </button>
+
+          {/* REALIZADAS */}
+          <button
+            onClick={() => setActiveTab('realizadas')}
+            className={`py-2.5 px-4 text-center text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm border ${
+              activeTab === 'realizadas'
+                ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-600/10'
+                : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+            }`}
+          >
+            <span>Realizadas</span>
+            <span className={`flex items-center justify-center text-[10px] w-5 h-5 rounded-full font-black transition-all ${
+              activeTab === 'realizadas'
+                ? 'bg-emerald-700 text-white'
+                : 'bg-slate-100 text-slate-500'
+            }`}>
+              {completedCount}
+            </span>
           </button>
         </div>
 
