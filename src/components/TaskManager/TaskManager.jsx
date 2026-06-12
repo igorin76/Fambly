@@ -1077,14 +1077,14 @@ export default function TaskManager() {
     <div className="flex flex-col gap-6">
       
       {/* CABECERA */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-800">Listado de Tareas</h2>
-          <p className="text-sm text-slate-500">Organiza y supervisa los objetivos diarios y semanales de la familia.</p>
+          <p className="text-xs text-slate-500 mt-1">Organiza y supervisa los objetivos diarios y semanales de la familia.</p>
         </div>
         <button
           onClick={handleOpenCreate}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02] touch-btn"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/10 hover:scale-[1.02] touch-btn self-start sm:self-auto shrink-0"
         >
           <Plus size={15} />
           Nueva Tarea
