@@ -150,7 +150,7 @@ export default function SuperAdminPanel() {
         };
       });
 
-      setFamilies(processedFamilies.filter(f => f.email.toLowerCase() !== 'igorjimenez@gmail.com'));
+      setFamilies(processedFamilies);
     } catch (err) {
       console.error("Error al cargar familias:", err);
     } finally {
