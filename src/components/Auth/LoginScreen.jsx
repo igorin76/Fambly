@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import FamblyLogo from '../Layout/FamblyLogo';
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, ArrowLeft, KeyRound, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../../utils/supabaseClient';
 
 export default function LoginScreen() {
   const { 
@@ -53,6 +54,47 @@ export default function LoginScreen() {
     setError('');
     setSuccessMessage('');
     setLoginView(view);
+  };
+
+  // Huevo de pascua del logotipo (5 clics rápidos)
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
+
+  const handleLogoClick = async () => {
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < 1000) {
+      const nextClicks = logoClicks + 1;
+      setLogoClicks(nextClicks);
+      
+      if (nextClicks >= 5) {
+        setLogoClicks(0);
+        let superEmail = 'igorjimenez@gmail.com';
+        
+        // Consultar dinámicamente el correo de superadmin de Supabase si está disponible
+        try {
+          const { data, error: superError } = await supabase
+            .from('superadmins')
+            .select('email')
+            .eq('id', 'superadmin-global')
+            .maybeSingle();
+
+          if (!superError && data && data.email) {
+            superEmail = data.email;
+          }
+        } catch (err) {
+          console.log("Error consultando superadmin en el huevo de pascua:", err);
+        }
+
+        setEmail(superEmail);
+        setRecoveryEmail(superEmail);
+        
+        setSuccessMessage(`Superadmin detectado (${superEmail}).`);
+        setTimeout(() => setSuccessMessage(''), 4000);
+      }
+    } else {
+      setLogoClicks(1);
+    }
+    setLastClickTime(currentTime);
   };
 
   // Enviar formulario de inicio de sesión estándar
@@ -184,7 +226,13 @@ export default function LoginScreen() {
           {/* Logo y título */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <FamblyLogo className="h-10" />
+              <div 
+                onClick={handleLogoClick}
+                className="cursor-pointer active:scale-95 transition-transform select-none"
+                title="Haga clic 5 veces para autocompletar el Superadministrador"
+              >
+                <FamblyLogo className="h-10" />
+              </div>
             </div>
             
             {loginView === 'login' && (

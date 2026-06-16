@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useStore } from '../../store/useStore';
 import FamblyLogo from '../Layout/FamblyLogo';
 import { supabase } from '../../utils/supabaseClient';
@@ -18,7 +19,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Edit2
+  Edit2,
+  X
 } from 'lucide-react';
 
 export default function SuperAdminPanel() {
@@ -48,6 +50,92 @@ export default function SuperAdminPanel() {
   const [showEditPassword, setShowEditPassword] = useState(false);
   const [editError, setEditError] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Estados Modal Ajustes Cuenta Superadmin
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [superadminEmail, setSuperadminEmail] = useState('');
+  const [superadminPassword, setSuperadminPassword] = useState('');
+  const [showSuperadminPassword, setShowSuperadminPassword] = useState(false);
+  const [accountError, setAccountError] = useState('');
+  const [accountSuccess, setAccountSuccess] = useState('');
+  const [isSavingAccount, setIsSavingAccount] = useState(false);
+
+  const handleOpenAccountSettings = async () => {
+    setAccountError('');
+    setAccountSuccess('');
+    setSuperadminPassword('');
+    setShowSuperadminPassword(false);
+    
+    try {
+      const { data, error } = await supabase
+        .from('superadmins')
+        .select('email')
+        .eq('id', 'superadmin-global')
+        .maybeSingle();
+      
+      if (!error && data) {
+        setSuperadminEmail(data.email);
+      } else {
+        setSuperadminEmail('igorjimenez@gmail.com');
+      }
+    } catch (err) {
+      setSuperadminEmail('igorjimenez@gmail.com');
+    }
+    
+    setIsAccountModalOpen(true);
+  };
+
+  const handleSaveAccountSettings = async (e) => {
+    e.preventDefault();
+    if (!superadminEmail.trim()) {
+      setAccountError('El correo electrónico es obligatorio.');
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(superadminEmail)) {
+      setAccountError('Por favor, introduce una dirección de correo electrónico válida.');
+      return;
+    }
+
+    if (superadminPassword && superadminPassword.length < 4) {
+      setAccountError('La contraseña debe tener al menos 4 caracteres.');
+      return;
+    }
+
+    setIsSavingAccount(true);
+    setAccountError('');
+    setAccountSuccess('');
+
+    try {
+      const updates = {
+        email: superadminEmail.trim().toLowerCase()
+      };
+
+      if (superadminPassword) {
+        const hashedPassword = await bcrypt.hash(superadminPassword, 10);
+        updates.password_hash = hashedPassword;
+      }
+
+      const { error } = await supabase
+        .from('superadmins')
+        .update(updates)
+        .eq('id', 'superadmin-global');
+
+      if (error) throw error;
+
+      setAccountSuccess('¡Ajustes de cuenta actualizados con éxito!');
+      setSuperadminPassword('');
+      
+      setTimeout(() => {
+        setIsAccountModalOpen(false);
+      }, 1500);
+
+    } catch (err) {
+      setAccountError(err.message || 'Error al guardar los ajustes de cuenta.');
+    } finally {
+      setIsSavingAccount(false);
+    }
+  };
 
   const handleOpenEditFamily = (family) => {
     setEditingFamily(family);
@@ -340,13 +428,22 @@ export default function SuperAdminPanel() {
               Superadmin
             </span>
           </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-red-650 hover:bg-red-50 hover:border-red-100 border border-transparent transition-all touch-btn"
-          >
-            <LogOut size={14} />
-            <span>Cerrar Sesión</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleOpenAccountSettings}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-650 hover:text-indigo-800 hover:bg-indigo-50 border border-transparent transition-all touch-btn"
+            >
+              <Key size={14} />
+              <span>Mi Cuenta</span>
+            </button>
+            <button
+              onClick={logout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-red-650 hover:bg-red-50 hover:border-red-100 border border-transparent transition-all touch-btn"
+            >
+              <LogOut size={14} />
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -694,6 +791,120 @@ export default function SuperAdminPanel() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal Ajustes Cuenta Superadmin */}
+      {isAccountModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 cursor-pointer"
+            onClick={() => { if (!isSavingAccount) setIsAccountModalOpen(false); }}
+          />
+
+          {/* Modal Content */}
+          <div className="relative z-10 w-full max-w-md bg-white rounded-t-3xl rounded-b-none sm:rounded-3xl border border-slate-200/80 shadow-premium p-6 flex flex-col gap-5 animate-scaleIn sm:animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Key size={16} className="text-indigo-650" />
+                  Ajustes de mi Cuenta
+                </h3>
+                <span className="text-[10px] text-slate-400 font-semibold">
+                  Gestiona tu correo y contraseña de superadministrador.
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsAccountModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer"
+                disabled={isSavingAccount}
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {accountError && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-655 rounded-xl text-xs font-semibold flex items-start gap-2">
+                <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                <span>{accountError}</span>
+              </div>
+            )}
+
+            {accountSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-655 rounded-xl text-xs font-semibold flex items-start gap-2">
+                <CheckCircle size={15} className="shrink-0 mt-0.5" />
+                <span>{accountSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveAccountSettings} className="flex flex-col gap-4">
+              
+              {/* Correo Electrónico */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="ejemplo@correo.com"
+                  value={superadminEmail}
+                  onChange={(e) => setSuperadminEmail(e.target.value)}
+                  className="w-full px-3 py-2.5 flat-input text-xs"
+                  disabled={isSavingAccount}
+                />
+              </div>
+
+              {/* Nueva Contraseña (Opcional) */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nueva Contraseña (Opcional)</label>
+                <div className="relative">
+                  <input
+                    type={showSuperadminPassword ? 'text' : 'password'}
+                    placeholder="Dejar en blanco para mantener actual"
+                    value={superadminPassword}
+                    onChange={(e) => setSuperadminPassword(e.target.value)}
+                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    disabled={isSavingAccount}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSuperadminPassword(!showSuperadminPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 touch-btn"
+                  >
+                    {showSuperadminPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAccountModalOpen(false)}
+                  disabled={isSavingAccount}
+                  className="px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all rounded-xl touch-btn cursor-pointer bg-transparent border-0"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingAccount}
+                  className="px-5 py-2 text-white bg-indigo-650 hover:bg-indigo-700 font-bold text-xs flex items-center gap-1.5 transition-all rounded-xl shadow-md shadow-indigo-500/10 disabled:opacity-55 disabled:cursor-not-allowed touch-btn cursor-pointer border-0"
+                >
+                  {isSavingAccount ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Cambios</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

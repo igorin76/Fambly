@@ -38,16 +38,47 @@ export const useStore = create(
       currentWorkspaceId: 'ws-default-1',
 
       login: async (email, password) => {
-        // 1. Caso especial: Superadministrador global
-        if (email.toLowerCase() === 'igorjimenez@gmail.com' && password === 'R@ssini76') {
-          set({
-            isAuthenticated: true,
-            isSuperAdmin: true,
-            currentUser: 'Superadmin',
-            authenticatedMemberId: 'superadmin',
-            currentWorkspaceId: 'ws-system'
-          });
-          return { id: 'superadmin', firstName: 'Superadmin', isAdmin: true, isSuperAdmin: true };
+        // 1. Caso especial: Superadministrador global en Supabase o fallback local
+        if (isSupabaseConfigured()) {
+          try {
+            const { data: superAdmin, error: superError } = await supabase
+              .from('superadmins')
+              .select('*')
+              .eq('email', email.trim().toLowerCase())
+              .maybeSingle();
+
+            if (!superError && superAdmin) {
+              const isValid = await bcrypt.compare(password, superAdmin.password_hash);
+              if (!isValid) {
+                throw new Error('Contraseña incorrecta.');
+              }
+              set({
+                isAuthenticated: true,
+                isSuperAdmin: true,
+                currentUser: 'Superadmin',
+                authenticatedMemberId: 'superadmin',
+                currentWorkspaceId: 'ws-system'
+              });
+              return { id: 'superadmin', firstName: 'Superadmin', isAdmin: true, isSuperAdmin: true, email: superAdmin.email };
+            }
+          } catch (err) {
+            if (err.message === 'Contraseña incorrecta.') {
+              throw err;
+            }
+            console.error("Error al autenticar superadmin:", err);
+          }
+        } else {
+          // Fallback local/offline para desarrollo
+          if (email.toLowerCase() === 'igorjimenez@gmail.com' && password === 'R@ssini76') {
+            set({
+              isAuthenticated: true,
+              isSuperAdmin: true,
+              currentUser: 'Superadmin',
+              authenticatedMemberId: 'superadmin',
+              currentWorkspaceId: 'ws-system'
+            });
+            return { id: 'superadmin', firstName: 'Superadmin', isAdmin: true, isSuperAdmin: true };
+          }
         }
 
         // 2. Administradores de familias
@@ -197,7 +228,40 @@ export const useStore = create(
         }
 
         if (isSupabaseConfigured()) {
-          // 1. Buscar miembro administrador con este correo
+          // 1a. Buscar primero en superadmins
+          const { data: superAdmin, error: superError } = await supabase
+            .from('superadmins')
+            .select('*')
+            .eq('email', email.trim().toLowerCase())
+            .maybeSingle();
+
+          if (!superError && superAdmin) {
+            // Generar código de 6 dígitos
+            const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+            // Guardar en la tabla superadmins
+            const { error: updateError } = await supabase
+              .from('superadmins')
+              .update({
+                reset_token: recoveryCode,
+                reset_token_expires_at: expiresAt
+              })
+              .eq('id', superAdmin.id);
+
+            if (updateError) throw updateError;
+
+            // Enviar email
+            await sendPasswordRecoveryEmail({
+              adminEmail: superAdmin.email,
+              adminName: 'Superadministrador',
+              recoveryCode: recoveryCode
+            });
+
+            return true;
+          }
+
+          // 1b. Buscar miembro administrador con este correo si no es superadmin
           const { data: member, error } = await supabase
             .from('members')
             .select('*')
@@ -234,7 +298,18 @@ export const useStore = create(
 
           return true;
         } else {
-          // Modo local/desarrollo
+          // Modo local/desarrollo para superadmin o miembros
+          if (email.trim().toLowerCase() === 'igorjimenez@gmail.com') {
+            const recoveryCode = '123456';
+            console.log(`[LOCAL SUPERADMIN RECOVERY CODE]: ${recoveryCode}`);
+            await sendPasswordRecoveryEmail({
+              adminEmail: 'igorjimenez@gmail.com',
+              adminName: 'Superadministrador',
+              recoveryCode: recoveryCode
+            });
+            return true;
+          }
+
           const members = get().members;
           const member = members.find(m => m.isAdmin && m.email && m.email.toLowerCase() === email.trim().toLowerCase());
           if (!member) {
@@ -257,6 +332,23 @@ export const useStore = create(
         }
 
         if (isSupabaseConfigured()) {
+          // 1. Buscar en superadmins primero
+          const { data: superAdmin, error: superError } = await supabase
+            .from('superadmins')
+            .select('*')
+            .eq('email', email.trim().toLowerCase())
+            .eq('reset_token', code.trim())
+            .maybeSingle();
+
+          if (!superError && superAdmin) {
+            const expiry = new Date(superAdmin.reset_token_expires_at);
+            if (expiry < new Date()) {
+              throw new Error('El código de verificación ha expirado.');
+            }
+            return true;
+          }
+
+          // 2. Buscar en members
           const { data: member, error } = await supabase
             .from('members')
             .select('*')
@@ -299,6 +391,28 @@ export const useStore = create(
         const newHash = await bcrypt.hash(newPassword, 10);
 
         if (isSupabaseConfigured()) {
+          // 1. Buscar en superadmins primero
+          const { data: superAdmin, error: superError } = await supabase
+            .from('superadmins')
+            .select('id')
+            .eq('email', email.trim().toLowerCase())
+            .maybeSingle();
+
+          if (!superError && superAdmin) {
+            const { error: updateError } = await supabase
+              .from('superadmins')
+              .update({
+                password_hash: newHash,
+                reset_token: null,
+                reset_token_expires_at: null
+              })
+              .eq('id', superAdmin.id);
+
+            if (updateError) throw updateError;
+            return true; // Éxito con el superadmin
+          }
+
+          // 2. Buscar en members
           const { data: member, error } = await supabase
             .from('members')
             .select('id')
