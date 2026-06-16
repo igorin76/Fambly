@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import FamblyLogo from '../Layout/FamblyLogo';
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, ArrowLeft, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2, ArrowLeft, KeyRound, CheckCircle2, X } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 
 export default function LoginScreen() {
@@ -18,6 +18,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSuperAdminMode, setIsSuperAdminMode] = useState(false);
   
   // Estado de navegación interna de login
   // 'login' | 'forgot_password' | 'verify_code' | 'reset_password'
@@ -68,6 +69,7 @@ export default function LoginScreen() {
       
       if (nextClicks >= 5) {
         setLogoClicks(0);
+        setIsSuperAdminMode(true);
         let superEmail = 'igorjimenez@gmail.com';
         
         // Consultar dinámicamente el correo de superadmin de Supabase si está disponible
@@ -87,8 +89,9 @@ export default function LoginScreen() {
 
         setEmail(superEmail);
         setRecoveryEmail(superEmail);
+        setPassword('');
         
-        setSuccessMessage(`Superadmin detectado (${superEmail}).`);
+        setSuccessMessage(`Modo Superadministrador activado. Correo: ${superEmail}`);
         setTimeout(() => setSuccessMessage(''), 4000);
       }
     } else {
@@ -114,7 +117,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim(), password, isSuperAdminMode);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -135,7 +138,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await requestPasswordRecovery(recoveryEmail.trim());
+      await requestPasswordRecovery(recoveryEmail.trim(), isSuperAdminMode);
       setSuccessMessage('Se ha enviado un código de verificación por correo electrónico.');
       setLoginView('verify_code');
     } catch (err) {
@@ -158,7 +161,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await verifyRecoveryCode(recoveryEmail.trim(), recoveryCode.trim());
+      await verifyRecoveryCode(recoveryEmail.trim(), recoveryCode.trim(), isSuperAdminMode);
       setLoginView('reset_password');
     } catch (err) {
       setError(err.message);
@@ -188,7 +191,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await resetPasswordWithCode(recoveryEmail.trim(), recoveryCode.trim(), newPassword);
+      await resetPasswordWithCode(recoveryEmail.trim(), recoveryCode.trim(), newPassword, isSuperAdminMode);
       setSuccessMessage('¡Contraseña restablecida correctamente! Ya puedes iniciar sesión con tu nueva contraseña.');
       
       // Preparar transición a login estándar
@@ -255,6 +258,24 @@ export default function LoginScreen() {
                 Establece tu nueva contraseña
               </p>
             )}
+            {isSuperAdminMode && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-2.5 rounded-full bg-amber-50 border border-amber-100 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider shadow-sm animate-scaleIn">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                Modo Superadministrador
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSuperAdminMode(false);
+                    setEmail('');
+                    setRecoveryEmail('');
+                  }}
+                  className="ml-1 text-amber-400 hover:text-amber-600 transition-colors p-0.5 rounded-full hover:bg-amber-100 border-0 cursor-pointer flex items-center justify-center inline-flex"
+                  title="Salir del modo superadministrador"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Banner de éxito */}
@@ -307,7 +328,7 @@ export default function LoginScreen() {
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     placeholder="tucorreo@ejemplo.com"
                     className="w-full px-4 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
-                    autoComplete="email"
+                    autoComplete="off"
                     autoFocus
                     disabled={loading}
                   />
@@ -339,7 +360,7 @@ export default function LoginScreen() {
                     onChange={(e) => { setPassword(e.target.value); setError(''); }}
                     placeholder="••••••••"
                     className="w-full pl-4 pr-12 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     disabled={loading}
                   />
                   <button
@@ -393,6 +414,7 @@ export default function LoginScreen() {
                     onChange={(e) => { setRecoveryEmail(e.target.value); setError(''); }}
                     placeholder="tucorreo@ejemplo.com"
                     className="w-full px-4 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
+                    autoComplete="off"
                     autoFocus
                     disabled={loading}
                   />
@@ -513,6 +535,7 @@ export default function LoginScreen() {
                     onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
                     placeholder="••••••••"
                     className="w-full pl-4 pr-12 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
+                    autoComplete="new-password"
                     disabled={loading}
                     autoFocus
                   />
@@ -540,6 +563,7 @@ export default function LoginScreen() {
                     onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
                     placeholder="••••••••"
                     className="w-full pl-4 pr-12 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
+                    autoComplete="new-password"
                     disabled={loading}
                   />
                   <button

@@ -531,6 +531,7 @@ export default function SuperAdminPanel() {
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     className="w-full px-3 py-2.5 flat-input text-xs"
+                    autoComplete="off"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -545,6 +546,7 @@ export default function SuperAdminPanel() {
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                      autoComplete="new-password"
                       disabled={isSubmitting}
                     />
                     <button
@@ -737,6 +739,7 @@ export default function SuperAdminPanel() {
                   value={selectedAdminEmail}
                   onChange={(e) => setSelectedAdminEmail(e.target.value)}
                   className="w-full px-3 py-2.5 flat-input text-xs"
+                  autoComplete="off"
                   disabled={isSavingEdit}
                 />
               </div>
@@ -751,6 +754,7 @@ export default function SuperAdminPanel() {
                     value={updatedAdminPassword}
                     onChange={(e) => setUpdatedAdminPassword(e.target.value)}
                     className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    autoComplete="new-password"
                     disabled={isSavingEdit}
                   />
                   <button
@@ -850,6 +854,7 @@ export default function SuperAdminPanel() {
                   value={superadminEmail}
                   onChange={(e) => setSuperadminEmail(e.target.value)}
                   className="w-full px-3 py-2.5 flat-input text-xs"
+                  autoComplete="off"
                   disabled={isSavingAccount}
                 />
               </div>
@@ -864,6 +869,7 @@ export default function SuperAdminPanel() {
                     value={superadminPassword}
                     onChange={(e) => setSuperadminPassword(e.target.value)}
                     className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    autoComplete="new-password"
                     disabled={isSavingAccount}
                   />
                   <button
