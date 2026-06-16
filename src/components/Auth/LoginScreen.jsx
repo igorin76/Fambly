@@ -162,11 +162,6 @@ export default function LoginScreen() {
               )}
             </button>
           </form>
-
-          {/* Footer info */}
-          <p className="text-center text-[10px] text-slate-400 font-medium mt-6">
-            La contraseña por defecto es <span className="font-bold text-slate-500">12345</span>
-          </p>
         </div>
 
         {/* Branding footer */}
