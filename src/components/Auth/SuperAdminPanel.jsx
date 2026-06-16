@@ -17,7 +17,8 @@ import {
   Loader2,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Edit2
 } from 'lucide-react';
 
 export default function SuperAdminPanel() {
@@ -25,7 +26,7 @@ export default function SuperAdminPanel() {
   const [families, setFamilies] = useState([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
 
-  // Estados Formulario
+  // Estados Formulario Creación
   const [familyName, setFamilyName] = useState('');
   const [adminFirstName, setAdminFirstName] = useState('');
   const [adminLastName, setAdminLastName] = useState('');
@@ -37,12 +38,73 @@ export default function SuperAdminPanel() {
   const [formSuccess, setFormSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Estados Modal Edición de Familia
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingFamily, setEditingFamily] = useState(null);
+  const [updatedFamilyName, setUpdatedFamilyName] = useState('');
+  const [selectedAdminId, setSelectedAdminId] = useState('');
+  const [selectedAdminEmail, setSelectedAdminEmail] = useState('');
+  const [editError, setEditError] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const handleOpenEditFamily = (family) => {
+    setEditingFamily(family);
+    setUpdatedFamilyName(family.familyName);
+    const currentAdmin = family.allAdmins.find(a => a.email === family.email) || family.allAdmins[0];
+    setSelectedAdminId(currentAdmin ? currentAdmin.id : '');
+    setSelectedAdminEmail(currentAdmin ? currentAdmin.email : '');
+    setEditError('');
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditFamily = async (e) => {
+    e.preventDefault();
+    if (!updatedFamilyName.trim() || !selectedAdminId) {
+      setEditError('Todos los campos son obligatorios.');
+      return;
+    }
+
+    setIsSavingEdit(true);
+    setEditError('');
+
+    try {
+      // 1. Actualizar nombre del workspace en Supabase
+      const { error: wsError } = await supabase
+        .from('workspaces')
+        .update({ name: updatedFamilyName.trim() })
+        .eq('id', editingFamily.workspaceId);
+
+      if (wsError) throw wsError;
+
+      // 2. Actualizar is_primary_admin para los miembros de este workspace
+      const { error: resetError } = await supabase
+        .from('members')
+        .update({ is_primary_admin: false })
+        .eq('workspace_id', editingFamily.workspaceId);
+
+      if (resetError) throw resetError;
+
+      const { error: setPrimaryError } = await supabase
+        .from('members')
+        .update({ is_primary_admin: true })
+        .eq('id', selectedAdminId);
+
+      if (setPrimaryError) throw setPrimaryError;
+
+      setIsEditModalOpen(false);
+      setEditingFamily(null);
+      fetchFamilies();
+    } catch (err) {
+      setEditError(err.message || 'Error al guardar los cambios.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   // Cargar administradores de familias existentes
   const fetchFamilies = async () => {
     setIsLoadingList(true);
     try {
-      // Obtener todos los miembros que son administradores (is_admin = true)
-      // También traemos la información del workspace si existe
       const { data: members, error: membersError } = await supabase
         .from('members')
         .select('*')
@@ -50,7 +112,6 @@ export default function SuperAdminPanel() {
 
       if (membersError) throw membersError;
 
-      // Obtener todos los workspaces para cruzar nombres
       const { data: workspaces, error: wsError } = await supabase
         .from('workspaces')
         .select('*');
@@ -62,16 +123,33 @@ export default function SuperAdminPanel() {
         return acc;
       }, {});
 
-      const processedFamilies = members.map(m => ({
-        id: m.id,
-        adminName: `${m.first_name} ${m.last_name || ''}`.trim(),
-        email: m.email,
-        workspaceId: m.workspace_id,
-        familyName: wsMap[m.workspace_id] || 'Hogar Sin Nombre',
-        createdAt: m.created_at ? new Date(m.created_at).toLocaleDateString('es-ES') : 'Desconocida'
-      }));
+      // Agrupar administradores por workspace_id
+      const groupedByWorkspace = members.reduce((acc, m) => {
+        if (!acc[m.workspace_id]) {
+          acc[m.workspace_id] = [];
+        }
+        acc[m.workspace_id].push(m);
+        return acc;
+      }, {});
 
-      // Filtrar al superadmin (que es virtual, pero por si acaso estuviese en la base de datos)
+      const processedFamilies = Object.keys(groupedByWorkspace).map(wsId => {
+        const admins = groupedByWorkspace[wsId];
+        let primaryAdmin = admins.find(a => a.is_primary_admin === true);
+        if (!primaryAdmin) {
+          primaryAdmin = admins[0];
+        }
+
+        return {
+          id: primaryAdmin.id,
+          adminName: `${primaryAdmin.first_name} ${primaryAdmin.last_name || ''}`.trim(),
+          email: primaryAdmin.email,
+          workspaceId: wsId,
+          familyName: wsMap[wsId] || 'Hogar Sin Nombre',
+          createdAt: primaryAdmin.created_at ? new Date(primaryAdmin.created_at).toLocaleDateString('es-ES') : 'Desconocida',
+          allAdmins: admins
+        };
+      });
+
       setFamilies(processedFamilies.filter(f => f.email.toLowerCase() !== 'igorjimenez@gmail.com'));
     } catch (err) {
       console.error("Error al cargar familias:", err);
@@ -417,7 +495,14 @@ export default function SuperAdminPanel() {
                           <td className="py-3.5 font-mono text-[9px] text-slate-400 tracking-tight" title={f.workspaceId}>
                             {f.workspaceId.substring(0, 16)}...
                           </td>
-                          <td className="py-3.5 text-right pr-2">
+                          <td className="py-3.5 text-right pr-2 flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => handleOpenEditFamily(f)}
+                              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all touch-btn"
+                              title="Editar Familia"
+                            >
+                              <Edit2 size={14} />
+                            </button>
                             <button
                               onClick={() => handleDeleteFamily(f.workspaceId, f.id, f.familyName)}
                               className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all touch-btn"
@@ -438,6 +523,112 @@ export default function SuperAdminPanel() {
         </div>
 
       </main>
+
+      {/* Modal de Edición de Familia */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setIsEditModalOpen(false)}
+          />
+
+          {/* Modal Content */}
+          <div className="relative z-10 w-full max-w-md bg-white rounded-3xl border border-slate-200/80 shadow-premium p-6 flex flex-col gap-5 animate-scaleIn">
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-1.5">
+                <Edit2 size={18} className="text-indigo-600" />
+                Editar Familia / Hogar
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Modifica el nombre del hogar o cambia el administrador principal.
+              </p>
+            </div>
+
+            {editError && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-655 rounded-xl text-xs font-semibold flex items-start gap-2">
+                <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEditFamily} className="flex flex-col gap-4">
+              {/* Nombre de la familia */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre de la Familia / Hogar *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Familia López"
+                  value={updatedFamilyName}
+                  onChange={(e) => setUpdatedFamilyName(e.target.value)}
+                  className="w-full px-3 py-2.5 flat-input text-xs"
+                  disabled={isSavingEdit}
+                />
+              </div>
+
+              {/* Selector de Administrador Principal */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Administrador Principal *</label>
+                <select
+                  value={selectedAdminId}
+                  onChange={(e) => {
+                    const adminId = e.target.value;
+                    setSelectedAdminId(adminId);
+                    const selected = editingFamily?.allAdmins?.find(a => a.id === adminId);
+                    setSelectedAdminEmail(selected ? selected.email : '');
+                  }}
+                  className="w-full px-3 py-2.5 flat-input text-xs bg-white cursor-pointer"
+                  disabled={isSavingEdit}
+                >
+                  {editingFamily?.allAdmins?.map(admin => (
+                    <option key={admin.id} value={admin.id}>
+                      {`${admin.first_name} ${admin.last_name || ''}`.trim()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Correo Electrónico (deshabilitado / automático) */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico (Automático)</label>
+                <input
+                  type="email"
+                  value={selectedAdminEmail}
+                  disabled
+                  className="w-full px-3 py-2.5 flat-input text-xs bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                />
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isSavingEdit}
+                  className="px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all rounded-xl touch-btn"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="px-5 py-2 text-white bg-indigo-650 hover:bg-indigo-700 font-bold text-xs flex items-center gap-1.5 transition-all rounded-xl shadow-md shadow-indigo-500/10 disabled:opacity-55 disabled:cursor-not-allowed touch-btn"
+                >
+                  {isSavingEdit ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Cambios</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
