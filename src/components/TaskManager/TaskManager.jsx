@@ -1308,20 +1308,20 @@ export default function TaskManager() {
                   {/* Categoría y Prioridad */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
                         <button
                           type="button"
                           onClick={() => setShowCategoryManager(!showCategoryManager)}
-                          className="text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0.5 rounded hover:bg-blue-50/50 transition-all flex items-center gap-1"
+                          className="text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0.5 rounded hover:bg-blue-50/50 transition-all flex items-center gap-1 shrink-0"
                           title={showCategoryManager ? "Cerrar Gestor" : "Gestionar Categorías"}
                         >
                           {showCategoryManager ? (
-                            <X size={14} className="stroke-[2.5]" />
+                            <X size={13} className="stroke-[2.5]" />
                           ) : (
                             <div className="flex items-center gap-0.5">
-                              <FileText size={13} className="text-blue-600" />
-                              <Edit2 size={10} className="-ml-1.5 -mt-1 text-blue-600 stroke-[3]" />
+                              <FileText size={12} className="text-blue-600" />
+                              <Edit2 size={9} className="-ml-1.5 -mt-1 text-blue-600 stroke-[3]" />
                             </div>
                           )}
                         </button>
@@ -1329,7 +1329,7 @@ export default function TaskManager() {
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-2.5 py-1 flat-input text-[11px] text-slate-655 font-bold uppercase h-8"
+                        className="w-full px-2 py-0.5 border border-slate-200 bg-white rounded-lg text-[10px] text-slate-655 font-extrabold uppercase h-[28px] focus:outline-none focus:border-blue-300 transition-all cursor-pointer"
                       >
                         {taskCategories.map((cat) => (
                           <option key={cat.id} value={cat.name}>
@@ -1341,17 +1341,17 @@ export default function TaskManager() {
 
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
-                      <div className="grid grid-cols-3 gap-1 h-8">
+                      <div className="grid grid-cols-3 gap-1 h-[28px]">
                         {['BAJA', 'MEDIA', 'ALTA'].map((p) => (
                           <button
                             key={p}
                             type="button"
                             onClick={() => setPriority(p)}
-                            className={`text-[9px] font-bold rounded-xl border transition-all cursor-pointer ${
+                            className={`text-[9px] font-bold rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
                               priority === p
-                                ? p === 'ALTA' ? 'bg-red-50 border-red-200 text-red-600 shadow-sm' :
-                                  p === 'MEDIA' ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm' :
-                                  'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm'
+                                ? p === 'ALTA' ? 'bg-red-50 border-red-200 text-red-600 shadow-sm font-extrabold' :
+                                  p === 'MEDIA' ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm font-extrabold' :
+                                  'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm font-extrabold'
                                 : 'bg-white border-slate-200 text-slate-500 hover:border-slate-350'
                             }`}
                           >
