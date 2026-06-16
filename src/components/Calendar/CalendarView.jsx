@@ -1620,16 +1620,20 @@ export default function CalendarView({ setActiveTab }) {
                       <button
                         type="button"
                         onClick={() => setSelectedMembers([])}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer shrink-0 ${
                           selectedMembers.length === 0
-                            ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
-                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+                            ? 'bg-indigo-600 border-indigo-600 text-white font-bold'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}
                       >
                         TODOS
                       </button>
                       {members.map((m) => {
                         const isSelected = selectedMembers.includes(m.firstName);
+                        const isKid = m.role === 'Hijo' || m.role === 'Hija';
+                        const pillBg = isSelected 
+                          ? isKid ? 'bg-orange-500 border-orange-500 text-white font-bold' : 'bg-blue-600 border-blue-600 text-white font-bold'
+                          : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300';
                         return (
                           <button
                             key={m.id}
@@ -1649,11 +1653,7 @@ export default function CalendarView({ setActiveTab }) {
                                 setSelectedMembers(nextMembers);
                               }
                             }}
-                            className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
-                                : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
-                            }`}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 shrink-0 ${pillBg}`}
                           >
                             {m.firstName}
                           </button>
