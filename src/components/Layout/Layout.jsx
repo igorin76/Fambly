@@ -32,8 +32,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
   const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const handleUserChange = (member) => {
-    // Si el miembro destino es admin y NO es el admin actualmente autenticado, pedir contraseña
-    if (member.isAdmin && member.id !== authenticatedMemberId) {
+    // Si el miembro destino es admin y NO es el perfil activo actual, pedir contraseña
+    if (member.isAdmin && member.firstName !== currentUser) {
       setAdminPasswordModal({ show: true, member });
       setAdminPassword('');
       setAdminPasswordError('');
@@ -333,7 +333,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     key={m.id}
                     onClick={() => {
                       handleUserChange(m);
-                      if (!m.isAdmin || m.id === authenticatedMemberId) {
+                      if (!m.isAdmin || m.firstName === currentUser) {
                         setShowProfileSheet(false);
                       }
                     }}
@@ -357,7 +357,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {m.isAdmin && m.id !== authenticatedMemberId && !isSelected && (
+                      {m.isAdmin && !isSelected && (
                         <Lock size={14} className="text-slate-400" />
                       )}
                       {isSelected && (
