@@ -1306,8 +1306,8 @@ export default function TaskManager() {
                   </div>
 
                   {/* Categoría y Prioridad */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
                         <button
@@ -1326,33 +1326,44 @@ export default function TaskManager() {
                           )}
                         </button>
                       </div>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-3 py-2.5 flat-input text-xs text-slate-600 font-bold uppercase"
-                      >
-                        {taskCategories.map((cat) => (
-                          <option key={cat.id} value={cat.name}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
-                      <div className="grid grid-cols-3 gap-1 h-[38px]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* SELECTOR DE CATEGORÍA COMO BOTONES PLANOS */}
+                      <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
+                        {taskCategories.map((cat) => {
+                          const isActive = category === cat.name;
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setCategory(cat.name)}
+                              className={`px-2.5 py-1.5 text-[9px] font-bold rounded-xl border transition-all uppercase whitespace-nowrap cursor-pointer ${
+                                isActive
+                                  ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
+                                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                              }`}
+                            >
+                              {cat.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* SELECTOR DE PRIORIDAD (BOTONES PLANOS) */}
+                      <div className="grid grid-cols-3 gap-1 h-[32px] sm:h-[38px] self-start">
                         {['BAJA', 'MEDIA', 'ALTA'].map((p) => (
                           <button
                             key={p}
                             type="button"
                             onClick={() => setPriority(p)}
-                            className={`text-[9px] font-bold rounded-xl border transition-all ${
+                            className={`text-[9px] font-bold rounded-xl border transition-all cursor-pointer ${
                               priority === p
-                                ? p === 'ALTA' ? 'bg-red-50 border-red-200 text-red-600' :
-                                  p === 'MEDIA' ? 'bg-amber-50 border-amber-200 text-amber-600' :
-                                  'bg-emerald-50 border-emerald-200 text-emerald-600'
-                                : 'bg-white border-slate-200 text-slate-500'
+                                ? p === 'ALTA' ? 'bg-red-50 border-red-200 text-red-600 shadow-sm' :
+                                  p === 'MEDIA' ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm' :
+                                  'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm'
+                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-350'
                             }`}
                           >
                             {p}
