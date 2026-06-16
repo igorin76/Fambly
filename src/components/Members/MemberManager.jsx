@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { useStore } from '../../store/useStore';
 import { 
   Users, 
@@ -528,26 +529,40 @@ export default function MemberManager() {
         </div>
       )}
 
-      {/* MODAL MIEMBRO (Crear/Editar) / BOTTOM SHEET EN MÓVIL */}
-      {isMemberModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="w-full sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative overflow-y-auto max-h-[85vh] sm:max-h-[90vh]"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+      {/* MODAL MIEMBRO (Crear/Editar) / ESTILO TAREAS */}
+      {isMemberModalOpen && ReactDOM.createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsMemberModalOpen(false); }}
+        >
+          <form 
+            onSubmit={handleSaveMember}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                {editingMember ? 'Editar Miembro' : 'Añadir Miembro'}
-              </h3>
-              <button onClick={() => setIsMemberModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
-                <X size={18} />
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                  {editingMember ? 'Editar Miembro' : 'Añadir Miembro'}
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {editingMember ? 'Modifica los datos del perfil familiar' : 'Crea un nuevo perfil para la familia'}
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsMemberModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
+              >
+                <X size={15} />
               </button>
             </div>
             
-             <form onSubmit={handleSaveMember} className="flex flex-col gap-4">
-              
+            {/* Cuerpo */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4 overflow-y-auto">
               {formError && (
-                <div className="p-3 bg-red-50 border border-red-100 text-red-650 rounded-xl text-xs font-semibold leading-relaxed">
+                <div className="p-3 bg-red-50 border border-red-100 text-red-650 rounded-xl text-xs font-semibold leading-relaxed animate-fadeIn">
                   {formError}
                 </div>
               )}
@@ -766,7 +781,7 @@ export default function MemberManager() {
               </div>
 
               <div className="flex flex-col gap-1 bg-red-50/30 border border-red-100/50 p-3 rounded-xl">
-                <label className="text-[10px] font-bold text-red-650 uppercase tracking-wide flex items-center gap-1">
+                <label className="text-[10px] font-bold text-red-655 uppercase tracking-wide flex items-center gap-1">
                   <ShieldAlert size={12} />
                   Información Confidencial (Oculta en Tablón)
                 </label>
@@ -778,43 +793,57 @@ export default function MemberManager() {
                   className="w-full px-3 py-2 flat-input text-xs"
                 />
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsMemberModalOpen(false)}
-                  className="text-xs font-bold text-slate-400 px-3 py-2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
-                >
-                  {editingMember ? 'Guardar Cambios' : 'Añadir Miembro'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL NUEVO PREMIO / BOTTOM SHEET EN MÓVIL */}
-      {isRewardModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Premio</h3>
-              <button onClick={() => setIsRewardModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
-                <X size={18} />
+            {/* Footer sticky */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-white sticky bottom-0 z-20 shrink-0 mt-auto">
+              <button
+                type="button"
+                onClick={() => setIsMemberModalOpen(false)}
+                className="text-xs font-bold text-slate-400 px-3 py-2"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
+              >
+                {editingMember ? 'Guardar Cambios' : 'Añadir Miembro'}
               </button>
             </div>
-            <form onSubmit={handleSaveReward} className="flex flex-col gap-4">
-              
+          </form>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL NUEVO PREMIO / ESTILO TAREAS */}
+      {isRewardModalOpen && ReactDOM.createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsRewardModalOpen(false); }}
+        >
+          <form 
+            onSubmit={handleSaveReward}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
+          >
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">Nuevo Premio</h3>
+                <span className="text-[10px] text-slate-400 font-medium">Crea un incentivo para canjear con estrellas</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsRewardModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Cuerpo */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4 overflow-y-auto">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título del Premio *</label>
                 <input
@@ -839,44 +868,58 @@ export default function MemberManager() {
                   className="w-full px-3.5 py-2.5 flat-input text-xs"
                 />
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsRewardModalOpen(false)}
-                  className="text-xs font-bold text-slate-400 px-3 py-2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
-                >
-                  Crear Premio
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
+            {/* Footer sticky */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-white sticky bottom-0 z-20 shrink-0 mt-auto">
+              <button
+                type="button"
+                onClick={() => setIsRewardModalOpen(false)}
+                className="text-xs font-bold text-slate-400 px-3 py-2"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
+              >
+                Crear Premio
+              </button>
+            </div>
+          </form>
+        </div>,
+        document.body
       )}
-      {/* MODAL GESTIONAR ROLES FAMILIARES / BOTTOM SHEET EN MÓVIL */}
-      {isRolesModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+
+      {/* MODAL GESTIONAR ROLES FAMILIARES / ESTILO TAREAS */}
+      {isRolesModalOpen && ReactDOM.createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsRolesModalOpen(false); }}
+        >
           <div 
-            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Gestionar Roles</h3>
-              <button onClick={() => setIsRolesModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn">
-                <X size={18} />
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">Gestionar Roles</h3>
+                <span className="text-[10px] text-slate-400 font-medium">Añade o elimina roles del hogar</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsRolesModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
+              >
+                <X size={15} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-4">
+            {/* Cuerpo */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4 overflow-y-auto">
               {/* Formulario Añadir Rol */}
-              <div className="flex flex-col gap-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div className="flex flex-col gap-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100 shrink-0">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nuevo Rol Familiar</label>
                 <div className="flex gap-2">
                   <input
@@ -893,7 +936,7 @@ export default function MemberManager() {
                       await addFamilyRole(newRoleName);
                       setNewRoleName('');
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs disabled:opacity-55 disabled:cursor-not-allowed transition-all"
                   >
                     Añadir
                   </button>
@@ -925,50 +968,61 @@ export default function MemberManager() {
                   )}
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center justify-end pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsRolesModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-sm transition-all"
-                >
-                  Cerrar
-                </button>
-              </div>
+            {/* Footer sticky */}
+            <div className="flex items-center justify-end px-6 py-4 border-t border-slate-100 bg-white sticky bottom-0 z-20 shrink-0 mt-auto">
+              <button
+                type="button"
+                onClick={() => setIsRolesModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-sm transition-all"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* MODAL CAMBIAR CONTRASEÑA */}
-      {isChangePasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+      {/* MODAL CAMBIAR CONTRASEÑA / ESTILO TAREAS */}
+      {isChangePasswordModalOpen && ReactDOM.createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsChangePasswordModalOpen(false); }}
+        >
+          <form 
+            onSubmit={handleChangePasswordSubmit}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Key size={16} className="text-indigo-650" />
-                Cambiar Contraseña
-              </h3>
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5 flex-1 pr-4">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800 flex items-center gap-1.5">
+                  <Key size={16} className="text-indigo-650 shrink-0" />
+                  Cambiar Contraseña
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">Actualiza tu clave de acceso</span>
+              </div>
               <button 
+                type="button"
                 onClick={() => setIsChangePasswordModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn"
-                disabled={isSubmittingPassword}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={handleChangePasswordSubmit} className="flex flex-col gap-4">
+            {/* Cuerpo */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4 overflow-y-auto">
               {passwordError && (
-                <div className="p-3 bg-red-50 border border-red-100 text-red-650 rounded-xl text-xs font-semibold leading-relaxed">
+                <div className="p-3 bg-red-50 border border-red-100 text-red-655 rounded-xl text-xs font-semibold leading-relaxed animate-fadeIn">
                   {passwordError}
                 </div>
               )}
               {passwordSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-650 rounded-xl text-xs font-semibold leading-relaxed">
+                <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-655 rounded-xl text-xs font-semibold leading-relaxed animate-fadeIn">
                   {passwordSuccess}
                 </div>
               )}
@@ -983,7 +1037,7 @@ export default function MemberManager() {
                     placeholder="••••••••"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    className="w-full px-4 pr-10 py-2.5 flat-input text-xs"
                     disabled={isSubmittingPassword}
                   />
                   <button
@@ -1007,7 +1061,7 @@ export default function MemberManager() {
                     placeholder="Mínimo 4 caracteres"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    className="w-full px-4 pr-10 py-2.5 flat-input text-xs"
                     disabled={isSubmittingPassword}
                   />
                   <button
@@ -1031,7 +1085,7 @@ export default function MemberManager() {
                     placeholder="Repite la contraseña"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    className="w-full px-4 pr-10 py-2.5 flat-input text-xs"
                     disabled={isSubmittingPassword}
                   />
                   <button
@@ -1044,28 +1098,29 @@ export default function MemberManager() {
                   </button>
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsChangePasswordModalOpen(false)}
-                  className="text-xs font-bold text-slate-400 px-3 py-2"
-                  disabled={isSubmittingPassword}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5"
-                  disabled={isSubmittingPassword}
-                >
-                  {isSubmittingPassword ? 'Actualizando...' : 'Cambiar Contraseña'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
+            {/* Footer sticky */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-white sticky bottom-0 z-20 shrink-0 mt-auto">
+              <button
+                type="button"
+                onClick={() => setIsChangePasswordModalOpen(false)}
+                className="text-xs font-bold text-slate-400 px-3 py-2"
+                disabled={isSubmittingPassword}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5"
+                disabled={isSubmittingPassword}
+              >
+                {isSubmittingPassword ? 'Actualizando...' : 'Cambiar Contraseña'}
+              </button>
+            </div>
+          </form>
+        </div>,
+        document.body
       )}
 
     </div>
