@@ -1313,9 +1313,17 @@ export default function TaskManager() {
                         <button
                           type="button"
                           onClick={() => setShowCategoryManager(!showCategoryManager)}
-                          className="text-[9px] font-black uppercase tracking-wider text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0"
+                          className="text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0.5 rounded hover:bg-blue-50/50 transition-all flex items-center gap-1"
+                          title={showCategoryManager ? "Cerrar Gestor" : "Gestionar Categorías"}
                         >
-                          {showCategoryManager ? 'Cerrar' : 'Gestionar'}
+                          {showCategoryManager ? (
+                            <X size={14} className="stroke-[2.5]" />
+                          ) : (
+                            <div className="flex items-center gap-0.5">
+                              <FileText size={13} className="text-blue-600" />
+                              <Edit2 size={10} className="-ml-1.5 -mt-1 text-blue-600 stroke-[3]" />
+                            </div>
+                          )}
                         </button>
                       </div>
                       <select
@@ -1354,12 +1362,12 @@ export default function TaskManager() {
                     </div>
                   </div>
 
-                  {/* GESTOR DE CATEGORÍAS COLAPSABLE */}
+                  {/* GESTOR DE CATEGORÍAS COLAPSABLE (MÁS COMPACTO Y DIMENSIONADO) */}
                   {showCategoryManager && (
-                    <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col gap-3 animate-fadeIn">
+                    <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col gap-2 animate-fadeIn">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Añadir Categoría Nueva</label>
-                        <div className="flex items-center gap-1.5">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nueva Categoría</label>
+                        <div className="flex items-center gap-1">
                           <input
                             type="text"
                             placeholder="Ej: EXTRA-ESCOLARES..."
@@ -1379,7 +1387,7 @@ export default function TaskManager() {
                                 }
                               }
                             }}
-                            className="flex-1 px-3 py-1.5 flat-input text-[10px] uppercase font-bold text-slate-700"
+                            className="flex-1 px-2.5 py-1 flat-input text-[10px] uppercase font-bold text-slate-700 h-7"
                           />
                           <button
                             type="button"
@@ -1395,22 +1403,22 @@ export default function TaskManager() {
                               }
                             }}
                             disabled={!newCatName.trim()}
-                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold disabled:opacity-40 disabled:hover:bg-blue-600 shrink-0 border-0 cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-bold disabled:opacity-40 disabled:hover:bg-blue-600 shrink-0 border-0 h-7 cursor-pointer flex items-center justify-center"
                           >
-                            Añadir
+                            <Plus size={12} className="stroke-[2.5]" />
                           </button>
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-1">
                         <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Categorías Activas</label>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
                           {taskCategories.map((cat) => {
                             const isGeneral = cat.name === 'GENERAL';
                             return (
                               <div 
                                 key={cat.id} 
-                                className="flex items-center gap-1 bg-white pl-2.5 pr-1.5 py-1 rounded-lg border border-slate-200/60 text-[10px] font-bold text-slate-700 shadow-sm animate-fadeIn"
+                                className="flex items-center gap-1 bg-white pl-2 pr-1 py-0.5 rounded-md border border-slate-200/50 text-[9px] font-bold text-slate-655 shadow-sm animate-fadeIn"
                               >
                                 <span>{cat.name}</span>
                                 {!isGeneral && (
@@ -1424,10 +1432,10 @@ export default function TaskManager() {
                                         }
                                       }
                                     }}
-                                    className="p-0.5 text-slate-400 hover:text-red-500 transition-colors bg-transparent border-0 cursor-pointer"
+                                    className="p-0.5 text-slate-400 hover:text-red-500 transition-colors bg-transparent border-0 cursor-pointer flex"
                                     title="Eliminar categoría"
                                   >
-                                    <X size={10} />
+                                    <X size={9} />
                                   </button>
                                 )}
                               </div>
