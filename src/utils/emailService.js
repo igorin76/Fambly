@@ -5,6 +5,7 @@
 // Obtener las variables de entorno para EmailJS si existen
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_RECOVERY_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_RECOVERY_TEMPLATE_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 /**
@@ -185,18 +186,21 @@ Este código expira en 15 minutos y es de un solo uso.
       },
       body: JSON.stringify({
         service_id: EMAILJS_SERVICE_ID,
-        template_id: EMAILJS_TEMPLATE_ID,
+        template_id: EMAILJS_RECOVERY_TEMPLATE_ID,
         user_id: EMAILJS_PUBLIC_KEY,
         template_params: {
           to_email: adminEmail,
           to_name: adminName,
-          // Reutilizamos task_title para enviar el asunto del código en EmailJS
-          task_title: `CÓDIGO DE RECUPERACIÓN: ${recoveryCode}`,
-          creator_name: 'Fambly Seguridad',
-          task_description: `Introduce el código ${recoveryCode} en la aplicación para restablecer tu contraseña. Expira en 15 minutos.`,
-          due_date: 'Expiración: 15 min',
-          priority: 'ALTA',
-          other_pending_tasks: 'Solicitud de recuperación de contraseña en curso.'
+          // Si reutiliza la plantilla de tareas, vaciamos campos para que no vengan "demasiadas cosas" y solo aparezca el código
+          task_title: recoveryCode,
+          creator_name: '',
+          task_description: `Código: ${recoveryCode}`,
+          due_date: '',
+          priority: '',
+          other_pending_tasks: '',
+          // Campos directos por si el usuario configura una plantilla limpia dedicada
+          recovery_code: recoveryCode,
+          code: recoveryCode
         }
       })
     });

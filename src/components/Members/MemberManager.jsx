@@ -34,7 +34,8 @@ export default function MemberManager() {
     deleteFamilyRole,
     authenticatedMemberId,
     changePassword,
-    resetAdminPassword
+    resetAdminPassword,
+    currentUser
   } = useStore();
 
   const [activeSubTab, setActiveSubTab] = useState('perfiles');
@@ -367,7 +368,7 @@ export default function MemberManager() {
                     </div>
 
                     <div className="flex gap-1.5">
-                      {m.isAdmin && m.id === authenticatedMemberId && (
+                      {m.isAdmin && m.firstName === currentUser && (
                         <button
                           onClick={() => handleOpenChangePassword(m.id)}
                           className="p-2 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 rounded-lg transition-all touch-btn"

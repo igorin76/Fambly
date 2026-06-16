@@ -460,13 +460,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             {/* Form */}
             <form onSubmit={handleAdminPasswordSubmit}>
               <div className="relative mb-3">
-                <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type={showAdminPassword ? 'text' : 'password'}
                   value={adminPassword}
                   onChange={(e) => { setAdminPassword(e.target.value); setAdminPasswordError(''); }}
                   placeholder="Contraseña"
-                  className="w-full pl-10 pr-12 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
+                  className="w-full px-4 pr-12 py-3 text-sm font-medium text-slate-800 bg-slate-50/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-slate-400"
                   autoFocus
                   disabled={adminPasswordLoading}
                 />
