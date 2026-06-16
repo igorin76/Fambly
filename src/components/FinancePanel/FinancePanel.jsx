@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../../store/useStore';
 import { getTaskStatus, formatDateSpanish } from '../../utils/dateHelpers';
 import { 
@@ -393,19 +394,37 @@ export default function FinancePanel() {
       )}
 
       {/* MODAL NUEVO PRESUPUESTO */}
-      {isBudgetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div
-            className="w-full max-w-sm bg-white border border-slate-200 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 sm:pb-6 shadow-xl relative animate-slideUp sm:animate-fadeIn max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+      {isBudgetModalOpen && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsBudgetModalOpen(false); }}
+        >
+          <form 
+            onSubmit={handleAddBudget}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Presupuesto</h3>
-              <button onClick={() => setIsBudgetModalOpen(false)} className="touch-btn text-slate-400 hover:text-slate-700 p-2.5">
-                <X size={20} />
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                  Nuevo Presupuesto
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Completa los campos y crea el presupuesto mensual
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsBudgetModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
+              >
+                <X size={15} />
               </button>
             </div>
-            <form onSubmit={handleAddBudget} className="flex flex-col gap-4">
+
+            {/* Cuerpo del Formulario */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Concepto *</label>
                 <input
@@ -428,29 +447,60 @@ export default function FinancePanel() {
                   className="w-full px-3.5 py-2.5 flat-input text-xs"
                 />
               </div>
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="touch-btn text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
-                <button type="submit" className="touch-btn px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
+              
+              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsBudgetModalOpen(false)} 
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all touch-btn"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10 touch-btn"
+                >
+                  Crear Presupuesto
+                </button>
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          </form>
+        </div>,
+        document.body
       )}
 
       {/* MODAL NUEVO RECIBO */}
-      {isReceiptModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div
-            className="w-full max-w-sm bg-white border border-slate-200 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 sm:pb-6 shadow-xl relative animate-slideUp sm:animate-fadeIn max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+      {isReceiptModalOpen && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsReceiptModalOpen(false); }}
+        >
+          <form 
+            onSubmit={handleAddReceipt}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Recibo</h3>
-              <button onClick={() => setIsReceiptModalOpen(false)} className="touch-btn text-slate-400 hover:text-slate-700 p-2.5">
-                <X size={20} />
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                  Nuevo Recibo
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Completa los campos y crea el recibo recurrente
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsReceiptModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
+              >
+                <X size={15} />
               </button>
             </div>
-            <form onSubmit={handleAddReceipt} className="flex flex-col gap-4">
+
+            {/* Cuerpo del Formulario */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Proveedor / Servicio *</label>
                 <input
@@ -462,6 +512,7 @@ export default function FinancePanel() {
                   className="w-full px-3.5 py-2.5 flat-input text-xs"
                 />
               </div>
+              
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Importe (€) *</label>
@@ -479,7 +530,7 @@ export default function FinancePanel() {
                   <select
                     value={receiptPeriod}
                     onChange={(e) => setReceiptPeriod(e.target.value)}
-                    className="w-full px-3.5 py-2.5 flat-input text-xs text-slate-600"
+                    className="w-full px-3.5 py-2.5 flat-input text-xs text-slate-600 bg-white cursor-pointer"
                   >
                     <option value="Mensual">Mensual</option>
                     <option value="Bimestral">Bimestral</option>
@@ -487,6 +538,7 @@ export default function FinancePanel() {
                   </select>
                 </div>
               </div>
+              
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Vencimiento *</label>
                 <input
@@ -497,29 +549,60 @@ export default function FinancePanel() {
                   className="w-full px-3.5 py-2.5 flat-input text-xs"
                 />
               </div>
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsReceiptModalOpen(false)} className="touch-btn text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
-                <button type="submit" className="touch-btn px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
+              
+              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsReceiptModalOpen(false)} 
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all touch-btn"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10 touch-btn"
+                >
+                  Crear Recibo
+                </button>
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          </form>
+        </div>,
+        document.body
       )}
 
       {/* MODAL NUEVO TRÁMITE */}
-      {isProcedureModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div
-            className="w-full max-w-md bg-white border border-slate-200 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 sm:pb-6 shadow-xl relative animate-slideUp sm:animate-fadeIn max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+      {isProcedureModalOpen && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsProcedureModalOpen(false); }}
+        >
+          <form 
+            onSubmit={handleAddProcedure}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-md bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Nuevo Trámite</h3>
-              <button onClick={() => setIsProcedureModalOpen(false)} className="touch-btn text-slate-400 hover:text-slate-700 p-2.5">
-                <X size={20} />
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                  Nuevo Trámite
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Completa los campos y crea el trámite o certificado
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsProcedureModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
+              >
+                <X size={15} />
               </button>
             </div>
-            <form onSubmit={handleAddProcedure} className="flex flex-col gap-4">
+
+            {/* Cuerpo del Formulario */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nombre del Trámite *</label>
                 <input
@@ -531,13 +614,14 @@ export default function FinancePanel() {
                   className="w-full px-3.5 py-2.5 flat-input text-xs"
                 />
               </div>
+              
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Responsable</label>
                   <select
                     value={procOwner}
                     onChange={(e) => setProcOwner(e.target.value)}
-                    className="w-full px-3.5 py-2.5 flat-input text-xs text-slate-600"
+                    className="w-full px-3.5 py-2.5 flat-input text-xs text-slate-600 bg-white cursor-pointer"
                   >
                     <option value="Todos">Común / Todos</option>
                     <option value="Igor">Igor</option>
@@ -555,6 +639,7 @@ export default function FinancePanel() {
                   />
                 </div>
               </div>
+              
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Notas</label>
                 <textarea
@@ -565,15 +650,27 @@ export default function FinancePanel() {
                   className="w-full px-3.5 py-2.5 flat-input text-xs"
                 />
               </div>
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsProcedureModalOpen(false)} className="touch-btn text-xs font-bold text-slate-400 px-3 py-2">Cancelar</button>
-                <button type="submit" className="touch-btn px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">Crear</button>
+              
+              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsProcedureModalOpen(false)} 
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all touch-btn"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10 touch-btn"
+                >
+                  Crear Trámite
+                </button>
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          </form>
+        </div>,
+        document.body
       )}
-
     </div>
   );
 }
