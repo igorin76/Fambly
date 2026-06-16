@@ -81,20 +81,43 @@ export default function ShoppingListView() {
 
   const activeMember = members.find(m => m.firstName === currentUser);
 
-  // Comprobar si hay otros administradores seleccionados en los destinatarios de la wishlist
-  const otherAdminsSelected = members.filter(m => m.isAdmin && m.id !== activeMember?.id && wishMemberIds.includes(m.id));
+  // Si wishMemberIds está vacío, representa "Todos". Los destinatarios implícitos son todos los miembros.
+  const isTodosSelected = wishMemberIds.length === 0;
+
+  // Filtrar los otros administradores de la familia que están seleccionados (o todos los otros si es "Todos")
+  const otherAdminsSelected = members.filter(m => 
+    m.isAdmin && 
+    m.id !== activeMember?.id && 
+    (isTodosSelected || wishMemberIds.includes(m.id))
+  );
+
   const showPrivacyToggle = activeMember?.isAdmin && otherAdminsSelected.length > 0;
   const otherAdminsNames = otherAdminsSelected.map(a => a.firstName).join(' y ');
   const toggleLabel = `Ocultar a ${otherAdminsNames} (Sorpresa 🎁)`;
 
   const filteredWishlist = wishlist.filter(item => {
-    // Si el regalo está marcado para ocultarse del destinatario, y el destinatario es el miembro activo actual, lo ocultamos.
-    if (item.hideFromTarget && activeMember && item.memberIds && item.memberIds.includes(activeMember.id)) {
-      return false;
-    }
-    // Compatibilidad con campo memberId (legacy/singular)
-    if (item.hideFromTarget && activeMember && item.memberId && item.memberId === activeMember.id) {
-      return false;
+    // Si el regalo está marcado para ocultarse del destinatario
+    if (item.hideFromTarget && activeMember) {
+      // Si el usuario activo es el creador del deseo, siempre debe poder verlo
+      if (item.createdBy && item.createdBy === activeMember.id) {
+        return true;
+      }
+
+      // Si es para "Todos" (memberIds vacío o nulo): se oculta si el miembro activo es administrador y no es el creador.
+      const isItemForTodos = !item.memberIds || item.memberIds.length === 0;
+      if (isItemForTodos) {
+        if (activeMember.isAdmin) {
+          return false;
+        }
+      } else {
+        // Si es para destinatarios específicos, se oculta si el miembro activo está en la lista.
+        if (item.memberIds && item.memberIds.includes(activeMember.id)) {
+          return false;
+        }
+        if (item.memberId && item.memberId === activeMember.id) {
+          return false;
+        }
+      }
     }
 
     if (selectedFilterCategories.length === 0) return true;
@@ -145,9 +168,16 @@ export default function ShoppingListView() {
   };
 
   const handleWishMemberToggle = (id) => {
+    const activeMember = members.find(m => m.firstName === currentUser);
+    const hasOtherAdminsInFamily = members.some(m => m.isAdmin && m.id !== activeMember?.id);
+
     if (id === 'todos') {
       setWishMemberIds([]);
-      setHideFromTarget(false);
+      if (activeMember?.isAdmin && hasOtherAdminsInFamily) {
+        setHideFromTarget(true);
+      } else {
+        setHideFromTarget(false);
+      }
       return;
     }
 
@@ -164,11 +194,23 @@ export default function ShoppingListView() {
     }
     setWishMemberIds(finalIds);
 
-    // Si hay otro administrador seleccionado, activar hideFromTarget por defecto si es una nueva selección
-    const activeMember = members.find(m => m.firstName === currentUser);
-    const hasOtherAdmin = members.some(m => m.isAdmin && m.id !== activeMember?.id && finalIds.includes(m.id));
-    if (hasOtherAdmin) {
-      const hadOtherAdminBefore = members.some(m => m.isAdmin && m.id !== activeMember?.id && wishMemberIds.includes(m.id));
+    const isTodos = finalIds.length === 0;
+
+    // Si hay otro administrador seleccionado (o si es TODOS y hay otros administradores en la familia),
+    // activar hideFromTarget por defecto si es una nueva selección
+    const hasOtherAdminSelected = members.some(m => 
+      m.isAdmin && 
+      m.id !== activeMember?.id && 
+      (isTodos || finalIds.includes(m.id))
+    );
+
+    if (hasOtherAdminSelected) {
+      const wasTodosBefore = wishMemberIds.length === 0;
+      const hadOtherAdminBefore = members.some(m => 
+        m.isAdmin && 
+        m.id !== activeMember?.id && 
+        (wasTodosBefore || wishMemberIds.includes(m.id))
+      );
       if (!hadOtherAdminBefore) {
         setHideFromTarget(true);
       }
@@ -220,7 +262,8 @@ export default function ShoppingListView() {
       memberIds: wishMemberIds.length > 0 ? wishMemberIds : null,
       memberId: wishMemberIds.length === 1 ? wishMemberIds[0] : null,
       category: wishCategory.trim() || null,
-      hideFromTarget: hideFromTarget
+      hideFromTarget: hideFromTarget,
+      createdBy: editingWishItem ? (editingWishItem.createdBy || activeMember?.id || null) : (activeMember?.id || null)
     };
 
     if (editingWishItem) {
