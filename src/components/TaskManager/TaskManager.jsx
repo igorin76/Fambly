@@ -1519,7 +1519,7 @@ export default function TaskManager() {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => setRewardPoints(prev => Math.max(1, prev - 5))}
+                              onClick={() => setRewardPoints(prev => Math.max(0, prev - 5))}
                               className="w-7 h-7 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 font-bold flex items-center justify-center transition-colors text-sm touch-btn shadow-sm select-none"
                             >
                               -
@@ -1533,7 +1533,9 @@ export default function TaskManager() {
                                 onChange={(e) => setRewardPoints(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)}
                                 className="w-12 h-7 text-center font-bold text-xs bg-white border border-amber-200 rounded-lg text-amber-900 shadow-sm"
                               />
-                              <span className="absolute -top-1.5 -right-1.5 text-[8px] bg-amber-400 text-white font-black px-1 rounded-full animate-bounce">⭐</span>
+                              {rewardPoints > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 text-[8px] bg-amber-400 text-white font-black px-1 rounded-full animate-bounce">⭐</span>
+                              )}
                             </div>
                             <button
                               type="button"
@@ -1546,9 +1548,20 @@ export default function TaskManager() {
                         </div>
 
                         {/* Chips rápidos */}
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Preselección:</span>
-                          <div className="flex gap-1.5">
+                          <div className="flex flex-wrap gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setRewardPoints(0)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all border shrink-0 ${
+                                rewardPoints === 0
+                                  ? 'bg-slate-600 border-slate-655 text-white shadow-sm'
+                                  : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                              }`}
+                            >
+                              No puntuar (0 ⭐)
+                            </button>
                             {[5, 10, 20, 50].map((val) => {
                               const isCurrent = rewardPoints === val;
                               return (

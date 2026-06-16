@@ -1218,8 +1218,10 @@ export const useStore = create(
           if (isCompleted && finalCompletedSuccessfully && taskRef && taskRef.assignedMemberIds) {
             const scoringMembers = get().members.filter(m => m.isScoringSubject && taskRef.assignedMemberIds.includes(m.id));
             const pts = taskRef.rewardPoints !== undefined ? Number(taskRef.rewardPoints) : 10;
-            for (const m of scoringMembers) {
-              await get().awardPoints(m.id, pts);
+            if (pts > 0) {
+              for (const m of scoringMembers) {
+                await get().awardPoints(m.id, pts);
+              }
             }
           }
         }
