@@ -964,7 +964,7 @@ export default function TaskManager() {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className={`text-sm font-bold truncate ${task.completed ? 'line-through text-slate-400 font-medium' : 'text-slate-800'}`}>
+              <p className={`text-sm font-bold truncate ${task.completed ? 'text-slate-400 font-medium' : 'text-slate-800'}`}>
                 {task.title}
               </p>
               
@@ -987,7 +987,7 @@ export default function TaskManager() {
               </span>
             </div>
             {task.description && (
-              <p className={`text-xs mt-1 text-slate-400 ${task.completed && 'line-through'}`}>
+              <p className="text-xs mt-1 text-slate-400">
                 {task.description}
               </p>
             )}
