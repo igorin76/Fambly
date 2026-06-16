@@ -266,20 +266,15 @@ export default function SuperAdminPanel() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre de la Familia *</label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <Home size={15} />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: Familia López"
-                      value={familyName}
-                      onChange={(e) => setFamilyName(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 flat-input text-xs"
-                      disabled={isSubmitting}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Familia López"
+                    value={familyName}
+                    onChange={(e) => setFamilyName(e.target.value)}
+                    className="w-full px-3 py-2.5 flat-input text-xs"
+                    disabled={isSubmitting}
+                  />
                 </div>
 
                 <div className="border-t border-slate-100 my-1 pt-3">
@@ -289,20 +284,15 @@ export default function SuperAdminPanel() {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre *</label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                        <User size={14} />
-                      </span>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ej: Ana"
-                        value={adminFirstName}
-                        onChange={(e) => setAdminFirstName(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 flat-input text-xs"
-                        disabled={isSubmitting}
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: Ana"
+                      value={adminFirstName}
+                      onChange={(e) => setAdminFirstName(e.target.value)}
+                      className="w-full px-3 py-2.5 flat-input text-xs"
+                      disabled={isSubmitting}
+                    />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Apellidos</label>
@@ -319,35 +309,27 @@ export default function SuperAdminPanel() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico *</label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <Mail size={15} />
-                    </span>
-                    <input
-                      type="email"
-                      required
-                      placeholder="ejemplo@correo.com"
-                      value={adminEmail}
-                      onChange={(e) => setAdminEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 flat-input text-xs"
-                      disabled={isSubmitting}
-                    />
-                  </div>
+                  <input
+                    type="email"
+                    required
+                    placeholder="ejemplo@correo.com"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    className="w-full px-3 py-2.5 flat-input text-xs"
+                    disabled={isSubmitting}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Contraseña de Acceso *</label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <Lock size={15} />
-                    </span>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
                       placeholder="Mínimo 4 caracteres"
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
-                      className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                      className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
                       disabled={isSubmitting}
                     />
                     <button
