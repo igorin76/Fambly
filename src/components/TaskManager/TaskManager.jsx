@@ -1387,7 +1387,7 @@ export default function TaskManager() {
                                 }
                               }
                             }}
-                            className="flex-1 px-2.5 py-1 flat-input text-[10px] uppercase font-bold text-slate-700 h-7"
+                            className="flex-1 px-2.5 py-0.5 border border-slate-200 bg-white rounded-lg text-[10px] uppercase font-extrabold text-slate-700 h-[28px] focus:outline-none focus:border-blue-300 transition-all"
                           />
                           <button
                             type="button"
@@ -1403,7 +1403,7 @@ export default function TaskManager() {
                               }
                             }}
                             disabled={!newCatName.trim()}
-                            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-bold disabled:opacity-40 disabled:hover:bg-blue-600 shrink-0 border-0 h-7 cursor-pointer flex items-center justify-center"
+                            className="px-2.5 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-extrabold shrink-0 border-0 h-[28px] cursor-pointer flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-blue-600"
                           >
                             <Plus size={12} className="stroke-[2.5]" />
                           </button>
