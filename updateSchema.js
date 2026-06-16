@@ -32,6 +32,7 @@ async function run() {
     console.log("Altering tasks for resolution details...");
     await client.query("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS completed_successfully BOOLEAN DEFAULT true;");
     await client.query("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;");
+    await client.query("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS reward_points INTEGER DEFAULT 10;");
 
     // Create wishlist_categories table
     console.log("Creating wishlist_categories...");

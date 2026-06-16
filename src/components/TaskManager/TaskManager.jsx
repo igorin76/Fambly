@@ -29,7 +29,8 @@ import {
   ChevronDown,
   ChevronUp,
   Link,
-  ExternalLink
+  ExternalLink,
+  Star
 } from 'lucide-react';
 
 export default function TaskManager() {
@@ -92,6 +93,7 @@ export default function TaskManager() {
   const [dueDate, setDueDate] = useState('');
   const [category, setCategory] = useState('GENERAL');
   const [priority, setPriority] = useState('MEDIA');
+  const [rewardPoints, setRewardPoints] = useState(10);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [attachmentsList, setAttachmentsList] = useState([]);
@@ -509,6 +511,7 @@ export default function TaskManager() {
     setDueDate('');
     setCategory('GENERAL');
     setPriority('MEDIA');
+    setRewardPoints(10);
     setAttachmentsList([]);
     setContentType('');
     setFileUrl('');
@@ -534,6 +537,7 @@ export default function TaskManager() {
     setDueDate(task.dueDate || '');
     setCategory(task.category || 'GENERAL');
     setPriority(task.priority || 'MEDIA');
+    setRewardPoints(task.rewardPoints !== undefined ? task.rewardPoints : 10);
     
     // Cargar contenido adjunto con compatibilidad legacy
     const rawAtts = task.attachments || [];
@@ -627,7 +631,8 @@ export default function TaskManager() {
       priority,
       attachments: finalAttachments,
       assignee: assignedMemberIds.map(id => members.find(m => m.id === id)?.firstName || '').join(', ') || 'Todos',
-      children: assignedMemberIds.map(id => members.find(m => m.id === id)?.firstName || '')
+      children: assignedMemberIds.map(id => members.find(m => m.id === id)?.firstName || ''),
+      rewardPoints: Number(rewardPoints)
     };
 
     if (editingTask) {
@@ -985,6 +990,13 @@ export default function TaskManager() {
               <span className="text-[8px] bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded text-slate-500 font-bold uppercase tracking-wider">
                 {task.category}
               </span>
+
+              {/* Recompensa de Estrellas */}
+              {task.rewardPoints > 0 && (
+                <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded font-black flex items-center gap-0.5">
+                  ⭐ +{task.rewardPoints}
+                </span>
+              )}
               
               {/* Ámbito/Asignados - Siempre visible */}
               <span className="text-[9px] text-slate-400 font-bold">
@@ -1481,6 +1493,84 @@ export default function TaskManager() {
                       })}
                     </div>
                   </div>
+
+                  {/* RECOMPENSA DE ESTRELLAS DINÁMICA */}
+                  {(() => {
+                    const hasScoringAssignee = assignedMemberIds.length === 0
+                      ? members.some(m => m.isScoringSubject === true)
+                      : members.some(m => m.isScoringSubject === true && assignedMemberIds.includes(m.id));
+
+                    if (!hasScoringAssignee) return null;
+
+                    return (
+                      <div className="flex flex-col gap-3 bg-gradient-to-r from-amber-500/5 via-amber-500/10 to-transparent p-4 rounded-2xl border border-amber-250/40 shadow-sm animate-fadeIn">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-amber-100 text-amber-500 rounded-xl shrink-0">
+                              <Star size={16} className="fill-amber-400 animate-pulse" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">Recompensa por Consecución</h4>
+                              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Puntos para cada miembro implicado al cumplir la tarea</p>
+                            </div>
+                          </div>
+
+                          {/* Control incremental */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setRewardPoints(prev => Math.max(1, prev - 5))}
+                              className="w-7 h-7 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 font-bold flex items-center justify-center transition-colors text-sm touch-btn shadow-sm select-none"
+                            >
+                              -
+                            </button>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={rewardPoints}
+                                onChange={(e) => setRewardPoints(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+                                className="w-12 h-7 text-center font-bold text-xs bg-white border border-amber-200 rounded-lg text-amber-900 shadow-sm"
+                              />
+                              <span className="absolute -top-1.5 -right-1.5 text-[8px] bg-amber-400 text-white font-black px-1 rounded-full animate-bounce">⭐</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setRewardPoints(prev => prev + 5)}
+                              className="w-7 h-7 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 font-bold flex items-center justify-center transition-colors text-sm touch-btn shadow-sm select-none"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Chips rápidos */}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Preselección:</span>
+                          <div className="flex gap-1.5">
+                            {[5, 10, 20, 50].map((val) => {
+                              const isCurrent = rewardPoints === val;
+                              return (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() => setRewardPoints(val)}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all border shrink-0 ${
+                                    isCurrent
+                                      ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
+                                      : 'bg-white border-amber-200/60 text-amber-750 hover:bg-amber-50/50'
+                                  }`}
+                                >
+                                  +{val} ⭐
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    );
+                  })()}
 
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fecha de Límite</label>

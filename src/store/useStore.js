@@ -588,7 +588,8 @@ export const useStore = create(
                 attachments: cleanAttachments,
                 createdById: createdById,
                 completedSuccessfully: t.completed_successfully !== false,
-                completedAt: t.completed_at || null
+                completedAt: t.completed_at || null,
+                rewardPoints: t.reward_points !== null ? t.reward_points : 10
               };
             }) : get().tasks,
 
@@ -890,7 +891,8 @@ export const useStore = create(
           createdById: activeMember ? activeMember.id : null,
           attachments: [...(task.attachments || []), creatorMeta],
           assignee: task.assignee || 'Todos',
-          children: task.children || []
+          children: task.children || [],
+          rewardPoints: task.rewardPoints !== undefined ? Number(task.rewardPoints) : 10
         };
         
         // Estado local con attachments limpios
@@ -919,7 +921,8 @@ export const useStore = create(
               priority: newTask.priority,
               assigned_member_ids: newTask.assignedMemberIds,
               is_accepted: newTask.isAccepted,
-              attachments: newTask.attachments
+              attachments: newTask.attachments,
+              reward_points: newTask.rewardPoints
             });
             if (error) {
               console.error("[Supabase Error] Error inserting task:", error);
@@ -1075,6 +1078,7 @@ export const useStore = create(
             updatePayload.attachments = attachmentsToSave;
             if (mergedTask.completedSuccessfully !== undefined) updatePayload.completed_successfully = mergedTask.completedSuccessfully;
             if (mergedTask.completedAt !== undefined) updatePayload.completed_at = mergedTask.completedAt;
+            if (mergedTask.rewardPoints !== undefined) updatePayload.reward_points = Number(mergedTask.rewardPoints);
 
             const { error } = await supabase.from('tasks').update(updatePayload).eq('id', taskId);
             if (error) {
@@ -1210,10 +1214,12 @@ export const useStore = create(
             completed_at: finalCompletedAt
           }).eq('id', taskId);
           
-          // GAMIFICACIÓN: Si la tarea se completó exitosamente y está asignada a niños, sumarle puntos al niño! (10 puntos por misión)
-          if (isCompleted && finalCompletedSuccessfully && taskRef && taskRef.scope === 'ninos' && taskRef.assignedMemberIds) {
-            for (const childId of taskRef.assignedMemberIds) {
-              await get().awardPoints(childId, 10);
+          // GAMIFICACIÓN: Si la tarea se completó exitosamente, sumarle puntos a los miembros asignados sujetos a puntuación!
+          if (isCompleted && finalCompletedSuccessfully && taskRef && taskRef.assignedMemberIds) {
+            const scoringMembers = get().members.filter(m => m.isScoringSubject && taskRef.assignedMemberIds.includes(m.id));
+            const pts = taskRef.rewardPoints !== undefined ? Number(taskRef.rewardPoints) : 10;
+            for (const m of scoringMembers) {
+              await get().awardPoints(m.id, pts);
             }
           }
         }

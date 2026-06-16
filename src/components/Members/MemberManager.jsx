@@ -292,7 +292,7 @@ export default function MemberManager() {
           }`}
         >
           <Gift size={14} />
-          <span className="hidden min-[360px]:inline">Premios Niños</span>
+          <span className="hidden min-[360px]:inline">Premios</span>
           <span className="inline min-[360px]:hidden">Premios</span>
         </button>
       </div>

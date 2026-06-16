@@ -369,7 +369,14 @@ export default function Dashboard({ setActiveTab }) {
                       {task.assignee} {task.category !== 'GENERAL' && `• ${task.category}`}
                     </p>
                   </div>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${priority.cls}`}>{priority.label}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {task.rewardPoints > 0 && (
+                      <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded font-black flex items-center gap-0.5">
+                        ⭐ +{task.rewardPoints}
+                      </span>
+                    )}
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border ${priority.cls}`}>{priority.label}</span>
+                  </div>
                 </button>
               );
             })}
