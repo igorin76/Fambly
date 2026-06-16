@@ -1306,8 +1306,8 @@ export default function TaskManager() {
                   </div>
 
                   {/* Categoría y Prioridad */}
-                  <div className="flex flex-col gap-1.5">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
                         <button
@@ -1326,33 +1326,22 @@ export default function TaskManager() {
                           )}
                         </button>
                       </div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-2.5 py-1 flat-input text-[11px] text-slate-655 font-bold uppercase h-8"
+                      >
+                        {taskCategories.map((cat) => (
+                          <option key={cat.id} value={cat.name}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* SELECTOR DE CATEGORÍA COMO BOTONES PLANOS */}
-                      <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
-                        {taskCategories.map((cat) => {
-                          const isActive = category === cat.name;
-                          return (
-                            <button
-                              key={cat.id}
-                              type="button"
-                              onClick={() => setCategory(cat.name)}
-                              className={`px-2.5 py-1.5 text-[9px] font-bold rounded-xl border transition-all uppercase whitespace-nowrap cursor-pointer ${
-                                isActive
-                                  ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
-                                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-                              }`}
-                            >
-                              {cat.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* SELECTOR DE PRIORIDAD (BOTONES PLANOS) */}
-                      <div className="grid grid-cols-3 gap-1 h-[32px] sm:h-[38px] self-start">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridad</label>
+                      <div className="grid grid-cols-3 gap-1 h-8">
                         {['BAJA', 'MEDIA', 'ALTA'].map((p) => (
                           <button
                             key={p}
