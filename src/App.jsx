@@ -9,14 +9,15 @@ import FinancePanel from './components/FinancePanel/FinancePanel';
 import KidsModeView from './components/KidsMode/KidsModeView';
 import AnnouncementBoard from './components/Announcements/AnnouncementBoard';
 import MemberManager from './components/Members/MemberManager';
+import LoginScreen from './components/Auth/LoginScreen';
 import { Mail, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { fetchInitialData, currentUser, members = [] } = useStore();
+  const { fetchInitialData, currentUser, members = [], isAuthenticated } = useStore();
   const [toast, setToast] = useState(null);
 
-  // Cargar datos al iniciar
+  // Cargar datos al iniciar (independientemente del login)
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
@@ -70,6 +71,11 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
+
+  // ═══ GUARD DE AUTENTICACIÓN ═══
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
 
   // Verificar si el usuario activo es niño
   const activeMember = members.find(m => m.firstName === currentUser);

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../utils/supabaseClient';
 import { sendPendingTaskNotification } from '../utils/emailService';
+import bcrypt from 'bcryptjs';
 
 // Arrays de datos semilla vacíos
 const initialTasks = [];
@@ -25,10 +26,115 @@ const isSupabaseConfigured = () => {
 export const useStore = create(
   persist(
     (set, get) => ({
-      currentUser: 'Igor',
+      currentUser: '',
       setCurrentUser: (user) => set({ currentUser: user }),
       focusedTaskId: null,
       setFocusedTaskId: (id) => set({ focusedTaskId: id }),
+
+      // ═══ SISTEMA DE AUTENTICACIÓN ═══
+      isAuthenticated: false,
+      authenticatedMemberId: null,
+
+      login: async (email, password) => {
+        const members = get().members;
+        const admin = members.find(
+          (m) => m.isAdmin && m.email && m.email.toLowerCase() === email.toLowerCase()
+        );
+        if (!admin) {
+          throw new Error('No se encontró ningún administrador con ese correo electrónico.');
+        }
+        if (!admin.passwordHash || admin.passwordHash === '') {
+          // Si no tiene hash (primera vez o migración pendiente), aceptar "12345"
+          if (password === '12345') {
+            const hash = await bcrypt.hash('12345', 10);
+            // Guardar el hash en Supabase
+            if (isSupabaseConfigured()) {
+              await supabase.from('members').update({ password_hash: hash }).eq('id', admin.id);
+            }
+            set((state) => ({
+              isAuthenticated: true,
+              authenticatedMemberId: admin.id,
+              currentUser: admin.firstName,
+              members: state.members.map((m) =>
+                m.id === admin.id ? { ...m, passwordHash: hash } : m
+              ),
+            }));
+            return admin;
+          }
+          throw new Error('Contraseña incorrecta.');
+        }
+        const isValid = await bcrypt.compare(password, admin.passwordHash);
+        if (!isValid) {
+          throw new Error('Contraseña incorrecta.');
+        }
+        set({
+          isAuthenticated: true,
+          authenticatedMemberId: admin.id,
+          currentUser: admin.firstName,
+        });
+        return admin;
+      },
+
+      logout: () => {
+        set({
+          isAuthenticated: false,
+          authenticatedMemberId: null,
+          currentUser: '',
+        });
+      },
+
+      verifyAdminPassword: async (memberId, password) => {
+        const members = get().members;
+        const admin = members.find((m) => m.id === memberId);
+        if (!admin || !admin.isAdmin) {
+          throw new Error('Miembro no encontrado o no es administrador.');
+        }
+        if (!admin.passwordHash || admin.passwordHash === '') {
+          // Sin hash, aceptar "12345" por defecto
+          return password === '12345';
+        }
+        return await bcrypt.compare(password, admin.passwordHash);
+      },
+
+      changePassword: async (memberId, oldPassword, newPassword) => {
+        const members = get().members;
+        const admin = members.find((m) => m.id === memberId);
+        if (!admin || !admin.isAdmin) {
+          throw new Error('Miembro no encontrado o no es administrador.');
+        }
+        // Verificar contraseña actual
+        let isOldValid = false;
+        if (!admin.passwordHash || admin.passwordHash === '') {
+          isOldValid = oldPassword === '12345';
+        } else {
+          isOldValid = await bcrypt.compare(oldPassword, admin.passwordHash);
+        }
+        if (!isOldValid) {
+          throw new Error('La contraseña actual es incorrecta.');
+        }
+        // Hashear nueva contraseña
+        const newHash = await bcrypt.hash(newPassword, 10);
+        set((state) => ({
+          members: state.members.map((m) =>
+            m.id === memberId ? { ...m, passwordHash: newHash } : m
+          ),
+        }));
+        if (isSupabaseConfigured()) {
+          await supabase.from('members').update({ password_hash: newHash }).eq('id', memberId);
+        }
+      },
+
+      resetAdminPassword: async (adminMemberId) => {
+        const defaultHash = await bcrypt.hash('12345', 10);
+        set((state) => ({
+          members: state.members.map((m) =>
+            m.id === adminMemberId ? { ...m, passwordHash: defaultHash } : m
+          ),
+        }));
+        if (isSupabaseConfigured()) {
+          await supabase.from('members').update({ password_hash: defaultHash }).eq('id', adminMemberId);
+        }
+      },
 
       tasks: initialTasks,
       events: initialEvents,
@@ -153,7 +259,8 @@ export const useStore = create(
               neededItems: m.needed_items || '',
               isAdmin: m.is_admin === true,
               associatedMemberIds: m.associated_member_ids || [],
-              email: m.email || ''
+              email: m.email || '',
+              passwordHash: m.password_hash || ''
             })) : get().members,
 
             clothingLogistics: dbMembers ? dbMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
@@ -292,7 +399,8 @@ export const useStore = create(
             needed_items: '',
             is_admin: newMember.isAdmin || false,
             associated_member_ids: newMember.associatedMemberIds || [],
-            email: newMember.email || ''
+            email: newMember.email || '',
+            password_hash: newMember.passwordHash || ''
           });
         }
       },
@@ -328,6 +436,7 @@ export const useStore = create(
           if (updatedFields.isAdmin !== undefined) updatePayload.is_admin = updatedFields.isAdmin;
           if (updatedFields.associatedMemberIds !== undefined) updatePayload.associated_member_ids = updatedFields.associatedMemberIds;
           if (updatedFields.email !== undefined) updatePayload.email = updatedFields.email;
+          if (updatedFields.passwordHash !== undefined) updatePayload.password_hash = updatedFields.passwordHash;
 
           await supabase.from('members').update(updatePayload).eq('id', id);
         }

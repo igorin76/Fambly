@@ -12,7 +12,11 @@ import {
   Heart,
   ChevronRight,
   ShieldAlert,
-  Save
+  Save,
+  Key,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function MemberManager() {
@@ -27,7 +31,10 @@ export default function MemberManager() {
     awardPoints,
     familyRoles = [],
     addFamilyRole,
-    deleteFamilyRole
+    deleteFamilyRole,
+    authenticatedMemberId,
+    changePassword,
+    resetAdminPassword
   } = useStore();
 
   const [activeSubTab, setActiveSubTab] = useState('perfiles');
@@ -37,6 +44,19 @@ export default function MemberManager() {
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+
+  // Cambio de contraseña
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [changingPasswordMemberId, setChangingPasswordMemberId] = useState(null);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   // Estado Formulario Rol
   const [newRoleName, setNewRoleName] = useState('');
@@ -177,6 +197,60 @@ export default function MemberManager() {
     setAdjustPointsVal('');
   };
 
+  const handleOpenChangePassword = (memberId) => {
+    setChangingPasswordMemberId(memberId);
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setShowOldPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setPasswordError('');
+    setPasswordSuccess('');
+    setIsChangePasswordModalOpen(true);
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      setPasswordError('Todos los campos son obligatorios.');
+      return;
+    }
+    if (newPassword.length < 4) {
+      setPasswordError('La nueva contraseña debe tener al menos 4 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('Las nuevas contraseñas no coinciden.');
+      return;
+    }
+    setIsSubmittingPassword(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+    try {
+      await changePassword(changingPasswordMemberId, oldPassword, newPassword);
+      setPasswordSuccess('Contraseña actualizada correctamente.');
+      setTimeout(() => {
+        setIsChangePasswordModalOpen(false);
+      }, 1500);
+    } catch (err) {
+      setPasswordError(err.message || 'Error al cambiar la contraseña.');
+    } finally {
+      setIsSubmittingPassword(false);
+    }
+  };
+
+  const handleResetPassword = async (memberId, memberName) => {
+    if (confirm(`¿Seguro que quieres restablecer la contraseña de ${memberName} a "12345"?`)) {
+      try {
+        await resetAdminPassword(memberId);
+        alert('Contraseña restablecida con éxito a "12345".');
+      } catch (err) {
+        alert(err.message || 'Error al restablecer la contraseña.');
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       
@@ -293,6 +367,25 @@ export default function MemberManager() {
                     </div>
 
                     <div className="flex gap-1.5">
+                      {m.isAdmin && (
+                        m.id === authenticatedMemberId ? (
+                          <button
+                            onClick={() => handleOpenChangePassword(m.id)}
+                            className="p-2 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 rounded-lg transition-all touch-btn"
+                            title="Cambiar Contraseña"
+                          >
+                            <Key size={15} />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleResetPassword(m.id, m.firstName)}
+                            className="p-2 text-slate-500 hover:text-amber-650 hover:bg-amber-50 rounded-lg transition-all touch-btn"
+                            title="Restablecer Contraseña a '12345'"
+                          >
+                            <Key size={15} className="rotate-45" />
+                          </button>
+                        )
+                      )}
                       <button
                         onClick={() => handleOpenEditMember(m)}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all touch-btn"
@@ -852,6 +945,143 @@ export default function MemberManager() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CAMBIAR CONTRASEÑA */}
+      {isChangePasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div 
+            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Key size={16} className="text-indigo-650" />
+                Cambiar Contraseña
+              </h3>
+              <button 
+                onClick={() => setIsChangePasswordModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-700 p-2.5 touch-btn"
+                disabled={isSubmittingPassword}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePasswordSubmit} className="flex flex-col gap-4">
+              {passwordError && (
+                <div className="p-3 bg-red-50 border border-red-100 text-red-650 rounded-xl text-xs font-semibold leading-relaxed">
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-650 rounded-xl text-xs font-semibold leading-relaxed">
+                  {passwordSuccess}
+                </div>
+              )}
+
+              {/* Contraseña Actual */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Contraseña Actual</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <Lock size={15} />
+                  </span>
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    required
+                    placeholder="••••••••"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                    disabled={isSubmittingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 touch-btn"
+                    disabled={isSubmittingPassword}
+                  >
+                    {showOldPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Nueva Contraseña */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nueva Contraseña</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <Lock size={15} />
+                  </span>
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Mínimo 4 caracteres"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                    disabled={isSubmittingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 touch-btn"
+                    disabled={isSubmittingPassword}
+                  >
+                    {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirmar Nueva Contraseña */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Confirmar Nueva Contraseña</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <Lock size={15} />
+                  </span>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Repite la contraseña"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                    disabled={isSubmittingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 touch-btn"
+                    disabled={isSubmittingPassword}
+                  >
+                    {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsChangePasswordModalOpen(false)}
+                  className="text-xs font-bold text-slate-400 px-3 py-2"
+                  disabled={isSubmittingPassword}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5"
+                  disabled={isSubmittingPassword}
+                >
+                  {isSubmittingPassword ? 'Actualizando...' : 'Cambiar Contraseña'}
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
       )}
