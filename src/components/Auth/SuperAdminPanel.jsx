@@ -44,6 +44,8 @@ export default function SuperAdminPanel() {
   const [updatedFamilyName, setUpdatedFamilyName] = useState('');
   const [selectedAdminId, setSelectedAdminId] = useState('');
   const [selectedAdminEmail, setSelectedAdminEmail] = useState('');
+  const [updatedAdminPassword, setUpdatedAdminPassword] = useState('');
+  const [showEditPassword, setShowEditPassword] = useState(false);
   const [editError, setEditError] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
@@ -53,14 +55,26 @@ export default function SuperAdminPanel() {
     const currentAdmin = family.allAdmins.find(a => a.email === family.email) || family.allAdmins[0];
     setSelectedAdminId(currentAdmin ? currentAdmin.id : '');
     setSelectedAdminEmail(currentAdmin ? currentAdmin.email : '');
+    setUpdatedAdminPassword('');
+    setShowEditPassword(false);
     setEditError('');
     setIsEditModalOpen(true);
   };
 
   const handleSaveEditFamily = async (e) => {
     e.preventDefault();
-    if (!updatedFamilyName.trim() || !selectedAdminId) {
-      setEditError('Todos los campos son obligatorios.');
+    if (!updatedFamilyName.trim() || !selectedAdminId || !selectedAdminEmail.trim()) {
+      setEditError('El nombre de la familia y el correo del administrador son obligatorios.');
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(selectedAdminEmail)) {
+      setEditError('Por favor, introduce una dirección de correo electrónico válida.');
+      return;
+    }
+
+    if (updatedAdminPassword && updatedAdminPassword.length < 4) {
+      setEditError('La contraseña debe tener al menos 4 caracteres.');
       return;
     }
 
@@ -68,7 +82,20 @@ export default function SuperAdminPanel() {
     setEditError('');
 
     try {
-      // 1. Actualizar nombre del workspace en Supabase
+      // 1. Verificar si ya existe otro miembro con el mismo email (excepto el propio administrador actual que se edita)
+      const { data: existingMember, error: checkError } = await supabase
+        .from('members')
+        .select('id')
+        .eq('email', selectedAdminEmail.trim().toLowerCase())
+        .neq('id', selectedAdminId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (existingMember) {
+        throw new Error('El correo electrónico ya está registrado en otra cuenta.');
+      }
+
+      // 2. Actualizar nombre del workspace en Supabase
       const { error: wsError } = await supabase
         .from('workspaces')
         .update({ name: updatedFamilyName.trim() })
@@ -76,7 +103,7 @@ export default function SuperAdminPanel() {
 
       if (wsError) throw wsError;
 
-      // 2. Actualizar is_primary_admin para los miembros de este workspace
+      // 3. Desmarcar todos los administradores como principales
       const { error: resetError } = await supabase
         .from('members')
         .update({ is_primary_admin: false })
@@ -84,15 +111,28 @@ export default function SuperAdminPanel() {
 
       if (resetError) throw resetError;
 
+      // 4. Preparar actualizaciones del miembro administrador
+      const adminUpdates = {
+        is_primary_admin: true,
+        email: selectedAdminEmail.trim().toLowerCase()
+      };
+
+      if (updatedAdminPassword) {
+        const hashedPassword = await bcrypt.hash(updatedAdminPassword, 10);
+        adminUpdates.password_hash = hashedPassword;
+      }
+
+      // 5. Aplicar cambios al administrador principal
       const { error: setPrimaryError } = await supabase
         .from('members')
-        .update({ is_primary_admin: true })
+        .update(adminUpdates)
         .eq('id', selectedAdminId);
 
       if (setPrimaryError) throw setPrimaryError;
 
       setIsEditModalOpen(false);
       setEditingFamily(null);
+      setUpdatedAdminPassword('');
       fetchFamilies();
     } catch (err) {
       setEditError(err.message || 'Error al guardar los cambios.');
@@ -577,6 +617,7 @@ export default function SuperAdminPanel() {
                     setSelectedAdminId(adminId);
                     const selected = editingFamily?.allAdmins?.find(a => a.id === adminId);
                     setSelectedAdminEmail(selected ? selected.email : '');
+                    setUpdatedAdminPassword('');
                   }}
                   className="w-full px-3 py-2.5 flat-input text-xs bg-white cursor-pointer"
                   disabled={isSavingEdit}
@@ -589,15 +630,40 @@ export default function SuperAdminPanel() {
                 </select>
               </div>
 
-              {/* Correo Electrónico (deshabilitado / automático) */}
+              {/* Correo Electrónico */}
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico (Automático)</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico *</label>
                 <input
                   type="email"
+                  required
+                  placeholder="ejemplo@correo.com"
                   value={selectedAdminEmail}
-                  disabled
-                  className="w-full px-3 py-2.5 flat-input text-xs bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                  onChange={(e) => setSelectedAdminEmail(e.target.value)}
+                  className="w-full px-3 py-2.5 flat-input text-xs"
+                  disabled={isSavingEdit}
                 />
+              </div>
+
+              {/* Nueva Contraseña (Opcional) */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nueva Contraseña (Opcional)</label>
+                <div className="relative">
+                  <input
+                    type={showEditPassword ? 'text' : 'password'}
+                    placeholder="Dejar en blanco para mantener actual"
+                    value={updatedAdminPassword}
+                    onChange={(e) => setUpdatedAdminPassword(e.target.value)}
+                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
+                    disabled={isSavingEdit}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 touch-btn"
+                  >
+                    {showEditPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
 
               {/* Botones de acción */}
