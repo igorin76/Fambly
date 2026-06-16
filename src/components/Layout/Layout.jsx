@@ -105,16 +105,6 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             <FamblyLogo className="h-7 md:h-8" />
           </div>
 
-          {/* BOTÓN DE CERRAR SESIÓN */}
-          <button
-            onClick={handleLogout}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all touch-btn"
-            title="Cerrar sesión"
-          >
-            <LogOut size={14} />
-            <span className="hidden lg:inline">Salir</span>
-          </button>
-
           {/* SELECTOR DE USUARIO ACTIVO DINÁMICO */}
           <div className="flex items-center gap-2">
             {/* Inline en pantallas medianas/grandes */}
@@ -165,6 +155,15 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 {activeMember.firstName[0]}
               </span>
               <span className="text-sm font-bold text-slate-700">{activeMember.firstName}</span>
+            </button>
+
+            {/* Botón de Cerrar Sesión Siempre Visible */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center p-2 rounded-xl border border-slate-200/50 bg-slate-50 text-slate-500 hover:text-red-655 hover:bg-red-50 hover:border-red-100 transition-all touch-btn"
+              title="Cerrar sesión"
+            >
+              <LogOut size={16} />
             </button>
           </div>
         </div>

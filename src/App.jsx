@@ -10,17 +10,20 @@ import KidsModeView from './components/KidsMode/KidsModeView';
 import AnnouncementBoard from './components/Announcements/AnnouncementBoard';
 import MemberManager from './components/Members/MemberManager';
 import LoginScreen from './components/Auth/LoginScreen';
+import SuperAdminPanel from './components/Auth/SuperAdminPanel';
 import { Mail, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { fetchInitialData, currentUser, members = [], isAuthenticated } = useStore();
+  const { fetchInitialData, currentUser, members = [], isAuthenticated, isSuperAdmin } = useStore();
   const [toast, setToast] = useState(null);
 
-  // Cargar datos al iniciar (independientemente del login)
+  // Cargar datos al iniciar si el usuario está autenticado y no es superadmin
   useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
+    if (isAuthenticated && !isSuperAdmin) {
+      fetchInitialData();
+    }
+  }, [fetchInitialData, isAuthenticated, isSuperAdmin]);
 
   // Suscribirse a eventos de correo electrónico
   useEffect(() => {
@@ -75,6 +78,10 @@ export default function App() {
   // ═══ GUARD DE AUTENTICACIÓN ═══
   if (!isAuthenticated) {
     return <LoginScreen />;
+  }
+
+  if (isSuperAdmin) {
+    return <SuperAdminPanel />;
   }
 
   // Verificar si el usuario activo es niño

@@ -33,54 +33,112 @@ export const useStore = create(
 
       // ═══ SISTEMA DE AUTENTICACIÓN ═══
       isAuthenticated: false,
+      isSuperAdmin: false,
       authenticatedMemberId: null,
+      currentWorkspaceId: 'ws-default-1',
 
       login: async (email, password) => {
-        const members = get().members;
-        const admin = members.find(
-          (m) => m.isAdmin && m.email && m.email.toLowerCase() === email.toLowerCase()
-        );
-        if (!admin) {
-          throw new Error('No se encontró ningún administrador con ese correo electrónico.');
+        // 1. Caso especial: Superadministrador global
+        if (email.toLowerCase() === 'igorjimenez@gmail.com' && password === 'R@ssini76') {
+          set({
+            isAuthenticated: true,
+            isSuperAdmin: true,
+            currentUser: 'Superadmin',
+            authenticatedMemberId: 'superadmin',
+            currentWorkspaceId: 'ws-system'
+          });
+          return { id: 'superadmin', firstName: 'Superadmin', isAdmin: true, isSuperAdmin: true };
         }
-        if (!admin.passwordHash || admin.passwordHash === '') {
-          // Si no tiene hash (primera vez o migración pendiente), aceptar "12345"
-          if (password === '12345') {
-            const hash = await bcrypt.hash('12345', 10);
-            // Guardar el hash en Supabase
-            if (isSupabaseConfigured()) {
+
+        // 2. Administradores de familias
+        if (isSupabaseConfigured()) {
+          const { data: admin, error } = await supabase
+            .from('members')
+            .select('*')
+            .eq('email', email.trim())
+            .eq('is_admin', true)
+            .maybeSingle();
+
+          if (error) {
+            console.error("Error al buscar administrador:", error);
+            throw new Error('Error al conectar con la base de datos.');
+          }
+
+          if (!admin) {
+            throw new Error('No se encontró ningún administrador con ese correo electrónico.');
+          }
+
+          const passwordHash = admin.password_hash || '';
+
+          if (!passwordHash || passwordHash === '') {
+            // Si no tiene hash, aceptar "12345" por defecto la primera vez
+            if (password === '12345') {
+              const hash = await bcrypt.hash('12345', 10);
               await supabase.from('members').update({ password_hash: hash }).eq('id', admin.id);
+              
+              set({
+                isAuthenticated: true,
+                isSuperAdmin: false,
+                authenticatedMemberId: admin.id,
+                currentWorkspaceId: admin.workspace_id || 'ws-default-1',
+                currentUser: admin.first_name,
+              });
+              
+              // Cargar todos los datos de la familia específica
+              await get().fetchInitialData(admin.workspace_id || 'ws-default-1');
+              return admin;
             }
-            set((state) => ({
+            throw new Error('Contraseña incorrecta.');
+          }
+
+          const isValid = await bcrypt.compare(password, passwordHash);
+          if (!isValid) {
+            throw new Error('Contraseña incorrecta.');
+          }
+
+          set({
+            isAuthenticated: true,
+            isSuperAdmin: false,
+            authenticatedMemberId: admin.id,
+            currentWorkspaceId: admin.workspace_id || 'ws-default-1',
+            currentUser: admin.first_name,
+          });
+
+          // Cargar todos los datos de la familia específica
+          await get().fetchInitialData(admin.workspace_id || 'ws-default-1');
+          return admin;
+        } else {
+          // Fallback desarrollo local / offline
+          const members = get().members;
+          const admin = members.find(
+            (m) => m.isAdmin && m.email && m.email.toLowerCase() === email.toLowerCase()
+          );
+          if (!admin) {
+            throw new Error('No se encontró ningún administrador con ese correo electrónico.');
+          }
+          if (password === '12345') {
+            set({
               isAuthenticated: true,
+              isSuperAdmin: false,
               authenticatedMemberId: admin.id,
+              currentWorkspaceId: admin.workspaceId || 'ws-default-1',
               currentUser: admin.firstName,
-              members: state.members.map((m) =>
-                m.id === admin.id ? { ...m, passwordHash: hash } : m
-              ),
-            }));
+            });
             return admin;
           }
           throw new Error('Contraseña incorrecta.');
         }
-        const isValid = await bcrypt.compare(password, admin.passwordHash);
-        if (!isValid) {
-          throw new Error('Contraseña incorrecta.');
-        }
-        set({
-          isAuthenticated: true,
-          authenticatedMemberId: admin.id,
-          currentUser: admin.firstName,
-        });
-        return admin;
       },
 
       logout: () => {
         set({
           isAuthenticated: false,
+          isSuperAdmin: false,
           authenticatedMemberId: null,
           currentUser: '',
+          currentWorkspaceId: 'ws-default-1'
         });
+        get().resetToDefaultData();
       },
 
       verifyAdminPassword: async (memberId, password) => {
@@ -90,7 +148,6 @@ export const useStore = create(
           throw new Error('Miembro no encontrado o no es administrador.');
         }
         if (!admin.passwordHash || admin.passwordHash === '') {
-          // Sin hash, aceptar "12345" por defecto
           return password === '12345';
         }
         return await bcrypt.compare(password, admin.passwordHash);
@@ -102,7 +159,6 @@ export const useStore = create(
         if (!admin || !admin.isAdmin) {
           throw new Error('Miembro no encontrado o no es administrador.');
         }
-        // Verificar contraseña actual
         let isOldValid = false;
         if (!admin.passwordHash || admin.passwordHash === '') {
           isOldValid = oldPassword === '12345';
@@ -112,7 +168,6 @@ export const useStore = create(
         if (!isOldValid) {
           throw new Error('La contraseña actual es incorrecta.');
         }
-        // Hashear nueva contraseña
         const newHash = await bcrypt.hash(newPassword, 10);
         set((state) => ({
           members: state.members.map((m) =>
@@ -150,7 +205,8 @@ export const useStore = create(
       wishlistCategories: initialWishlistCategories,
       familyRoles: [],
 
-      fetchInitialData: async () => {
+      fetchInitialData: async (workspaceIdInput) => {
+        const workspaceId = workspaceIdInput || get().currentWorkspaceId || 'ws-default-1';
         if (!isSupabaseConfigured()) return;
         try {
           const [
@@ -167,18 +223,18 @@ export const useStore = create(
             { data: dbWishlistCategories, error: errWishlistCategories },
             { data: dbRoles, error: errRoles }
           ] = await Promise.all([
-            supabase.from('tasks').select('*'),
-            supabase.from('events').select('*'),
-            supabase.from('shopping_items').select('*'),
-            supabase.from('members').select('*'),
-            supabase.from('budgets').select('*'),
-            supabase.from('receipts').select('*'),
-            supabase.from('procedures').select('*'),
-            supabase.from('wishlist').select('*'),
-            supabase.from('announcements').select('*'),
-            supabase.from('rewards').select('*'),
-            supabase.from('wishlist_categories').select('*'),
-            supabase.from('family_roles').select('*')
+            supabase.from('tasks').select('*').eq('workspace_id', workspaceId),
+            supabase.from('events').select('*').eq('workspace_id', workspaceId),
+            supabase.from('shopping_items').select('*').eq('workspace_id', workspaceId),
+            supabase.from('members').select('*').eq('workspace_id', workspaceId),
+            supabase.from('budgets').select('*').eq('workspace_id', workspaceId),
+            supabase.from('receipts').select('*').eq('workspace_id', workspaceId),
+            supabase.from('procedures').select('*').eq('workspace_id', workspaceId),
+            supabase.from('wishlist').select('*').eq('workspace_id', workspaceId),
+            supabase.from('announcements').select('*').eq('workspace_id', workspaceId),
+            supabase.from('rewards').select('*').eq('workspace_id', workspaceId),
+            supabase.from('wishlist_categories').select('*').eq('workspace_id', workspaceId),
+            supabase.from('family_roles').select('*').eq('workspace_id', workspaceId)
           ]);
 
           if (errTasks) console.error("Error fetching tasks:", errTasks);
@@ -355,7 +411,7 @@ export const useStore = create(
         const newMember = {
           ...member,
           id: `mem-${Date.now()}`,
-          workspaceId: 'ws-default-1',
+          workspaceId: get().currentWorkspaceId || 'ws-default-1',
           points: member.role === 'Hijo' || member.role === 'Hija' ? 0 : 0,
           neededItems: '',
           shoeSize: member.shoeSize || '',
@@ -493,7 +549,7 @@ export const useStore = create(
           completedSuccessfully: true,
           completedAt: null,
           createdAt: new Date().toISOString().split('T')[0],
-          workspaceId: 'ws-default-1',
+          workspaceId: get().currentWorkspaceId || 'ws-default-1',
           category: task.category || 'GENERAL',
           priority: task.priority || 'MEDIA',
           assignedMemberIds: task.assignedMemberIds || [],
@@ -871,7 +927,8 @@ export const useStore = create(
             type: e.type,
             target: e.target,
             description: e.description || '',
-            attachments: e.attachments
+            attachments: e.attachments,
+            workspace_id: get().currentWorkspaceId || 'ws-default-1'
           }));
           await supabase.from('events').insert(payload);
         }
@@ -930,7 +987,8 @@ export const useStore = create(
             id: newItem.id,
             name: newItem.name,
             category: newItem.category,
-            completed: newItem.completed
+            completed: newItem.completed,
+            workspace_id: get().currentWorkspaceId || 'ws-default-1'
           });
         }
       },
@@ -1041,7 +1099,8 @@ export const useStore = create(
             id: newBudget.id,
             category: newBudget.category,
             limit_amount: newBudget.limit,
-            spent: newBudget.spent
+            spent: newBudget.spent,
+            workspace_id: get().currentWorkspaceId || 'ws-default-1'
           });
         }
       },
@@ -1086,7 +1145,8 @@ export const useStore = create(
             amount: newReceipt.amount,
             period: newReceipt.period,
             next_due_date: newReceipt.nextDueDate,
-            paid: newReceipt.paid
+            paid: newReceipt.paid,
+            workspace_id: get().currentWorkspaceId || 'ws-default-1'
           });
         }
       },
@@ -1131,7 +1191,8 @@ export const useStore = create(
             owner: newProc.owner,
             expiry_date: newProc.expiryDate,
             completed: newProc.completed,
-            notes: newProc.notes
+            notes: newProc.notes,
+            workspace_id: get().currentWorkspaceId || 'ws-default-1'
           });
         }
       },
@@ -1151,7 +1212,7 @@ export const useStore = create(
         const newItem = {
           ...item,
           id: `wish-${Date.now()}`,
-          workspaceId: 'ws-default-1'
+          workspaceId: get().currentWorkspaceId || 'ws-default-1'
         };
         set((state) => ({ wishlist: [...state.wishlist, newItem] }));
 
@@ -1210,7 +1271,7 @@ export const useStore = create(
       addWishlistCategory: async (name) => {
         const newCat = {
           id: `cat-${Date.now()}`,
-          workspaceId: 'ws-default-1',
+          workspaceId: get().currentWorkspaceId || 'ws-default-1',
           name: name.trim()
         };
         set((state) => ({ wishlistCategories: [...(state.wishlistCategories || []), newCat] }));
@@ -1264,7 +1325,7 @@ export const useStore = create(
         const newAnn = {
           ...ann,
           id: `ann-${Date.now()}`,
-          workspaceId: 'ws-default-1',
+          workspaceId: get().currentWorkspaceId || 'ws-default-1',
           attachments: ann.attachments || []
         };
         set((state) => ({ announcements: [...state.announcements, newAnn] }));
@@ -1338,7 +1399,7 @@ export const useStore = create(
         const newRew = {
           ...rew,
           id: `rew-${Date.now()}`,
-          workspaceId: 'ws-default-1'
+          workspaceId: get().currentWorkspaceId || 'ws-default-1'
         };
         set((state) => ({ rewards: [...state.rewards, newRew] }));
 
@@ -1412,7 +1473,7 @@ export const useStore = create(
         if (isSupabaseConfigured()) {
           await supabase.from('family_roles').insert({
             id: newRole.id,
-            workspace_id: 'ws-default-1',
+            workspace_id: get().currentWorkspaceId || 'ws-default-1',
             name: newRole.name
           });
         }
