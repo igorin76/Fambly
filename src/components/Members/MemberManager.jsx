@@ -986,16 +986,13 @@ export default function MemberManager() {
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Contraseña Actual</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <Lock size={15} />
-                  </span>
                   <input
                     type={showOldPassword ? 'text' : 'password'}
                     required
                     placeholder="••••••••"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
                     disabled={isSubmittingPassword}
                   />
                   <button
@@ -1013,16 +1010,13 @@ export default function MemberManager() {
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nueva Contraseña</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <Lock size={15} />
-                  </span>
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     required
                     placeholder="Mínimo 4 caracteres"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
                     disabled={isSubmittingPassword}
                   />
                   <button
@@ -1040,16 +1034,13 @@ export default function MemberManager() {
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Confirmar Nueva Contraseña</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <Lock size={15} />
-                  </span>
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
                     placeholder="Repite la contraseña"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 flat-input text-xs"
+                    className="w-full pl-3 pr-10 py-2.5 flat-input text-xs"
                     disabled={isSubmittingPassword}
                   />
                   <button
