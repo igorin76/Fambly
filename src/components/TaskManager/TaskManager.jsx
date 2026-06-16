@@ -636,18 +636,22 @@ export default function TaskManager() {
 
   const handleMemberToggle = (id) => {
     if (id === 'todos') {
-      // Si ya están todos seleccionados, deseleccionar todos
-      if (assignedMemberIds.length === members.length) {
-        setAssignedMemberIds([]);
-      } else {
-        setAssignedMemberIds(members.map(m => m.id));
-      }
+      setAssignedMemberIds([]);
       return;
     }
+
+    let nextIds;
     if (assignedMemberIds.includes(id)) {
-      setAssignedMemberIds(assignedMemberIds.filter(mid => mid !== id));
+      nextIds = assignedMemberIds.filter(mid => mid !== id);
     } else {
-      setAssignedMemberIds([...assignedMemberIds, id]);
+      nextIds = [...assignedMemberIds, id];
+    }
+
+    // Si se seleccionan todos uno a uno, pasamos al estado exclusivo "Todos" (vaciando el array)
+    if (nextIds.length === members.length) {
+      setAssignedMemberIds([]);
+    } else {
+      setAssignedMemberIds(nextIds);
     }
   };
 
@@ -1346,7 +1350,7 @@ export default function TaskManager() {
                         type="button"
                         onClick={() => handleMemberToggle('todos')}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1 shrink-0 ${
-                          assignedMemberIds.length === members.length
+                          assignedMemberIds.length === 0
                             ? 'bg-indigo-600 border-indigo-600 text-white'
                             : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}

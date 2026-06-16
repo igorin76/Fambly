@@ -130,10 +130,19 @@ export default function ShoppingListView() {
       setWishMemberIds([]);
       return;
     }
+
+    let nextIds;
     if (wishMemberIds.includes(id)) {
-      setWishMemberIds(wishMemberIds.filter(mid => mid !== id));
+      nextIds = wishMemberIds.filter(mid => mid !== id);
     } else {
-      setWishMemberIds([...wishMemberIds, id]);
+      nextIds = [...wishMemberIds, id];
+    }
+
+    // Si se seleccionan todos uno a uno, pasamos al estado exclusivo "Todos" (vaciando el array)
+    if (nextIds.length === members.length) {
+      setWishMemberIds([]);
+    } else {
+      setWishMemberIds(nextIds);
     }
   };
 
