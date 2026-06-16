@@ -251,7 +251,7 @@ export default function Dashboard({ setActiveTab }) {
 
   const getMemberColor = (member) => {
     if (!member) return { bg: 'bg-slate-500', light: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200' };
-    const isKid = member.role === 'Hijo' || member.role === 'Hija';
+    const isKid = member.isScoringSubject === true;
     if (isKid) return { bg: 'bg-orange-500', light: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' };
     if (member.firstName === 'Diana') return { bg: 'bg-purple-500', light: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' };
     return { bg: 'bg-blue-500', light: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' };
@@ -541,7 +541,7 @@ export default function Dashboard({ setActiveTab }) {
           <div className="flex flex-col gap-2.5">
             {derivedData.memberStats.map(member => {
               const colors = getMemberColor(member);
-              const isKid = member.role === 'Hijo' || member.role === 'Hija';
+              const isKid = member.isScoringSubject === true;
               const logistics = clothingLogistics.find(c => c.childName === member.firstName);
 
               return (

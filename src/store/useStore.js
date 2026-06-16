@@ -629,7 +629,8 @@ export const useStore = create(
               isAdmin: m.is_admin === true,
               associatedMemberIds: m.associated_member_ids || [],
               email: m.email || '',
-              passwordHash: m.password_hash || ''
+              passwordHash: m.password_hash || '',
+              isScoringSubject: m.is_scoring_subject === true
             })) : get().members,
 
             clothingLogistics: dbMembers ? dbMembers.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => ({
@@ -741,7 +742,7 @@ export const useStore = create(
           ...member,
           id: `mem-${Date.now()}`,
           workspaceId: get().currentWorkspaceId || 'ws-default-1',
-          points: member.role === 'Hijo' || member.role === 'Hija' ? 0 : 0,
+          points: 0,
           neededItems: '',
           shoeSize: member.shoeSize || '',
           shirtSize: member.shirtSize || '',
@@ -751,7 +752,8 @@ export const useStore = create(
           dietaryRestrictions: member.dietaryRestrictions || [],
           isAdmin: member.isAdmin || false,
           associatedMemberIds: member.associatedMemberIds || [],
-          email: member.email || ''
+          email: member.email || '',
+          isScoringSubject: member.isScoringSubject || false
         };
         set((state) => {
           const updatedMembers = [...state.members, newMember];
@@ -785,7 +787,8 @@ export const useStore = create(
             is_admin: newMember.isAdmin || false,
             associated_member_ids: newMember.associatedMemberIds || [],
             email: newMember.email || '',
-            password_hash: newMember.passwordHash || ''
+            password_hash: newMember.passwordHash || '',
+            is_scoring_subject: newMember.isScoringSubject || false
           });
         }
       },
@@ -822,6 +825,7 @@ export const useStore = create(
           if (updatedFields.associatedMemberIds !== undefined) updatePayload.associated_member_ids = updatedFields.associatedMemberIds;
           if (updatedFields.email !== undefined) updatePayload.email = updatedFields.email;
           if (updatedFields.passwordHash !== undefined) updatePayload.password_hash = updatedFields.passwordHash;
+          if (updatedFields.isScoringSubject !== undefined) updatePayload.is_scoring_subject = updatedFields.isScoringSubject;
 
           await supabase.from('members').update(updatePayload).eq('id', id);
         }

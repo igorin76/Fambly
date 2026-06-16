@@ -17,6 +17,8 @@ async function run() {
     
     console.log("Altering members...");
     await client.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS email TEXT DEFAULT '';");
+    await client.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS is_scoring_subject BOOLEAN DEFAULT false;");
+    await client.query("UPDATE members SET is_scoring_subject = true WHERE role IN ('Hijo', 'Hija');");
     
     console.log("Altering wishlist...");
     await client.query("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS category TEXT;");

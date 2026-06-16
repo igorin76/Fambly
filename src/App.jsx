@@ -86,7 +86,7 @@ export default function App() {
 
   // Verificar si el usuario activo es niño
   const activeMember = members.find(m => m.firstName === currentUser);
-  const isKidsMode = activeMember && (activeMember.role === 'Hijo' || activeMember.role === 'Hija');
+  const isKidsMode = activeMember && activeMember.isScoringSubject === true;
 
   const renderContent = () => {
     switch (activeTab) {

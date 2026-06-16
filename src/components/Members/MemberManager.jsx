@@ -79,6 +79,7 @@ export default function MemberManager() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [associatedMemberIds, setAssociatedMemberIds] = useState([]);
   const [email, setEmail] = useState('');
+  const [isScoringSubject, setIsScoringSubject] = useState(false);
   const [formError, setFormError] = useState('');
 
   // Estados Formulario Premio
@@ -95,7 +96,8 @@ export default function MemberManager() {
     setLastName('');
     setGender('M');
     setBirthDate('');
-    setRole(familyRoles[0]?.name || 'Hijo');
+    const initialRole = familyRoles[0]?.name || 'Hijo';
+    setRole(initialRole);
     setConfidentialInfo('');
     setShoSize('');
     setShirtSize('');
@@ -106,6 +108,7 @@ export default function MemberManager() {
     setIsAdmin(false);
     setAssociatedMemberIds([]);
     setEmail('');
+    setIsScoringSubject(initialRole === 'Hijo' || initialRole === 'Hija');
     setFormError('');
     setIsMemberModalOpen(true);
   };
@@ -127,6 +130,7 @@ export default function MemberManager() {
     setIsAdmin(member.isAdmin || false);
     setAssociatedMemberIds(member.associatedMemberIds || []);
     setEmail(member.email || '');
+    setIsScoringSubject(member.isScoringSubject || false);
     setFormError('');
     setIsMemberModalOpen(true);
   };
@@ -165,7 +169,8 @@ export default function MemberManager() {
       dietaryRestrictions,
       isAdmin,
       associatedMemberIds,
-      email: email.trim()
+      email: email.trim(),
+      isScoringSubject
     };
 
     if (editingMember) {
@@ -331,7 +336,7 @@ export default function MemberManager() {
               // Fallback
               return a.firstName.localeCompare(b.firstName);
             }).map((m) => {
-              const isKid = m.role === 'Hijo' || m.role === 'Hija';
+              const isKid = m.isScoringSubject === true;
               const isAdult = m.role === 'Padre' || m.role === 'Madre';
               
               const avatarBg = isKid ? 'bg-orange-500' : (m.firstName === 'Igor' ? 'bg-blue-500' : 'bg-purple-500');
@@ -432,7 +437,7 @@ export default function MemberManager() {
                     </div>
                   </div>
 
-                  {/* Fila de puntos / gamificación (Solo para niños) */}
+                  {/* Fila de puntos / gamificación */}
                   {isKid && (
                     <div className="mt-2.5 pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                       <div className="flex items-center gap-1.5">
@@ -444,11 +449,13 @@ export default function MemberManager() {
                       {adjustingMemberId === m.id ? (
                         <div className="flex items-center gap-1">
                           <input
-                            type="number"
-                            placeholder="+/- Puntos"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="-?[0-9]*"
+                            placeholder="+/- Pts"
                             value={adjustPointsVal}
-                            onChange={(e) => setAdjustPointsVal(e.target.value)}
-                            className="w-16 px-1.5 py-0.5 text-xs border rounded flat-input"
+                            onChange={(e) => setAdjustPointsVal(e.target.value.replace(/[^0-9-]/g, ''))}
+                            className="w-20 px-1.5 py-0.5 text-xs border rounded flat-input text-center font-semibold text-slate-800"
                           />
                           <button
                             onClick={() => handleAwardPoints(m.id)}
@@ -609,7 +616,15 @@ export default function MemberManager() {
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Rol Familiar</label>
                   <select
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => {
+                      const selectedRole = e.target.value;
+                      setRole(selectedRole);
+                      if (selectedRole === 'Hijo' || selectedRole === 'Hija') {
+                        setIsScoringSubject(true);
+                      } else {
+                        setIsScoringSubject(false);
+                      }
+                    }}
                     className="w-full px-3 py-2 flat-input text-xs text-slate-600"
                   >
                     {familyRoles.map(r => (
@@ -720,6 +735,22 @@ export default function MemberManager() {
                   onChange={(e) => setDietaryText(e.target.value)}
                   className="w-full px-3 py-2 flat-input text-xs"
                 />
+              </div>
+
+              {/* SUJETO A PUNTUACIÓN Y RECOMPENSAS */}
+              <div className="flex flex-col gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isScoringSubjectCheckbox"
+                    checked={isScoringSubject}
+                    onChange={(e) => setIsScoringSubject(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="isScoringSubjectCheckbox" className="text-xs font-bold text-slate-700 select-none cursor-pointer">
+                    ¿Sujeto a puntuación y premios? (para motivar con estrellas ⭐)
+                  </label>
+                </div>
               </div>
 
               {/* ROL ADMINISTRADOR Y MIEMBROS ASOCIADOS */}

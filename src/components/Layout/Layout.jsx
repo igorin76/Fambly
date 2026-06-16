@@ -111,7 +111,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             <div className="hidden sm:flex items-center rounded-xl bg-slate-100 p-0.5 border border-slate-200/50 overflow-x-auto scrollbar-none">
               {displayMembers.map((m) => {
                 const isActive = currentUser === m.firstName;
-                const isKid = m.role === 'Hijo' || m.role === 'Hija';
+                const isKid = m.isScoringSubject === true;
                 
                 let dotColor = 'bg-blue-500';
                 let textColor = 'text-blue-600';
@@ -317,7 +317,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             <div className="flex flex-col gap-3">
               {displayMembers.map((m) => {
                 const isSelected = currentUser === m.firstName;
-                const isKid = m.role === 'Hijo' || m.role === 'Hija';
+                const isKid = m.isScoringSubject === true;
                 
                 let bgClass = 'bg-slate-50 border-slate-100 text-slate-700';
                 if (isSelected) {

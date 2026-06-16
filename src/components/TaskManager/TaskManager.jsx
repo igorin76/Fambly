@@ -612,7 +612,7 @@ export default function TaskManager() {
       resolvedScope = 'matrimonial';
     } else if (assignedMemberIds.length === 1) {
       const assigned = members.find(m => m.id === assignedMemberIds[0]);
-      if (assigned && (assigned.role === 'Hijo' || assigned.role === 'Hija')) {
+      if (assigned && (assigned.role === 'Hijo' || assigned.role === 'Hija' || assigned.isScoringSubject === true)) {
         resolvedScope = 'ninos';
       }
     }
@@ -723,7 +723,7 @@ export default function TaskManager() {
       }
       
       if (tabId === 'ninos') {
-        const childMemberIds = members.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => m.id);
+        const childMemberIds = members.filter(m => m.role === 'Hijo' || m.role === 'Hija' || m.isScoringSubject === true).map(m => m.id);
         const involvesChildren = task.assignedMemberIds && task.assignedMemberIds.some(id => childMemberIds.includes(id));
         
         if (activeMember.isAdmin) {
@@ -793,7 +793,7 @@ export default function TaskManager() {
     
     if (activeTab === 'ninos') {
       // El filtro Hijos afecta a todos los catalogados como hijos (Hijo o Hija)
-      const childMemberIds = members.filter(m => m.role === 'Hijo' || m.role === 'Hija').map(m => m.id);
+      const childMemberIds = members.filter(m => m.role === 'Hijo' || m.role === 'Hija' || m.isScoringSubject === true).map(m => m.id);
       const involvesChildren = task.assignedMemberIds && task.assignedMemberIds.some(id => childMemberIds.includes(id));
       
       if (activeMember.isAdmin) {
@@ -1463,7 +1463,7 @@ export default function TaskManager() {
                       </button>
                       {members.map((m) => {
                         const isSelected = assignedMemberIds.includes(m.id);
-                        const isKid = m.role === 'Hijo' || m.role === 'Hija';
+                        const isKid = m.role === 'Hijo' || m.role === 'Hija' || m.isScoringSubject === true;
                         const pillBg = isSelected 
                           ? isKid ? 'bg-orange-500 border-orange-500 text-white' : 'bg-blue-600 border-blue-600 text-white'
                           : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300';
