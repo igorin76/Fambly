@@ -43,7 +43,10 @@ export default function TaskManager() {
     currentUser,
     members = [],
     focusedTaskId,
-    setFocusedTaskId
+    setFocusedTaskId,
+    taskCategories = [],
+    addTaskCategory,
+    deleteTaskCategory
   } = useStore();
 
   const [expandedTaskIds, setExpandedTaskIds] = useState([]);
@@ -89,6 +92,8 @@ export default function TaskManager() {
   const [dueDate, setDueDate] = useState('');
   const [category, setCategory] = useState('GENERAL');
   const [priority, setPriority] = useState('MEDIA');
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
   const [attachmentsList, setAttachmentsList] = useState([]);
   const [contentType, setContentType] = useState(''); // '', 'text', 'document', 'image', 'voice', 'url'
   const [fileUrl, setFileUrl] = useState('');
@@ -1303,19 +1308,26 @@ export default function TaskManager() {
                   {/* Categoría y Prioridad */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoría</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowCategoryManager(!showCategoryManager)}
+                          className="text-[9px] font-black uppercase tracking-wider text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0"
+                        >
+                          {showCategoryManager ? 'Cerrar' : 'Gestionar'}
+                        </button>
+                      </div>
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-3 py-2.5 flat-input text-xs text-slate-600"
+                        className="w-full px-3 py-2.5 flat-input text-xs text-slate-600 font-bold uppercase"
                       >
-                        <option value="GENERAL">General</option>
-                        <option value="COLEGIO">Colegio 🏫</option>
-                        <option value="TRABAJO">Trabajo 💼</option>
-                        <option value="TRÁMITES">Trámites 📄</option>
-                        <option value="CUMPLEAÑOS">Cumpleaños 🎂</option>
-                        <option value="REGALOS">Regalos 🎁</option>
-                        <option value="SALUD">Salud 🏥</option>
+                        {taskCategories.map((cat) => (
+                          <option key={cat.id} value={cat.name}>
+                            {cat.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -1341,6 +1353,90 @@ export default function TaskManager() {
                       </div>
                     </div>
                   </div>
+
+                  {/* GESTOR DE CATEGORÍAS COLAPSABLE */}
+                  {showCategoryManager && (
+                    <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col gap-3 animate-fadeIn">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Añadir Categoría Nueva</label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            placeholder="Ej: EXTRA-ESCOLARES..."
+                            value={newCatName}
+                            onChange={(e) => setNewCatName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const trimmed = newCatName.trim().toUpperCase();
+                                if (trimmed) {
+                                  if (taskCategories.some(c => c.name === trimmed)) {
+                                    alert("Esta categoría ya existe.");
+                                    return;
+                                  }
+                                  addTaskCategory(trimmed);
+                                  setNewCatName('');
+                                }
+                              }
+                            }}
+                            className="flex-1 px-3 py-1.5 flat-input text-[10px] uppercase font-bold text-slate-700"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const trimmed = newCatName.trim().toUpperCase();
+                              if (trimmed) {
+                                if (taskCategories.some(c => c.name === trimmed)) {
+                                  alert("Esta categoría ya existe.");
+                                  return;
+                                }
+                                addTaskCategory(trimmed);
+                                setNewCatName('');
+                              }
+                            }}
+                            disabled={!newCatName.trim()}
+                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold disabled:opacity-40 disabled:hover:bg-blue-600 shrink-0 border-0 cursor-pointer"
+                          >
+                            Añadir
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Categorías Activas</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {taskCategories.map((cat) => {
+                            const isGeneral = cat.name === 'GENERAL';
+                            return (
+                              <div 
+                                key={cat.id} 
+                                className="flex items-center gap-1 bg-white pl-2.5 pr-1.5 py-1 rounded-lg border border-slate-200/60 text-[10px] font-bold text-slate-700 shadow-sm animate-fadeIn"
+                              >
+                                <span>{cat.name}</span>
+                                {!isGeneral && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (confirm(`¿Borrar la categoría "${cat.name}"? Las tareas asociadas pasarán a la categoría GENERAL.`)) {
+                                        deleteTaskCategory(cat.id);
+                                        if (category === cat.name) {
+                                          setCategory('GENERAL');
+                                        }
+                                      }
+                                    }}
+                                    className="p-0.5 text-slate-400 hover:text-red-500 transition-colors bg-transparent border-0 cursor-pointer"
+                                    title="Eliminar categoría"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Asignación de Miembros */}
                   <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">

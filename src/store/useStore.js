@@ -17,6 +17,7 @@ const initialWishlist = [];
 const initialAnnouncements = [];
 const initialRewards = [];
 const initialWishlistCategories = [];
+const initialTaskCategories = [];
 
 const isSupabaseConfigured = () => {
   const url = import.meta.env.VITE_SUPABASE_URL;
@@ -492,6 +493,7 @@ export const useStore = create(
       announcements: initialAnnouncements,
       rewards: initialRewards,
       wishlistCategories: initialWishlistCategories,
+      taskCategories: initialTaskCategories,
       familyRoles: [],
 
       fetchInitialData: async (workspaceIdInput) => {
@@ -510,7 +512,8 @@ export const useStore = create(
             { data: dbAnnouncements, error: errAnnouncements },
             { data: dbRewards, error: errRewards },
             { data: dbWishlistCategories, error: errWishlistCategories },
-            { data: dbRoles, error: errRoles }
+            { data: dbRoles, error: errRoles },
+            { data: dbTaskCategories, error: errTaskCategories }
           ] = await Promise.all([
             supabase.from('tasks').select('*').eq('workspace_id', workspaceId),
             supabase.from('events').select('*').eq('workspace_id', workspaceId),
@@ -523,7 +526,8 @@ export const useStore = create(
             supabase.from('announcements').select('*').eq('workspace_id', workspaceId),
             supabase.from('rewards').select('*').eq('workspace_id', workspaceId),
             supabase.from('wishlist_categories').select('*').eq('workspace_id', workspaceId),
-            supabase.from('family_roles').select('*').eq('workspace_id', workspaceId)
+            supabase.from('family_roles').select('*').eq('workspace_id', workspaceId),
+            supabase.from('task_categories').select('*').eq('workspace_id', workspaceId)
           ]);
 
           if (errTasks) console.error("Error fetching tasks:", errTasks);
@@ -538,6 +542,26 @@ export const useStore = create(
           if (errRewards) console.error("Error fetching rewards:", errRewards);
           if (errWishlistCategories) console.error("Error fetching wishlist categories:", errWishlistCategories);
           if (errRoles) console.error("Error fetching family roles:", errRoles);
+          if (errTaskCategories) console.error("Error fetching task categories:", errTaskCategories);
+
+          let finalTaskCategories = dbTaskCategories;
+          if (isSupabaseConfigured() && (!finalTaskCategories || finalTaskCategories.length === 0)) {
+            const defaultCats = [
+              { id: `tcat-gen-${Date.now()}-1`, workspace_id: workspaceId, name: 'GENERAL' },
+              { id: `tcat-col-${Date.now()}-2`, workspace_id: workspaceId, name: 'COLEGIO' },
+              { id: `tcat-tra-${Date.now()}-3`, workspace_id: workspaceId, name: 'TRABAJO' },
+              { id: `tcat-trm-${Date.now()}-4`, workspace_id: workspaceId, name: 'TRÁMITES' },
+              { id: `tcat-cum-${Date.now()}-5`, workspace_id: workspaceId, name: 'CUMPLEAÑOS' },
+              { id: `tcat-reg-${Date.now()}-6`, workspace_id: workspaceId, name: 'REGALOS' },
+              { id: `tcat-sal-${Date.now()}-7`, workspace_id: workspaceId, name: 'SALUD' }
+            ];
+            const { error: errInsert } = await supabase.from('task_categories').insert(defaultCats);
+            if (!errInsert) {
+              finalTaskCategories = defaultCats;
+            } else {
+              console.error("Error seeding default task categories:", errInsert);
+            }
+          }
 
           set({
             tasks: dbTasks ? dbTasks.map(t => {
@@ -659,6 +683,20 @@ export const useStore = create(
               workspaceId: c.workspace_id,
               name: c.name
             })) : get().wishlistCategories,
+
+            taskCategories: finalTaskCategories ? finalTaskCategories.map(c => ({
+              id: c.id,
+              workspaceId: c.workspace_id,
+              name: c.name
+            })) : [
+              { id: 'default-general', name: 'GENERAL' },
+              { id: 'default-colegio', name: 'COLEGIO' },
+              { id: 'default-trabajo', name: 'TRABAJO' },
+              { id: 'default-tramites', name: 'TRÁMITES' },
+              { id: 'default-cumpleanos', name: 'CUMPLEAÑOS' },
+              { id: 'default-regalos', name: 'REGALOS' },
+              { id: 'default-salud', name: 'SALUD' }
+            ],
 
             announcements: dbAnnouncements ? dbAnnouncements.map(a => ({
               id: a.id,
@@ -1615,6 +1653,62 @@ export const useStore = create(
         }
       },
 
+      addTaskCategory: async (name) => {
+        const newCat = {
+          id: `tcat-${Date.now()}`,
+          workspaceId: get().currentWorkspaceId || 'ws-default-1',
+          name: name.trim().toUpperCase()
+        };
+        set((state) => ({ taskCategories: [...(state.taskCategories || []), newCat] }));
+
+        if (isSupabaseConfigured()) {
+          const { error } = await supabase.from('task_categories').insert({
+            id: newCat.id,
+            workspace_id: newCat.workspaceId,
+            name: newCat.name
+          });
+          if (error) {
+            console.error("Error adding task category to Supabase:", error);
+          }
+        }
+      },
+
+      deleteTaskCategory: async (id) => {
+        let categoryName = '';
+        set((state) => {
+          const cat = state.taskCategories.find(c => c.id === id);
+          if (cat) categoryName = cat.name;
+
+          const updatedCategories = (state.taskCategories || []).filter(c => c.id !== id);
+          const updatedTasks = state.tasks.map(task => 
+            task.category === categoryName ? { ...task, category: 'GENERAL' } : task
+          );
+
+          return {
+            taskCategories: updatedCategories,
+            tasks: updatedTasks
+          };
+        });
+
+        if (isSupabaseConfigured()) {
+          const { error: errorCat } = await supabase.from('task_categories').delete().eq('id', id);
+          if (errorCat) {
+            console.error("Error deleting task category from Supabase:", errorCat);
+          }
+
+          if (categoryName) {
+            const { error: errorTasks } = await supabase
+              .from('tasks')
+              .update({ category: 'GENERAL' })
+              .eq('category', categoryName)
+              .eq('workspace_id', get().currentWorkspaceId);
+            if (errorTasks) {
+              console.error("Error clearing category from tasks in Supabase:", errorTasks);
+            }
+          }
+        }
+      },
+
       // --- ANNOUNCEMENTS (TABLÓN) ---
       addAnnouncement: async (ann) => {
         const newAnn = {
@@ -1795,6 +1889,7 @@ export const useStore = create(
         announcements: initialAnnouncements,
         rewards: initialRewards,
         wishlistCategories: initialWishlistCategories,
+        taskCategories: initialTaskCategories,
         familyRoles: []
       })
     }),

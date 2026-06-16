@@ -41,6 +41,17 @@ async function run() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Create task_categories table
+    console.log("Creating task_categories...");
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS task_categories (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT,
+        name TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
     
     console.log("Done.");
   } catch (err) {
