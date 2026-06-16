@@ -38,7 +38,8 @@ export default function ShoppingListView() {
     members = [],
     wishlistCategories = [],
     addWishlistCategory,
-    deleteWishlistCategory
+    deleteWishlistCategory,
+    currentUser
   } = useStore();
 
   const [activeTab, setActiveTab] = useState('supermercado'); 
@@ -64,6 +65,7 @@ export default function ShoppingListView() {
   const [wishPhoto, setWishPhoto] = useState('');
   const [wishPhotoFileName, setWishPhotoFileName] = useState('');
   const [wishMemberIds, setWishMemberIds] = useState([]);
+  const [hideFromTarget, setHideFromTarget] = useState(false);
   const [wishCategory, setWishCategory] = useState('');
   const [newWishCategory, setNewWishCategory] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
@@ -77,7 +79,24 @@ export default function ShoppingListView() {
   // Categorías de wishlist guardadas en base de datos
   const existingWishCategories = wishlistCategories.map(c => c.name);
 
+  const activeMember = members.find(m => m.firstName === currentUser);
+
+  // Comprobar si hay otros administradores seleccionados en los destinatarios de la wishlist
+  const otherAdminsSelected = members.filter(m => m.isAdmin && m.id !== activeMember?.id && wishMemberIds.includes(m.id));
+  const showPrivacyToggle = activeMember?.isAdmin && otherAdminsSelected.length > 0;
+  const otherAdminsNames = otherAdminsSelected.map(a => a.firstName).join(' y ');
+  const toggleLabel = `Ocultar a ${otherAdminsNames} (Sorpresa 🎁)`;
+
   const filteredWishlist = wishlist.filter(item => {
+    // Si el regalo está marcado para ocultarse del destinatario, y el destinatario es el miembro activo actual, lo ocultamos.
+    if (item.hideFromTarget && activeMember && item.memberIds && item.memberIds.includes(activeMember.id)) {
+      return false;
+    }
+    // Compatibilidad con campo memberId (legacy/singular)
+    if (item.hideFromTarget && activeMember && item.memberId && item.memberId === activeMember.id) {
+      return false;
+    }
+
     if (selectedFilterCategories.length === 0) return true;
     return selectedFilterCategories.includes(item.category);
   });
@@ -128,6 +147,7 @@ export default function ShoppingListView() {
   const handleWishMemberToggle = (id) => {
     if (id === 'todos') {
       setWishMemberIds([]);
+      setHideFromTarget(false);
       return;
     }
 
@@ -138,11 +158,22 @@ export default function ShoppingListView() {
       nextIds = [...wishMemberIds, id];
     }
 
-    // Si se seleccionan todos uno a uno, pasamos al estado exclusivo "Todos" (vaciando el array)
+    let finalIds = nextIds;
     if (nextIds.length === members.length) {
-      setWishMemberIds([]);
+      finalIds = [];
+    }
+    setWishMemberIds(finalIds);
+
+    // Si hay otro administrador seleccionado, activar hideFromTarget por defecto si es una nueva selección
+    const activeMember = members.find(m => m.firstName === currentUser);
+    const hasOtherAdmin = members.some(m => m.isAdmin && m.id !== activeMember?.id && finalIds.includes(m.id));
+    if (hasOtherAdmin) {
+      const hadOtherAdminBefore = members.some(m => m.isAdmin && m.id !== activeMember?.id && wishMemberIds.includes(m.id));
+      if (!hadOtherAdminBefore) {
+        setHideFromTarget(true);
+      }
     } else {
-      setWishMemberIds(nextIds);
+      setHideFromTarget(false);
     }
   };
 
@@ -153,7 +184,9 @@ export default function ShoppingListView() {
     setWishPrice(item.price > 0 ? String(item.price) : '');
     setWishPhoto(item.photoUrl || '');
     setWishPhotoFileName(item.photoUrl ? 'Imagen cargada' : '');
-    setWishMemberIds(item.memberIds || (item.memberId ? [item.memberId] : []));
+    const mIds = item.memberIds || (item.memberId ? [item.memberId] : []);
+    setWishMemberIds(mIds);
+    setHideFromTarget(item.hideFromTarget || false);
     setWishCategory(item.category || '');
     setShowNewCategoryInput(false);
     setNewWishCategory('');
@@ -168,6 +201,7 @@ export default function ShoppingListView() {
     setWishPhoto('');
     setWishPhotoFileName('');
     setWishMemberIds([]);
+    setHideFromTarget(false);
     setWishCategory('');
     setNewWishCategory('');
     setShowNewCategoryInput(false);
@@ -185,7 +219,8 @@ export default function ShoppingListView() {
       photoUrl: wishPhoto,
       memberIds: wishMemberIds.length > 0 ? wishMemberIds : null,
       memberId: wishMemberIds.length === 1 ? wishMemberIds[0] : null,
-      category: wishCategory.trim() || null
+      category: wishCategory.trim() || null,
+      hideFromTarget: hideFromTarget
     };
 
     if (editingWishItem) {
@@ -761,6 +796,29 @@ export default function ShoppingListView() {
                 </div>
               </div>
 
+              {/* Opciones de Privacidad (Sorpresa) */}
+              {showPrivacyToggle && (
+                <div className="flex items-center justify-between p-3 bg-amber-50/50 border border-amber-100/70 rounded-xl animate-fadeIn">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] font-extrabold text-amber-800 flex items-center gap-1">
+                      <span>🎁</span> {toggleLabel}
+                    </span>
+                    <span className="text-[8px] text-amber-600 font-semibold leading-normal">
+                      El destinatario no verá esta idea de regalo en su cuenta.
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hideFromTarget}
+                      onChange={(e) => setHideFromTarget(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+              )}
+
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Enlace Web del producto</label>
                 <input
@@ -926,6 +984,12 @@ export default function ShoppingListView() {
                           <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                             {assignedNames ? `Para: ${assignedNames}` : 'Familiar'}
                           </span>
+                          {item.hideFromTarget && (
+                            <span className="inline-flex items-center gap-0.5 text-[8px] font-extrabold uppercase bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-100" title="Este regalo está oculto para el destinatario">
+                              <span>Sorpresa</span>
+                              <span>🎁</span>
+                            </span>
+                          )}
                           {item.category && (
                             <span 
                               onClick={() => {

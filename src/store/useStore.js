@@ -649,7 +649,8 @@ export const useStore = create(
               url: w.url,
               price: Number(w.price || 0),
               photoUrl: w.photo_url,
-              category: w.category || ''
+              category: w.category || '',
+              hideFromTarget: w.hide_from_target || false
             })) : get().wishlist,
 
             wishlistCategories: dbWishlistCategories ? dbWishlistCategories.map(c => ({
@@ -1515,7 +1516,8 @@ export const useStore = create(
             url: newItem.url || '',
             price: Number(newItem.price || 0),
             photo_url: newItem.photoUrl || '',
-            category: newItem.category || null
+            category: newItem.category || null,
+            hide_from_target: newItem.hideFromTarget || false
           });
           if (error) {
             console.error("Error inserting wishlist item into Supabase:", error);
@@ -1549,6 +1551,7 @@ export const useStore = create(
           if (updatedFields.photoUrl !== undefined) updatePayload.photo_url = updatedFields.photoUrl;
           if (updatedFields.category !== undefined) updatePayload.category = updatedFields.category || null;
           if (updatedFields.memberIds !== undefined) updatePayload.member_ids = updatedFields.memberIds;
+          if (updatedFields.hideFromTarget !== undefined) updatePayload.hide_from_target = updatedFields.hideFromTarget;
 
           const { error } = await supabase.from('wishlist').update(updatePayload).eq('id', id);
           if (error) {
