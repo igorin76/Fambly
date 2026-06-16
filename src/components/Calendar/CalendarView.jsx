@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useStore } from '../../store/useStore';
 import { getDaysUntilBirthday, formatDateSpanish } from '../../utils/dateHelpers';
 import { 
@@ -1372,549 +1373,434 @@ export default function CalendarView({ setActiveTab }) {
 
       </div>
 
-      {/* MODAL NUEVO EVENTO / BOTTOM SHEET EN MÓVIL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="w-full sm:max-w-sm bg-white border-t sm:border border-slate-200/60 rounded-t-3xl rounded-b-none sm:rounded-2xl p-6 pb-12 sm:pb-6 shadow-2xl sm:shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-slideUp sm:animate-fadeIn"
-            style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 16px) + 16px)' }}
+      {/* MODAL CREAR/EDITAR EVENTO / PANTALLA COMPLETA EN MÓVIL Y GRID 2 COLUMNAS EN PC */}
+      {isModalOpen && ReactDOM.createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start p-0 sm:p-4 sm:pt-20 bg-slate-900/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
+        >
+          <form 
+            onSubmit={handleSaveEvent}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 sm:relative sm:inset-auto w-full h-full sm:h-auto sm:max-w-4xl bg-white border-t sm:border border-slate-200/60 rounded-none sm:rounded-2xl shadow-2xl sm:flex sm:flex-col overflow-y-auto animate-slideUp sm:animate-none sm:mb-8"
           >
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
-                {editingEvent ? 'Editar Evento' : 'Nuevo Evento'}
-              </h3>
+            {/* Cabecera sticky */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20 shrink-0">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                  {editingEvent ? 'Editar Evento' : 'Nuevo Evento'}
+                </h3>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {editingEvent ? 'Modifica los detalles del evento y guarda' : 'Completa los campos y crea el evento'}
+                </span>
+              </div>
               <button 
                 type="button"
                 onClick={handleCloseModal} 
-                className="text-slate-400 hover:text-slate-700 bg-transparent border-0 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-all border-0 cursor-pointer shrink-0"
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEvent} className="flex flex-col gap-4">
-              
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título del Evento *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Cerámica"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 flat-input text-xs"
-                />
-              </div>
-
-              {type !== 'cumpleanos' && (
-                <div className="flex flex-col gap-1 animate-fadeIn">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    Descripción / Notas
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Detalles o notas adicionales..."
-                    value={eventDescription}
-                    onChange={(e) => setEventDescription(e.target.value)}
-                    className="w-full px-3.5 py-2.5 flat-input text-xs"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fecha de Inicio *</label>
-                <input
-                  type="date"
-                  required
-                  value={date}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 flat-input text-xs"
-                />
-              </div>
-
-              {/* ASIGNACIÓN MÚLTIPLE DE MIEMBROS */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                  Miembros Asignados *
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMembers([])}
-                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all ${
-                      selectedMembers.length === 0
-                        ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
-                        : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    TODOS
-                  </button>
-                  {members.map((m) => {
-                    const isSelected = selectedMembers.includes(m.firstName);
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedMembers(selectedMembers.filter(name => name !== m.firstName));
-                          } else {
-                            setSelectedMembers([...selectedMembers, m.firstName]);
-                          }
-                        }}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all ${
-                          isSelected
-                            ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
-                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        {m.firstName}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* CHECKBOX PERIODICIDAD - Oculto en Edición */}
-              {!editingEvent && (
-                <div className="flex items-center gap-2 mt-1">
-                  <input
-                    type="checkbox"
-                    id="recurrent-check"
-                    checked={isRecurrent}
-                    onChange={(e) => {
-                      setIsRecurrent(e.target.checked);
-                      setRecurrenceError('');
-                      if (e.target.checked && date) {
-                        const dateObj = new Date(date);
-                        setSelectedDays([dateObj.getDay()]);
-                      }
-                    }}
-                    className="rounded text-blue-600 focus:ring-blue-500 border-slate-300 h-4 w-4 cursor-pointer"
-                  />
-                  <label htmlFor="recurrent-check" className="text-xs font-bold text-slate-700 cursor-pointer">
-                    ¿Hacer este evento periódico/recurrente?
-                  </label>
-                </div>
-              )}
-
-              {isRecurrent && (
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col gap-3.5 animate-fadeIn">
+            {/* Cuerpo con grid de dos columnas */}
+            <div className="px-6 py-5 pb-8 sm:pb-6 flex-1 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Columna Izquierda: Información básica y Tiempo */}
+                <div className="flex flex-col gap-4">
                   
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Repetir cada</label>
-                    <select
-                      value={recurrenceType}
-                      onChange={(e) => {
-                        setRecurrenceType(e.target.value);
-                        setRecurrenceError('');
-                      }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-600 bg-white"
-                    >
-                      <option value="daily">Todos los días</option>
-                      <option value="weekly_days">Cada semana</option>
-                      <option value="biweekly">Cada 2 semanas</option>
-                      <option value="monthly">Cada mes</option>
-                      <option value="quarterly">Cada trimestre</option>
-                      <option value="yearly">Cada año</option>
-                    </select>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Título del Evento *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: Cerámica"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full px-3.5 py-2.5 flat-input text-xs"
+                    />
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide flex items-center justify-between">
-                      <span>Días de la semana</span>
-                      <span className="text-[8px] text-slate-400 font-bold">Opcional</span>
-                    </label>
-                    <div className="flex justify-between gap-1">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Tipo de Evento</label>
+                    <div className="grid grid-cols-2 gap-2">
                       {[
-                        { key: 1, label: 'L' },
-                        { key: 2, label: 'M' },
-                        { key: 3, label: 'X' },
-                        { key: 4, label: 'J' },
-                        { key: 5, label: 'V' },
-                        { key: 6, label: 'S' },
-                        { key: 0, label: 'D' }
-                      ].map((day) => {
-                        const isSelected = selectedDays.includes(day.key);
+                        { id: 'escolar', label: 'Escolar' },
+                        { id: 'extraescolar', label: 'Extraescolar' },
+                        { id: 'cumpleanos', label: 'Cumpleaños' },
+                        { id: 'hito', label: 'Hito' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setType(item.id);
+                            if (item.id !== 'cumpleanos') {
+                              setBirthYear('');
+                              setBirthdayLabel('');
+                            }
+                          }}
+                          className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            type === item.id
+                              ? 'bg-blue-50 border-blue-200 text-blue-600'
+                              : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {type === 'cumpleanos' && (
+                    <div className="flex flex-col gap-3.5 animate-fadeIn">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Nombre / Etiqueta del Homenajeado (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej: Abuelo Jesús"
+                          value={birthdayLabel}
+                          onChange={(e) => setBirthdayLabel(e.target.value)}
+                          className="w-full px-3.5 py-2.5 flat-input text-xs"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Año de Nacimiento (Opcional)
+                        </label>
+                        <input
+                          type="number"
+                          min="1900"
+                          max={currentYear}
+                          placeholder="Ej: 2018 (para calcular edad)"
+                          value={birthYear}
+                          onChange={(e) => setBirthYear(e.target.value)}
+                          className="w-full px-3.5 py-2.5 flat-input text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fecha de Inicio *</label>
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                      className="w-full px-3.5 py-2.5 flat-input text-xs"
+                    />
+                  </div>
+
+                  {/* CHECKBOX PERIODICIDAD - Oculto en Edición */}
+                  {!editingEvent && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="checkbox"
+                        id="recurrent-check"
+                        checked={isRecurrent}
+                        onChange={(e) => {
+                          setIsRecurrent(e.target.checked);
+                          setRecurrenceError('');
+                          if (e.target.checked && date) {
+                            const dateObj = new Date(date);
+                            setSelectedDays([dateObj.getDay()]);
+                          }
+                        }}
+                        className="rounded text-blue-600 focus:ring-blue-500 border-slate-300 h-4 w-4 cursor-pointer"
+                      />
+                      <label htmlFor="recurrent-check" className="text-xs font-bold text-slate-700 cursor-pointer">
+                        ¿Hacer este evento periódico/recurrente?
+                      </label>
+                    </div>
+                  )}
+
+                  {isRecurrent && (
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col gap-3.5 animate-fadeIn">
+                      
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Repetir cada</label>
+                        <select
+                          value={recurrenceType}
+                          onChange={(e) => {
+                            setRecurrenceType(e.target.value);
+                            setRecurrenceError('');
+                          }}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-600 bg-white focus:outline-none"
+                        >
+                          <option value="daily">Todos los días</option>
+                          <option value="weekly_days">Cada semana</option>
+                          <option value="biweekly">Cada 2 semanas</option>
+                          <option value="monthly">Cada mes</option>
+                          <option value="quarterly">Cada trimestre</option>
+                          <option value="yearly">Cada año</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide flex items-center justify-between">
+                          <span>Días de la semana</span>
+                          <span className="text-[8px] text-slate-400 font-bold">Opcional</span>
+                        </label>
+                        <div className="flex justify-between gap-1">
+                          {[
+                            { key: 1, label: 'L' },
+                            { key: 2, label: 'M' },
+                            { key: 3, label: 'X' },
+                            { key: 4, label: 'J' },
+                            { key: 5, label: 'V' },
+                            { key: 6, label: 'S' },
+                            { key: 0, label: 'D' }
+                          ].map((day) => {
+                            const isSelected = selectedDays.includes(day.key);
+                            return (
+                              <button
+                                key={day.key}
+                                type="button"
+                                onClick={() => {
+                                  setRecurrenceError('');
+                                  if (isSelected) {
+                                    setSelectedDays(selectedDays.filter(d => d !== day.key));
+                                  } else {
+                                    setSelectedDays([...selectedDays, day.key]);
+                                  }
+                                }}
+                                className={`h-7 w-7 rounded-full text-[10px] font-black transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-blue-600 text-white font-extrabold shadow shadow-blue-500/20 border-0'
+                                    : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'
+                                }`}
+                              >
+                                {day.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[8px] text-slate-400 font-bold mt-0.5 leading-normal">
+                          * Selecciona los días para repetición semanal/quincenal. Si se deja vacío, se repetirá estrictamente en el mismo día de la fecha de inicio.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Repetir hasta *</label>
+                        <input
+                          type="date"
+                          required
+                          value={endDate}
+                          onChange={(e) => {
+                            setEndDate(e.target.value);
+                            setRecurrenceError('');
+                          }}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-600 focus:outline-none"
+                        />
+                      </div>
+
+                      {recurrenceError && (
+                        <p className="text-[9px] text-red-500 font-extrabold leading-snug">{recurrenceError}</p>
+                      )}
+                    </div>
+                  )}
+
+                </div> {/* Cierre Columna Izquierda */}
+
+                {/* Columna Derecha: Asignación y notas/adjuntos */}
+                <div className="flex flex-col gap-4">
+                  
+                  {/* ASIGNACIÓN MÚLTIPLE DE MIEMBROS */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                      Miembros Asignados *
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMembers([])}
+                        className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                          selectedMembers.length === 0
+                            ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
+                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        TODOS
+                      </button>
+                      {members.map((m) => {
+                        const isSelected = selectedMembers.includes(m.firstName);
                         return (
                           <button
-                            key={day.key}
+                            key={m.id}
                             type="button"
                             onClick={() => {
-                              setRecurrenceError('');
+                              let nextMembers;
                               if (isSelected) {
-                                setSelectedDays(selectedDays.filter(d => d !== day.key));
+                                nextMembers = selectedMembers.filter(name => name !== m.firstName);
                               } else {
-                                setSelectedDays([...selectedDays, day.key]);
+                                nextMembers = [...selectedMembers, m.firstName];
+                              }
+                              
+                              // Si se seleccionan todos uno a uno, pasamos al estado exclusivo "TODOS" (vaciar array)
+                              if (nextMembers.length === members.length) {
+                                setSelectedMembers([]);
+                              } else {
+                                setSelectedMembers(nextMembers);
                               }
                             }}
-                            className={`h-7 w-7 rounded-full text-[10px] font-black transition-all ${
+                            className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-blue-600 text-white font-extrabold shadow shadow-blue-500/20'
-                                : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'
+                                ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-black'
+                                : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
                             }`}
                           >
-                            {day.label}
+                            {m.firstName}
                           </button>
                         );
                       })}
                     </div>
-                    <p className="text-[8px] text-slate-400 font-bold mt-0.5 leading-normal">
-                      * Selecciona los días para repetición semanal/quincenal. Si se deja vacío, se repetirá estrictamente en el mismo día de la fecha de inicio.
-                    </p>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Repetir hasta *</label>
-                    <input
-                      type="date"
-                      required
-                      value={endDate}
-                      onChange={(e) => {
-                        setEndDate(e.target.value);
-                        setRecurrenceError('');
-                      }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-600"
-                    />
-                  </div>
-
-                  {recurrenceError && (
-                    <p className="text-[9px] text-red-500 font-extrabold leading-snug">{recurrenceError}</p>
+                  {type !== 'cumpleanos' && (
+                    <div className="flex flex-col gap-1 animate-fadeIn">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                        Descripción / Notas
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="Detalles o notas adicionales..."
+                        value={eventDescription}
+                        onChange={(e) => setEventDescription(e.target.value)}
+                        className="w-full px-3.5 py-2.5 flat-input text-xs"
+                      />
+                    </div>
                   )}
-                </div>
-              )}
 
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Tipo de Evento</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'escolar', label: 'Escolar' },
-                    { id: 'extraescolar', label: 'Extraescolar' },
-                    { id: 'cumpleanos', label: 'Cumpleaños' },
-                    { id: 'hito', label: 'Hito' }
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setType(item.id);
-                        if (item.id !== 'cumpleanos') {
-                          setBirthYear('');
-                          setBirthdayLabel('');
-                        }
-                      }}
-                      className={`py-2 rounded-xl text-xs font-bold border transition-all ${
-                        type === item.id
-                          ? 'bg-blue-50 border-blue-200 text-blue-600'
-                          : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* LISTADO DE ADJUNTOS ACTUALES */}
+                  {attachmentsList.length > 0 && (
+                    <div className="flex flex-col gap-2 bg-blue-50/20 p-3 rounded-xl border border-blue-100/50">
+                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Adjuntos de este Evento ({attachmentsList.length})</span>
+                      <div className="flex flex-col gap-1.5">
+                        {attachmentsList.map((att, idx) => (
+                          <div key={att.id || idx} className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-slate-100 text-xs shadow-sm">
+                            <span className="font-semibold text-slate-700 truncate max-w-[240px]">
+                              {att.type === 'text' && `📝 Nota: ${att.textContent.substring(0, 30)}${att.textContent.length > 30 ? '...' : ''}`}
+                              {att.type === 'document' && `📄 Doc: ${att.fileName || 'Archivo'}`}
+                              {att.type === 'image' && `🖼️ Imagen`}
+                              {att.type === 'voice' && `🎤 Nota de Voz`}
+                              {att.type === 'url' && `🔗 Web: ${att.label || att.url}`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setAttachmentsList(attachmentsList.filter((_, i) => i !== idx))}
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-slate-50 transition-colors bg-transparent border-0 cursor-pointer"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {type === 'cumpleanos' && (
-                <div className="flex flex-col gap-3.5 animate-fadeIn">
-                  <div className="flex flex-col gap-1">
+                  {/* SECCIÓN AÑADIR ADJUNTOS */}
+                  <div className="flex flex-col gap-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                      Nombre / Etiqueta del Homenajeado (Opcional)
+                      Añadir Adjuntos
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Abuelo Jesús"
-                      value={birthdayLabel}
-                      onChange={(e) => setBirthdayLabel(e.target.value)}
-                      className="w-full px-3.5 py-2.5 flat-input text-xs"
-                    />
-                  </div>
+                    
+                    <div className="grid grid-cols-3 gap-1 mb-2">
+                      {[
+                        { id: 'text', label: 'Texto/Nota' },
+                        { id: 'document', label: 'PDF/Doc' },
+                        { id: 'image', label: 'Imagen' },
+                        { id: 'voice', label: 'Voz' },
+                        { id: 'url', label: 'Enlace URL' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setContentType(contentType === item.id ? '' : item.id);
+                            setFileUrl('');
+                            setTextContent('');
+                            setRecordedAudioUrl('');
+                            setSelectedFileName('');
+                            setSelectedFileSize(0);
+                            setFileErrorMsg('');
+                            setVoiceInputMode('record');
+                            setVoiceFileErrorMsg('');
+                            setTempUrl('');
+                            setTempUrlLabel('');
+                            if (isRecording) stopRecording();
+                          }}
+                          className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                            contentType === item.id
+                              ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-bold'
+                              : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                      Año de Nacimiento (Opcional)
-                    </label>
-                    <input
-                      type="number"
-                      min="1900"
-                      max={currentYear}
-                      placeholder="Ej: 2018 (para calcular edad)"
-                      value={birthYear}
-                      onChange={(e) => setBirthYear(e.target.value)}
-                      className="w-full px-3.5 py-2.5 flat-input text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* LISTADO DE ADJUNTOS ACTUALES */}
-              {attachmentsList.length > 0 && (
-                <div className="flex flex-col gap-2 bg-blue-50/20 p-3 rounded-xl border border-blue-100/50">
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Adjuntos de este Evento ({attachmentsList.length})</span>
-                  <div className="flex flex-col gap-1.5">
-                    {attachmentsList.map((att, idx) => (
-                      <div key={att.id || idx} className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-slate-100 text-xs shadow-sm">
-                        <span className="font-semibold text-slate-700 truncate max-w-[240px]">
-                          {att.type === 'text' && `📝 Nota: ${att.textContent.substring(0, 30)}${att.textContent.length > 30 ? '...' : ''}`}
-                          {att.type === 'document' && `📄 Doc: ${att.fileName || 'Archivo'}`}
-                          {att.type === 'image' && `🖼️ Imagen`}
-                          {att.type === 'voice' && `🎤 Nota de Voz`}
-                          {att.type === 'url' && `🔗 Web: ${att.label || att.url}`}
-                        </span>
+                    {contentType === 'text' && (
+                      <div className="flex flex-col gap-1.5 mt-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Nota Adjunta *</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Escribe el contenido de la nota aquí..."
+                          value={textContent}
+                          onChange={(e) => setTextContent(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 focus:outline-none"
+                        />
                         <button
                           type="button"
-                          onClick={() => setAttachmentsList(attachmentsList.filter((_, i) => i !== idx))}
-                          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-slate-50 transition-colors bg-transparent border-0 cursor-pointer"
+                          disabled={!textContent.trim()}
+                          onClick={() => {
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: 'text',
+                              textContent: textContent
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setTextContent('');
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
                         >
-                          <X size={14} />
+                          Insertar Nota
                         </button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* SECCIÓN AÑADIR ADJUNTOS */}
-              <div className="flex flex-col gap-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                  Añadir Adjuntos
-                </label>
-                
-                <div className="grid grid-cols-3 gap-1 mb-2">
-                  {[
-                    { id: 'text', label: 'Texto/Nota' },
-                    { id: 'document', label: 'PDF/Doc' },
-                    { id: 'image', label: 'Imagen' },
-                    { id: 'voice', label: 'Voz' },
-                    { id: 'url', label: 'Enlace URL' }
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setContentType(contentType === item.id ? '' : item.id);
-                        setFileUrl('');
-                        setTextContent('');
-                        setRecordedAudioUrl('');
-                        setSelectedFileName('');
-                        setSelectedFileSize(0);
-                        setFileErrorMsg('');
-                        setVoiceInputMode('record');
-                        setVoiceFileErrorMsg('');
-                        setTempUrl('');
-                        setTempUrlLabel('');
-                        if (isRecording) stopRecording();
-                      }}
-                      className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
-                        contentType === item.id
-                          ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm font-bold'
-                          : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-
-                {contentType === 'text' && (
-                  <div className="flex flex-col gap-1.5 mt-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Nota Adjunta *</label>
-                    <textarea
-                      rows={3}
-                      placeholder="Escribe el contenido de la nota aquí..."
-                      value={textContent}
-                      onChange={(e) => setTextContent(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      disabled={!textContent.trim()}
-                      onClick={() => {
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: 'text',
-                          textContent: textContent
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setTextContent('');
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
-                    >
-                      Insertar Nota
-                    </button>
-                  </div>
-                )}
-
-                {(contentType === 'document' || contentType === 'image') && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
-                      {contentType === 'image' ? 'Seleccionar Imagen *' : 'Seleccionar Documento *'}
-                    </label>
-                    
-                    <div className="relative border border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-4 transition-colors bg-white flex flex-col items-center justify-center text-center group cursor-pointer">
-                      <input
-                        type="file"
-                        accept={contentType === 'image' ? 'image/*' : '.pdf,.txt,.doc,.docx,.xls,.xlsx,.rtf'}
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      
-                      {fileUrl ? (
-                        <div className="flex flex-col items-center gap-1.5 w-full">
-                          {contentType === 'image' ? (
-                            <img src={fileUrl} alt="Preview" className="max-h-20 object-contain rounded border border-slate-100 p-0.5 bg-slate-50" />
-                          ) : (
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-full">
-                              <FileText size={20} />
-                            </div>
-                          )}
-                          <div className="text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
-                            {selectedFileName || 'Archivo cargado'}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setFileUrl('');
-                              setSelectedFileName('');
-                              setSelectedFileSize(0);
-                            }}
-                            className="text-[9px] text-red-500 font-bold hover:underline bg-transparent border-0 cursor-pointer"
-                          >
-                            Quitar archivo
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <UploadCloud size={20} className="text-slate-400 group-hover:scale-110 transition-transform shadow-sm mb-1" />
-                          <p className="text-[10px] font-bold text-slate-600">Subir {contentType === 'image' ? 'imagen' : 'documento'}</p>
-                          <p className="text-[8px] text-slate-400 font-bold">Máx. 5MB</p>
-                        </>
-                      )}
-                    </div>
-                    
-                    {fileErrorMsg && (
-                      <p className="text-[9px] text-red-500 font-bold text-center">{fileErrorMsg}</p>
                     )}
 
-                    <button
-                      type="button"
-                      disabled={!fileUrl}
-                      onClick={() => {
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: contentType,
-                          fileUrl: fileUrl,
-                          fileName: selectedFileName || (contentType === 'image' ? 'Imagen' : 'Documento')
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setFileUrl('');
-                        setSelectedFileName('');
-                        setSelectedFileSize(0);
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
-                    >
-                      Insertar Archivo
-                    </button>
-                  </div>
-                )}
-
-                {contentType === 'voice' && (
-                  <div className="flex flex-col gap-2.5 bg-white border border-slate-200/50 p-3 rounded-xl mt-1 text-center">
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoiceInputMode('record');
-                          setFileUrl('');
-                          setRecordedAudioUrl('');
-                          setSelectedFileName('');
-                          setSelectedFileSize(0);
-                          setVoiceFileErrorMsg('');
-                        }}
-                        className={`flex-1 py-1 rounded text-[9px] font-bold transition-all cursor-pointer border-0 ${
-                          voiceInputMode === 'record'
-                            ? 'bg-white text-slate-800 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 bg-transparent'
-                        }`}
-                      >
-                        Grabar Micrófono
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoiceInputMode('upload');
-                          setFileUrl('');
-                          setRecordedAudioUrl('');
-                          setSelectedFileName('');
-                          setSelectedFileSize(0);
-                          setVoiceFileErrorMsg('');
-                          if (isRecording) stopRecording();
-                        }}
-                        className={`flex-1 py-1 rounded text-[9px] font-bold transition-all cursor-pointer border-0 ${
-                          voiceInputMode === 'upload'
-                            ? 'bg-white text-slate-800 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 bg-transparent'
-                        }`}
-                      >
-                        Cargar Audio
-                      </button>
-                    </div>
-
-                    {voiceInputMode === 'record' ? (
-                      <div className="flex flex-col items-center gap-2 py-1.5">
-                        {isRecording ? (
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-[10px] font-bold text-red-500 animate-pulse">Grabando... {formatTime(recordingSeconds)}</span>
-                            <button
-                              type="button"
-                              onClick={stopRecording}
-                              className="h-9 w-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow shadow-red-500/20 border-0 cursor-pointer"
-                            >
-                              <Square size={16} fill="white" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-[9px] text-slate-400 font-bold">Pulsa para empezar a grabar</span>
-                            <button
-                              type="button"
-                              onClick={startRecording}
-                              className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow shadow-blue-500/20 border-0 cursor-pointer"
-                            >
-                              <Mic size={16} />
-                            </button>
-                          </div>
-                        )}
-
-                        {recordedAudioUrl && (
-                          <div className="w-full flex flex-col gap-1 mt-1 border-t border-slate-100 pt-2">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Preescucha de Grabación:</span>
-                            <audio src={recordedAudioUrl} controls className="w-full h-8" />
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2 py-1">
+                    {(contentType === 'document' || contentType === 'image') && (
+                      <div className="flex flex-col gap-2 mt-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                          {contentType === 'image' ? 'Seleccionar Imagen *' : 'Seleccionar Documento *'}
+                        </label>
+                        
                         <div className="relative border border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-4 transition-colors bg-white flex flex-col items-center justify-center text-center group cursor-pointer">
                           <input
                             type="file"
-                            accept="audio/*"
-                            onChange={handleVoiceFileChange}
+                            accept={contentType === 'image' ? 'image/*' : '.pdf,.txt,.doc,.docx,.xls,.xlsx,.rtf'}
+                            onChange={handleFileChange}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           />
                           
                           {fileUrl ? (
                             <div className="flex flex-col items-center gap-1.5 w-full">
-                              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-full">
-                                <Volume2 size={18} />
-                              </div>
+                              {contentType === 'image' ? (
+                                <img src={fileUrl} alt="Preview" className="max-h-20 object-contain rounded border border-slate-100 p-0.5 bg-slate-50" />
+                              ) : (
+                                <div className="p-2 bg-blue-50 text-blue-600 rounded-full">
+                                  <FileText size={20} />
+                                </div>
+                              )}
                               <div className="text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
-                                {selectedFileName || 'Audio cargado'}
+                                {selectedFileName || 'Archivo cargado'}
                               </div>
                               <button
                                 type="button"
@@ -1922,126 +1808,277 @@ export default function CalendarView({ setActiveTab }) {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   setFileUrl('');
-                                  setRecordedAudioUrl('');
                                   setSelectedFileName('');
                                   setSelectedFileSize(0);
                                 }}
                                 className="text-[9px] text-red-500 font-bold hover:underline bg-transparent border-0 cursor-pointer"
                               >
-                                Quitar audio
+                                Quitar archivo
                               </button>
                             </div>
                           ) : (
                             <>
                               <UploadCloud size={20} className="text-slate-400 group-hover:scale-110 transition-transform shadow-sm mb-1" />
-                              <p className="text-[10px] font-bold text-slate-600">Subir archivo de audio</p>
-                              <p className="text-[8px] text-slate-400 font-bold">Formatos: MP3, WAV, WebM (Máx. 8MB)</p>
+                              <p className="text-[10px] font-bold text-slate-600">Subir {contentType === 'image' ? 'imagen' : 'documento'}</p>
+                              <p className="text-[8px] text-slate-400 font-bold">Máx. 5MB</p>
                             </>
                           )}
                         </div>
-
-                        {recordedAudioUrl && (
-                          <div className="w-full mt-1.5 text-left bg-slate-50 p-2 rounded-lg border border-slate-100">
-                            <span className="text-[9px] font-bold text-slate-400 block mb-1">Preescucha del archivo:</span>
-                            <audio src={recordedAudioUrl} controls className="w-full h-8" />
-                          </div>
+                        
+                        {fileErrorMsg && (
+                          <p className="text-[9px] text-red-500 font-bold text-center">{fileErrorMsg}</p>
                         )}
 
-                        {voiceFileErrorMsg && (
-                          <p className="text-[9px] text-red-500 font-bold text-center mt-1">{voiceFileErrorMsg}</p>
-                        )}
+                        <button
+                          type="button"
+                          disabled={!fileUrl}
+                          onClick={() => {
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: contentType,
+                              fileUrl: fileUrl,
+                              fileName: selectedFileName || (contentType === 'image' ? 'Imagen' : 'Documento')
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setFileUrl('');
+                            setSelectedFileName('');
+                            setSelectedFileSize(0);
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
+                        >
+                          Insertar Archivo
+                        </button>
                       </div>
                     )}
 
-                    <button
-                      type="button"
-                      disabled={!fileUrl}
-                      onClick={() => {
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: 'voice',
-                          fileUrl: fileUrl,
-                          fileName: selectedFileName || 'Nota de voz'
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setFileUrl('');
-                        setRecordedAudioUrl('');
-                        setSelectedFileName('');
-                        setSelectedFileSize(0);
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
-                    >
-                      Insertar Nota de Voz
-                    </button>
+                    {contentType === 'voice' && (
+                      <div className="flex flex-col gap-2.5 bg-white border border-slate-200/50 p-3 rounded-xl mt-1 text-center">
+                        <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVoiceInputMode('record');
+                              setFileUrl('');
+                              setRecordedAudioUrl('');
+                              setSelectedFileName('');
+                              setSelectedFileSize(0);
+                              setVoiceFileErrorMsg('');
+                            }}
+                            className={`flex-1 py-1 rounded text-[9px] font-bold transition-all cursor-pointer border-0 ${
+                              voiceInputMode === 'record'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                            }`}
+                          >
+                            Grabar Micrófono
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVoiceInputMode('upload');
+                              setFileUrl('');
+                              setRecordedAudioUrl('');
+                              setSelectedFileName('');
+                              setSelectedFileSize(0);
+                              setVoiceFileErrorMsg('');
+                              if (isRecording) stopRecording();
+                            }}
+                            className={`flex-1 py-1 rounded text-[9px] font-bold transition-all cursor-pointer border-0 ${
+                              voiceInputMode === 'upload'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                            }`}
+                          >
+                            Cargar Audio
+                          </button>
+                        </div>
+
+                        {voiceInputMode === 'record' ? (
+                          <div className="flex flex-col items-center gap-2 py-1.5">
+                            {isRecording ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[10px] font-bold text-red-500 animate-pulse">Grabando... {formatTime(recordingSeconds)}</span>
+                                <button
+                                  type="button"
+                                  onClick={stopRecording}
+                                  className="h-9 w-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow shadow-red-500/20 border-0 cursor-pointer"
+                                >
+                                  <Square size={16} fill="white" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[9px] text-slate-400 font-bold">Pulsa para empezar a grabar</span>
+                                <button
+                                  type="button"
+                                  onClick={startRecording}
+                                  className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow shadow-blue-500/20 border-0 cursor-pointer"
+                                >
+                                  <Mic size={16} />
+                                </button>
+                              </div>
+                            )}
+
+                            {recordedAudioUrl && (
+                              <div className="w-full flex flex-col gap-1 mt-1 border-t border-slate-100 pt-2">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Preescucha de Grabación:</span>
+                                <audio src={recordedAudioUrl} controls className="w-full h-8" />
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2 py-1">
+                            <div className="relative border border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-4 transition-colors bg-white flex flex-col items-center justify-center text-center group cursor-pointer">
+                              <input
+                                type="file"
+                                accept="audio/*"
+                                onChange={handleVoiceFileChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              />
+                              
+                              {fileUrl ? (
+                                <div className="flex flex-col items-center gap-1.5 w-full">
+                                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-full">
+                                    <Volume2 size={18} />
+                                  </div>
+                                  <div className="text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
+                                    {selectedFileName || 'Audio cargado'}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setFileUrl('');
+                                      setRecordedAudioUrl('');
+                                      setSelectedFileName('');
+                                      setSelectedFileSize(0);
+                                    }}
+                                    className="text-[9px] text-red-500 font-bold hover:underline bg-transparent border-0 cursor-pointer"
+                                  >
+                                    Quitar audio
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <UploadCloud size={20} className="text-slate-400 group-hover:scale-110 transition-transform shadow-sm mb-1" />
+                                  <p className="text-[10px] font-bold text-slate-600">Subir archivo de audio</p>
+                                  <p className="text-[8px] text-slate-400 font-bold">Formatos: MP3, WAV, WebM (Máx. 8MB)</p>
+                                </>
+                              )}
+                            </div>
+
+                            {recordedAudioUrl && (
+                              <div className="w-full mt-1.5 text-left bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                <span className="text-[9px] font-bold text-slate-400 block mb-1">Preescucha del archivo:</span>
+                                <audio src={recordedAudioUrl} controls className="w-full h-8" />
+                              </div>
+                            )}
+
+                            {voiceFileErrorMsg && (
+                              <p className="text-[9px] text-red-500 font-bold text-center mt-1">{voiceFileErrorMsg}</p>
+                            )}
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={!fileUrl}
+                          onClick={() => {
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: 'voice',
+                              fileUrl: fileUrl,
+                              fileName: selectedFileName || 'Nota de voz'
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setFileUrl('');
+                            setRecordedAudioUrl('');
+                            setSelectedFileName('');
+                            setSelectedFileSize(0);
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
+                        >
+                          Insertar Nota de Voz
+                        </button>
+                      </div>
+                    )}
+
+                    {contentType === 'url' && (
+                      <div className="flex flex-col gap-2 mt-1">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Dirección Web (URL) *</label>
+                        <input
+                          type="text"
+                          placeholder="Ej: https://colegio.com/boletin"
+                          value={tempUrl}
+                          onChange={(e) => setTempUrl(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 focus:outline-none"
+                        />
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Etiqueta del enlace</label>
+                        <input
+                          type="text"
+                          placeholder="Ej: Portal Escolar"
+                          value={tempUrlLabel}
+                          onChange={(e) => setTempUrlLabel(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          disabled={!tempUrl.trim()}
+                          onClick={() => {
+                            let formattedUrl = tempUrl.trim();
+                            if (!/^https?:\/\//i.test(formattedUrl)) {
+                              formattedUrl = 'https://' + formattedUrl;
+                            }
+                            const newAtt = {
+                              id: `att-${Date.now()}`,
+                              type: 'url',
+                              url: formattedUrl,
+                              label: tempUrlLabel.trim() || tempUrl.trim()
+                            };
+                            setAttachmentsList([...attachmentsList, newAtt]);
+                            setTempUrl('');
+                            setTempUrlLabel('');
+                            setContentType('');
+                          }}
+                          className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
+                        >
+                          Insertar Enlace URL
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
 
-                {contentType === 'url' && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Dirección Web (URL) *</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: https://colegio.com/boletin"
-                      value={tempUrl}
-                      onChange={(e) => setTempUrl(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 focus:outline-none"
-                    />
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Etiqueta del enlace</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Portal Escolar"
-                      value={tempUrlLabel}
-                      onChange={(e) => setTempUrlLabel(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      disabled={!tempUrl.trim()}
-                      onClick={() => {
-                        let formattedUrl = tempUrl.trim();
-                        if (!/^https?:\/\//i.test(formattedUrl)) {
-                          formattedUrl = 'https://' + formattedUrl;
-                        }
-                        const newAtt = {
-                          id: `att-${Date.now()}`,
-                          type: 'url',
-                          url: formattedUrl,
-                          label: tempUrlLabel.trim() || tempUrl.trim()
-                        };
-                        setAttachmentsList([...attachmentsList, newAtt]);
-                        setTempUrl('');
-                        setTempUrlLabel('');
-                        setContentType('');
-                      }}
-                      className="mt-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-0"
-                    >
-                      Insertar Enlace URL
-                    </button>
-                  </div>
-                )}
-              </div>
+                </div> {/* Cierre Columna Derecha */}
+              </div> {/* Cierre Grid 2 Columnas */}
+            </div> {/* Cierre Cuerpo Scroll */}
 
-              <div className="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="text-xs font-bold text-slate-400 px-3 py-2 cursor-pointer bg-transparent border-0"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/10 cursor-pointer border-0"
-                >
-                  {editingEvent ? 'Guardar Cambios' : 'Añadir Evento'}
-                </button>
-              </div>
+            {/* Footer sticky en PC / Normal en Móvil */}
+            <div 
+              className="flex items-center gap-3 px-5 sm:px-6 pt-3 pb-3 sm:py-4 border-t border-slate-100 bg-white sm:sticky sm:bottom-0 z-20 shrink-0"
+              style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 12px))' }}
+            >
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="flex-1 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm sm:text-xs transition-all border-0 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold text-sm sm:text-xs shadow-md shadow-blue-500/20 transition-all border-0 cursor-pointer"
+                style={{ flexGrow: 2 }}
+              >
+                {editingEvent ? 'Guardar Cambios' : 'Añadir Evento'}
+              </button>
+            </div>
 
-            </form>
-
-          </div>
-        </div>
+          </form>
+        </div>,
+        document.body
       )}
 
       {/* MODAL CONFIRMACIÓN BORRAR EVENTO RECURRENTE */}
