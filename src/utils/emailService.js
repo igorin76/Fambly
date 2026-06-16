@@ -131,3 +131,105 @@ Por favor, entra en Fambly para confirmar la tarea en tu panel de "Tareas por Ac
     return { success: false, reason: error.message };
   }
 }
+
+/**
+ * Envía un correo electrónico con el código de recuperación de contraseña.
+ */
+export async function sendPasswordRecoveryEmail({ adminEmail, adminName, recoveryCode }) {
+  if (!adminEmail) {
+    console.warn("[emailService] No admin email provided, skipping password recovery.");
+    return { success: false, reason: 'no_email' };
+  }
+
+  // 1. Simulación si no están configuradas las variables de entorno
+  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+    const logMsg = `
+=========================================
+[SIMULACIÓN DE RECUPERACIÓN DE CONTRASEÑA]
+Para: ${adminName} <${adminEmail}>
+De: Fambly Soporte <support@fambly.family>
+Asunto: Código de recuperación de contraseña: ${recoveryCode}
+
+Hola ${adminName},
+
+Has solicitado restablecer tu contraseña en Fambly.
+Tu código de verificación de 6 dígitos es:
+
+🔑 ${recoveryCode}
+
+Este código expira en 15 minutos y es de un solo uso.
+=========================================
+`;
+    console.log(logMsg);
+    
+    // Crear un evento personalizado para mostrar un aviso visual en la aplicación
+    const event = new CustomEvent('email-simulated', {
+      detail: { 
+        adminEmail, 
+        adminName, 
+        taskTitle: `Restablecer Contraseña (CÓDIGO: ${recoveryCode})`, 
+        creatorName: 'Sistema de Seguridad'
+      }
+    });
+    window.dispatchEvent(event);
+
+    return { success: true, simulated: true };
+  }
+
+  // 2. Envío real con EmailJS REST API
+  try {
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        service_id: EMAILJS_SERVICE_ID,
+        template_id: EMAILJS_TEMPLATE_ID,
+        user_id: EMAILJS_PUBLIC_KEY,
+        template_params: {
+          to_email: adminEmail,
+          to_name: adminName,
+          // Reutilizamos task_title para enviar el asunto del código en EmailJS
+          task_title: `CÓDIGO DE RECUPERACIÓN: ${recoveryCode}`,
+          creator_name: 'Fambly Seguridad',
+          task_description: `Introduce el código ${recoveryCode} en la aplicación para restablecer tu contraseña. Expira en 15 minutos.`,
+          due_date: 'Expiración: 15 min',
+          priority: 'ALTA',
+          other_pending_tasks: 'Solicitud de recuperación de contraseña en curso.'
+        }
+      })
+    });
+
+    if (response.ok) {
+      console.log(`[emailService] Correo de recuperación enviado con éxito a ${adminEmail}`);
+      
+      const event = new CustomEvent('email-sent', {
+        detail: { adminEmail, adminName, taskTitle: 'Código de recuperación', creatorName: 'Seguridad' }
+      });
+      window.dispatchEvent(event);
+
+      return { success: true };
+    } else {
+      const errorText = await response.text();
+      console.error(`[emailService] Error al enviar correo de recuperación con EmailJS: ${errorText}`);
+      
+      const event = new CustomEvent('email-error', {
+        detail: { adminEmail, error: errorText }
+      });
+      window.dispatchEvent(event);
+
+      return { success: false, reason: errorText };
+    }
+  } catch (error) {
+    console.error(`[emailService] Excepción enviando correo de recuperación con EmailJS:`, error);
+    
+    const event = new CustomEvent('email-error', {
+      detail: { adminEmail, error: error.message }
+    });
+    window.dispatchEvent(event);
+
+    return { success: false, reason: error.message };
+  }
+}
+

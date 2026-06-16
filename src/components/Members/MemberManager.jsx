@@ -367,24 +367,14 @@ export default function MemberManager() {
                     </div>
 
                     <div className="flex gap-1.5">
-                      {m.isAdmin && (
-                        m.id === authenticatedMemberId ? (
-                          <button
-                            onClick={() => handleOpenChangePassword(m.id)}
-                            className="p-2 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 rounded-lg transition-all touch-btn"
-                            title="Cambiar Contraseña"
-                          >
-                            <Key size={15} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleResetPassword(m.id, m.firstName)}
-                            className="p-2 text-slate-500 hover:text-amber-650 hover:bg-amber-50 rounded-lg transition-all touch-btn"
-                            title="Restablecer Contraseña a '12345'"
-                          >
-                            <Key size={15} className="rotate-45" />
-                          </button>
-                        )
+                      {m.isAdmin && m.id === authenticatedMemberId && (
+                        <button
+                          onClick={() => handleOpenChangePassword(m.id)}
+                          className="p-2 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 rounded-lg transition-all touch-btn"
+                          title="Cambiar Contraseña"
+                        >
+                          <Key size={15} />
+                        </button>
                       )}
                       <button
                         onClick={() => handleOpenEditMember(m)}

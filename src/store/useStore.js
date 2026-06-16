@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../utils/supabaseClient';
-import { sendPendingTaskNotification } from '../utils/emailService';
+import { sendPendingTaskNotification, sendPasswordRecoveryEmail } from '../utils/emailService';
 import bcrypt from 'bcryptjs';
 
 // Arrays de datos semilla vacíos
@@ -189,6 +189,147 @@ export const useStore = create(
         if (isSupabaseConfigured()) {
           await supabase.from('members').update({ password_hash: defaultHash }).eq('id', adminMemberId);
         }
+      },
+
+      requestPasswordRecovery: async (email) => {
+        if (!email || email.trim() === '') {
+          throw new Error('El correo electrónico es obligatorio.');
+        }
+
+        if (isSupabaseConfigured()) {
+          // 1. Buscar miembro administrador con este correo
+          const { data: member, error } = await supabase
+            .from('members')
+            .select('*')
+            .eq('email', email.trim().toLowerCase())
+            .eq('is_admin', true)
+            .maybeSingle();
+
+          if (error) throw error;
+          if (!member) {
+            throw new Error('No se encontró ningún administrador con ese correo electrónico.');
+          }
+
+          // 2. Generar código de 6 dígitos
+          const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+          const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutos
+
+          // 3. Guardar en base de datos
+          const { error: updateError } = await supabase
+            .from('members')
+            .update({
+              reset_token: recoveryCode,
+              reset_token_expires_at: expiresAt
+            })
+            .eq('id', member.id);
+
+          if (updateError) throw updateError;
+
+          // 4. Enviar email
+          await sendPasswordRecoveryEmail({
+            adminEmail: member.email,
+            adminName: member.first_name,
+            recoveryCode: recoveryCode
+          });
+
+          return true;
+        } else {
+          // Modo local/desarrollo
+          const members = get().members;
+          const member = members.find(m => m.isAdmin && m.email && m.email.toLowerCase() === email.trim().toLowerCase());
+          if (!member) {
+            throw new Error('No se encontró ningún administrador con ese correo electrónico.');
+          }
+          const recoveryCode = '123456';
+          console.log(`[LOCAL RECOVERY CODE] para ${member.firstName}: ${recoveryCode}`);
+          await sendPasswordRecoveryEmail({
+            adminEmail: member.email || 'correo@prueba.com',
+            adminName: member.firstName,
+            recoveryCode: recoveryCode
+          });
+          return true;
+        }
+      },
+
+      verifyRecoveryCode: async (email, code) => {
+        if (!email || !code) {
+          throw new Error('El correo y el código son obligatorios.');
+        }
+
+        if (isSupabaseConfigured()) {
+          const { data: member, error } = await supabase
+            .from('members')
+            .select('*')
+            .eq('email', email.trim().toLowerCase())
+            .eq('is_admin', true)
+            .eq('reset_token', code.trim())
+            .maybeSingle();
+
+          if (error) throw error;
+          if (!member) {
+            throw new Error('El código de verificación es incorrecto.');
+          }
+
+          const expiry = new Date(member.reset_token_expires_at);
+          if (expiry < new Date()) {
+            throw new Error('El código de verificación ha expirado.');
+          }
+
+          return true;
+        } else {
+          if (code.trim() === '123456') {
+            return true;
+          }
+          throw new Error('El código de verificación es incorrecto.');
+        }
+      },
+
+      resetPasswordWithCode: async (email, code, newPassword) => {
+        if (!email || !code || !newPassword) {
+          throw new Error('Todos los campos son obligatorios.');
+        }
+
+        if (newPassword.length < 4) {
+          throw new Error('La contraseña debe tener al menos 4 caracteres.');
+        }
+
+        // Validar el código primero
+        await get().verifyRecoveryCode(email, code);
+
+        const newHash = await bcrypt.hash(newPassword, 10);
+
+        if (isSupabaseConfigured()) {
+          const { data: member, error } = await supabase
+            .from('members')
+            .select('id')
+            .eq('email', email.trim().toLowerCase())
+            .eq('is_admin', true)
+            .maybeSingle();
+
+          if (error) throw error;
+
+          const { error: updateError } = await supabase
+            .from('members')
+            .update({
+              password_hash: newHash,
+              reset_token: null,
+              reset_token_expires_at: null
+            })
+            .eq('id', member.id);
+
+          if (updateError) throw updateError;
+        }
+
+        // Actualizar el estado local
+        set((state) => ({
+          members: state.members.map((m) =>
+            m.email && m.email.toLowerCase() === email.trim().toLowerCase()
+              ? { ...m, passwordHash: newHash }
+              : m
+          )
+        }));
+
+        return true;
       },
 
       tasks: initialTasks,
